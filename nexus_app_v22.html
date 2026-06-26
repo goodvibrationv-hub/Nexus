@@ -200,15 +200,13 @@
   /* ---- revision ---- */
   .rev-progress{font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--mut); text-align:center; margin-bottom:14px}
   .flashcard{border:1px solid var(--line2); border-radius:14px; background:var(--surf); padding:20px 20px; display:flex; flex-direction:column}
-  .fc-fig{width:100%; border-radius:10px; overflow:hidden; background:var(--page); margin-bottom:14px; border:1px solid var(--line2)}
+  .fc-fig{width:100%; border-radius:10px; overflow:hidden; background:var(--surf); margin-bottom:14px; border:1px solid var(--line2); display:none}
+  .fc-fig.has-fig{display:block}
   .fc-fig svg{width:100%; height:auto; display:block; max-height:160px}
-  .fc-fig svg .lbl{font-family:'Fraunces',serif; font-size:13px; fill:var(--ink)}
-  .fc-fig svg .lblm{font-family:'JetBrains Mono',monospace; font-size:10px; fill:var(--mut)}
-  .fc-fig svg .sc{stroke:var(--forest)}
-  .fc-fig svg .sm{stroke:var(--ink)}
-  .fc-fig svg .sh{stroke:var(--terra)}
-  .fc-fig svg .sv{stroke:#6B4F9E}
-  .fc-fig svg .sg{stroke:var(--sage)}
+  .fc-fig .lbl{fill:var(--ink); font-family:'JetBrains Mono',monospace; font-size:11px; stroke:none}
+  .fc-fig .lblm{fill:var(--mut); font-family:'JetBrains Mono',monospace; font-size:10px; stroke:none}
+  .fc-fig .sc{stroke:var(--forest)} .fc-fig .sh{stroke:var(--terra)} .fc-fig .sv{stroke:var(--walnut)} .fc-fig .sg{stroke:var(--sage)} .fc-fig .sm{stroke:var(--mut)}
+  .fc-fig path,.fc-fig line,.fc-fig rect,.fc-fig ellipse,.fc-fig circle{vector-effect:non-scaling-stroke}
   .fc-skill{font-family:'JetBrains Mono',monospace; font-size:9.5px; letter-spacing:.12em; text-transform:uppercase; color:var(--terra); margin-bottom:10px}
   .fc-q{font-family:'Fraunces',serif; font-size:19px; font-weight:600; line-height:1.3; flex:1}
   .fc-vf{margin-top:20px; display:grid; grid-template-columns:1fr 1fr; gap:11px}
@@ -1195,8 +1193,8 @@ function showCard(){
   $('fcQ').textContent=c.stmt;
   const node=D.SKILLS[c.skill].nodes.find(n=>n.id===c.node);
   const figEl=$('fcFig');
-  if(node&&node.fig&&D.FIG[node.fig]){ figEl.innerHTML=D.FIG[node.fig]; figEl.style.display='block'; }
-  else figEl.style.display='none';
+  if(node&&node.fig&&D.FIG[node.fig]){ figEl.innerHTML=D.FIG[node.fig]; figEl.classList.add('has-fig'); }
+  else{ figEl.innerHTML=''; figEl.classList.remove('has-fig'); }
   $('fcChoice').style.display='grid';
   $('fcChoice').querySelectorAll('.vf').forEach(b=>{ b.disabled=false; b.classList.remove('picked'); });
   $('fcVerdict').className='fc-verdict'; $('fcVerdict').textContent='';

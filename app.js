@@ -469,6 +469,10 @@ function showCard(){
   $('revProgress').textContent='Fiche '+(revIndex+1)+' / '+revQueue.length;
   $('fcSkill').textContent=D.SKILLS[c.skill].name;
   $('fcQ').textContent=c.stmt;
+  const node=D.SKILLS[c.skill].nodes.find(n=>n.id===c.node);
+  const figEl=$('fcFig');
+  if(node&&node.fig&&D.FIG[node.fig]){ figEl.innerHTML=D.FIG[node.fig]; figEl.style.display='block'; }
+  else figEl.style.display='none';
   $('fcChoice').style.display='grid';
   $('fcChoice').querySelectorAll('.vf').forEach(b=>{ b.disabled=false; b.classList.remove('picked'); });
   $('fcVerdict').className='fc-verdict'; $('fcVerdict').textContent='';

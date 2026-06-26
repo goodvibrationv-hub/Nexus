@@ -37,11 +37,14 @@ const template = read('template.html');
 const dataCore = read('data_core.js');
 const content  = read('content_courses.js');
 const cards    = read('cards.js');
+const appCode  = read('app.js');
 
 /* ---- injection ---- */
 const dataBlock = [dataCore, content, cards].join('\n');
 
-const html = template.replace('/* {{DATA_INJECT}} */', dataBlock);
+const html = template
+  .replace('/* {{DATA_INJECT}} */', dataBlock)
+  .replace('/* {{APP_INJECT}} */',  appCode);
 
 /* ---- écriture ---- */
 fs.writeFileSync(OUTPUT, html, 'utf8');

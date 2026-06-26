@@ -19,7 +19,7 @@
   html,body{height:100%}
   body{background:var(--paper); color:var(--ink); font-family:'Inter',system-ui,sans-serif; line-height:1.6; -webkit-font-smoothing:antialiased; overflow-x:hidden}
   .mono{font-family:'JetBrains Mono',ui-monospace,monospace}
-  .backbtn{background:none;border:none;cursor:pointer;color:var(--forest);font:inherit;font-size:15px;display:flex;align-items:center;gap:6px;padding:14px 18px 0;margin:0}
+  .backbtn{background:none;border:none;cursor:pointer;color:var(--forest);font:inherit;font-size:15px;display:flex;align-items:center;gap:6px;padding:12px 18px 8px;margin:0;min-height:44px}
   .backbtn .lbl{font-family:'JetBrains Mono',monospace;font-size:12px}
   .app{min-height:100%; padding-bottom:calc(var(--nav-h) + env(safe-area-inset-bottom))}
   .screen{display:none; padding:14px 16px 24px; max-width:760px; margin:0 auto}
@@ -31,16 +31,20 @@
   .sectlabel::after{content:"";flex:1;height:1px;background:var(--line)}
 
   /* ---- LANDING : two doors ---- */
+  #scLanding{padding-top:20px}
+  #scLanding h1.title{font-size:26px; margin-bottom:6px}
+  #scLanding .intro{font-size:14px; margin-bottom:20px}
   .doors{display:flex; flex-direction:column; gap:12px; margin-top:4px}
-  .door{position:relative; width:100%; text-align:left; cursor:pointer; border:1px solid var(--line2); border-radius:14px; padding:18px 20px; background:var(--surf); color:inherit; font:inherit; transition:transform .15s, box-shadow .15s, border-color .15s; overflow:hidden}
+  .door{position:relative; width:100%; text-align:left; cursor:pointer; border:1px solid var(--line2); border-radius:14px; padding:20px 22px; background:var(--surf); color:inherit; font:inherit; transition:transform .15s, box-shadow .15s, border-color .15s; overflow:hidden}
   .door:active{transform:scale(.99)}
   .door:hover{box-shadow:0 14px 32px -18px rgba(42,37,32,.55); border-color:var(--dc)}
   .door::before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;background:var(--dc)}
-  .door .di{font-size:32px; display:block; margin-bottom:8px}
-  .door h2{font-family:'Fraunces',serif; font-size:21px; font-weight:600; margin-bottom:3px}
-  .door p{font-size:13px; color:var(--mut); max-width:95%; line-height:1.45}
-  .door .go{margin-top:10px; font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--dc); display:flex; align-items:center; gap:6px}
-  .door.learn{--dc:var(--forest)} .door.stable{--dc:var(--walnut)}
+  .door .di{font-size:34px; display:block; margin-bottom:10px}
+  .door h2{font-family:'Fraunces',serif; font-size:22px; font-weight:600; margin-bottom:4px}
+  .door p{font-size:13.5px; color:var(--mut); max-width:95%; line-height:1.5}
+  .door .go{margin-top:12px; font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--dc); display:flex; align-items:center; gap:6px}
+  .door.learn{--dc:var(--forest); background:linear-gradient(150deg,var(--surf) 60%,rgba(63,94,78,.04) 100%)}
+  .door.stable{--dc:var(--walnut)}
 
   /* ---- domain cards / steps (learning) ---- */
   .domains{display:flex; flex-direction:column; gap:9px}
@@ -53,8 +57,8 @@
   .domain h3{font-family:'Fraunces',serif; font-size:17px; font-weight:600; margin-bottom:1px}
   .domain .meta{font-family:'JetBrains Mono',monospace; font-size:9.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--mut); white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
   .domain .barwrap{margin-top:6px; display:flex; align-items:center; gap:9px}
-  .domain .bar{flex:1; height:4px; border-radius:99px; background:var(--paper2); overflow:hidden}
-  .domain .bar i{display:block;height:100%;background:var(--c,var(--forest));width:0;transition:width .4s}
+  .domain .bar{flex:1; height:5px; border-radius:99px; background:var(--paper2); overflow:hidden}
+  .domain .bar i{display:block;height:100%;background:var(--c,var(--forest));width:0;transition:width .5s}
   .domain .pc{font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--mut); flex-shrink:0}
   .domain .chev{color:var(--mut); font-size:18px; flex-shrink:0}
   .domhead{display:flex; align-items:center; gap:12px; margin-bottom:6px}
@@ -70,7 +74,7 @@
   .step{display:flex; align-items:center; gap:12px; width:100%; text-align:left; cursor:pointer; border:1px solid var(--line2); border-radius:10px; padding:10px 14px; background:var(--surf); color:inherit; font:inherit; margin-bottom:7px; transition:transform .14s, border-color .14s, box-shadow .14s}
   .step:active{transform:scale(.99)}
   .step.locked{opacity:.5; cursor:not-allowed}
-  .step.available{border-color:var(--forest)}
+  .step.available{border-color:var(--forest); box-shadow:0 0 0 1px var(--forest)}
   .step.mastered{background:linear-gradient(180deg,rgba(63,94,78,.06),var(--surf))}
   .step:not(.locked):hover{box-shadow:0 8px 20px -16px rgba(42,37,32,.5)}
   .dotcol{flex-shrink:0; width:26px; display:flex; justify-content:center}
@@ -219,10 +223,12 @@
   .revrow{--c:var(--forest)}
 
   .bottomnav{position:fixed; left:0; right:0; bottom:0; z-index:40; height:calc(var(--nav-h) + env(safe-area-inset-bottom)); padding-bottom:env(safe-area-inset-bottom); background:var(--surf); border-top:1px solid var(--line2); display:flex; align-items:stretch}
-  .navbtn{flex:1; background:none; border:none; cursor:pointer; font:inherit; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; color:var(--mut); transition:color .15s; padding:6px 0}
-  .navbtn .ni{font-size:20px; line-height:1}
+  .navbtn{flex:1; background:none; border:none; cursor:pointer; font:inherit; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; color:var(--mut); transition:color .15s; padding:6px 0; position:relative}
+  .navbtn .ni{width:22px; height:22px; display:flex; align-items:center; justify-content:center; font-size:20px; line-height:1}
+  .navbtn .ni svg{display:block}
   .navbtn .nl{font-family:'JetBrains Mono',monospace; font-size:9.5px; letter-spacing:.05em}
   .navbtn.on{color:var(--forest)}
+  .navbtn.on::before{content:''; position:absolute; top:0; left:50%; transform:translateX(-50%); width:24px; height:2px; border-radius:0 0 2px 2px; background:currentColor}
   body.stable-mode .navbtn.on{color:var(--walnut)}
 
   :focus-visible{outline:2px solid var(--forest); outline-offset:2px}
@@ -663,8 +669,18 @@ window.NEXUS_CARDS = [
 </script>
 
 <script>
+/* app.js — Logique applicative Nexus Learn. */
 const D=window.NEXUS_DATA, C=window.NEXUS_CONTENT, TIERS=D.TIERS;
 const $=id=>document.getElementById(id);
+
+/* ====== nav SVG icons ====== */
+const NAV_IC={
+  home:    '<svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10L11 4l8 6"/><path d="M5.5 8.2V18H9.5V13.5H12.5V18H16.5V8.2"/></svg>',
+  explore: '<svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="12" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="12" width="7" height="7" rx="1.5"/><rect x="12" y="12" width="7" height="7" rx="1.5"/></svg>',
+  revise:  '<svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 11a6.5 6.5 0 1 1 1.7 4.4"/><polyline points="4.5,16.5 4.5,11 10,11"/></svg>',
+  progress:'<svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="18" x2="4" y2="12"/><line x1="9" y1="18" x2="9" y2="7"/><line x1="14" y1="18" x2="14" y2="10"/><line x1="19" y1="18" x2="19" y2="4"/></svg>',
+  stable:  '<svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9.5L11 3.5l9 6"/><rect x="4.5" y="9.5" width="5" height="9" rx="1"/><rect x="12.5" y="12" width="5" height="6.5" rx="1"/><line x1="2" y1="18.5" x2="20" y2="18.5"/></svg>'
+};
 
 /* ====== persistent store (localStorage + fallback) ====== */
 const STORE={ horses:[], tasks:[], mastered:{} };
@@ -696,35 +712,36 @@ function show(screen,{crumb='',back=null,accent='#3F5E4E',nav=''}={}){
 }
 
 /* ====== bottom nav (contextual) ====== */
+function navBtn(active, key, icon, label){
+  return '<button class="navbtn'+(active===key?' on':'')+'" data-go="'+key+'"><span class="ni">'+icon+'</span><span class="nl">'+label+'</span></button>';
+}
 function buildNav(active){
   const nav=$('bottomnav');
   if(mode==='stable'){
     document.body.classList.add('stable-mode');
     nav.innerHTML=
-      '<button class="navbtn" data-go="landing"><span class="ni">⌂</span><span class="nl">Accueil</span></button>'+
-      '<button class="navbtn'+(active==='stable'?' on':'')+'" data-go="stable"><span class="ni">🐴</span><span class="nl">Écuries</span></button>';
+      navBtn(active,'landing',NAV_IC.home,'Accueil')+
+      navBtn(active,'stable',NAV_IC.stable,'Écuries');
   } else {
     document.body.classList.remove('stable-mode');
     nav.innerHTML=
-      '<button class="navbtn'+(active==='home'?' on':'')+'" data-go="home"><span class="ni">⌂</span><span class="nl">Accueil</span></button>'+
-      '<button class="navbtn'+(active==='domains'?' on':'')+'" data-go="domains"><span class="ni">❦</span><span class="nl">Domaines</span></button>'+
-      '<button class="navbtn'+(active==='revise'?' on':'')+'" data-go="revise"><span class="ni">⟲</span><span class="nl">Réviser</span></button>'+
-      '<button class="navbtn'+(active==='progress'?' on':'')+'" data-go="progress"><span class="ni">◔</span><span class="nl">Progression</span></button>';
+      navBtn(active,'domains',NAV_IC.explore,'Explorer')+
+      navBtn(active,'revise',NAV_IC.revise,'Réviser')+
+      navBtn(active,'progress',NAV_IC.progress,'Progrès');
   }
   nav.querySelectorAll('.navbtn').forEach(b=>b.onclick=()=>navGo(b.dataset.go));
 }
 function navGo(g){
   if(g==='landing'){ mode='landing'; goLanding(); }
-  else if(g==='home'){ goLanding(); }
-  else if(g==='domains'){ mode='learn'; renderHome(); show('scHome',{crumb:'<span class="cur">Domaines</span>',nav:'domains'}); }
-  else if(g==='progress'){ mode='learn'; renderProgress(); show('scProgress',{crumb:'<span class="cur">Progression</span>',nav:'progress'}); }
-  else if(g==='revise'){ mode='learn'; renderRevise(); show('scRevise',{crumb:'<span class="cur">Réviser</span>',back:{lbl:'accueil',fn:goLanding},nav:'revise'}); }
+  else if(g==='domains'){ mode='learn'; renderHome(); show('scHome',{back:{lbl:'accueil',fn:goLanding},nav:'domains'}); }
+  else if(g==='progress'){ mode='learn'; renderProgress(); show('scProgress',{back:{lbl:'accueil',fn:goLanding},nav:'progress'}); }
+  else if(g==='revise'){ mode='learn'; renderRevise(); show('scRevise',{back:{lbl:'accueil',fn:goLanding},nav:'revise'}); }
   else if(g==='stable'){ mode='stable'; const pend=(STORE.tasks||[]).filter(t=>!t.done).length; $('optTasksCount').textContent=pend?(pend+' tâche'+(pend>1?'s':'')+' à faire — voir et ajouter.'):'Voir et ajouter les tâches du jour.'; show('scStable',{back:{lbl:'accueil',fn:goLanding},accent:'#8A5A3C',nav:'stable'}); }
 }
 
 /* ====== landing ====== */
 function goLanding(){ mode='landing'; show('scLanding',{crumb:'',back:null,accent:'#3F5E4E',nav:''}); }
-$('doorLearn').onclick=()=>{ mode='learn'; renderHome(); show('scHome',{crumb:'<span class="cur">Apprendre</span>',back:{lbl:'accueil',fn:goLanding},nav:'home'}); };
+$('doorLearn').onclick=()=>{ mode='learn'; renderHome(); show('scHome',{back:{lbl:'accueil',fn:goLanding},nav:'domains'}); };
 $('doorStable').onclick=()=>navGo('stable');
 
 /* ====== learning ====== */
@@ -767,7 +784,7 @@ function openCourse(k,n){
   currentNode=n; currentSkillK=k; const c=C[n.id]; const s=D.SKILLS[k];
   $('cTag').textContent=c.tag; $('cTitle').textContent=c.title; $('cLead').textContent=c.lead; $('cBody').innerHTML=expandFigures(c.body);
   renderCourseFoot(k,n);
-  show('scCourse',{crumb:'<span>'+s.name+'</span><span class="sep">›</span><span class="cur">'+n.t+'</span>',back:{lbl:s.name,fn:()=>openDomain(k)},accent:s.color,nav:''});
+  show('scCourse',{back:{lbl:s.name,fn:()=>openDomain(k)},accent:s.color,nav:'domains'});
 }
 function questionsFor(nodeId){ return window.NEXUS_CARDS.filter(c=>c.node===nodeId); }
 function renderCourseFoot(k,n){
@@ -798,7 +815,7 @@ function startTest(k,n){
   $('testTitle').textContent=n.t;
   $('testResult').style.display='none'; $('testCard').style.display='flex';
   showTestCard();
-  show('scTest',{back:{lbl:'cours',fn:()=>openCourse(k,n)},accent:D.SKILLS[k].color,nav:''});
+  show('scTest',{back:{lbl:'cours',fn:()=>openCourse(k,n)},accent:D.SKILLS[k].color,nav:'domains'});
 }
 function showTestCard(){
   if(testIdx>=testQueue.length){ endTest(); return; }
@@ -1156,6 +1173,7 @@ $('revBackBtn').onclick=()=>renderRevise();
 $('startRevise').onclick=()=>{ if(dueCards(null).length) startSession(null); };
 
 goLanding();
+
 </script>
 </body>
 </html>

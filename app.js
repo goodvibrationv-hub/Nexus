@@ -2,6 +2,15 @@
 const D=window.NEXUS_DATA, C=window.NEXUS_CONTENT, TIERS=D.TIERS;
 const $=id=>document.getElementById(id);
 
+/* ====== nav SVG icons ====== */
+const NAV_IC={
+  home:    '<svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10L11 4l8 6"/><path d="M5.5 8.2V18H9.5V13.5H12.5V18H16.5V8.2"/></svg>',
+  explore: '<svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="12" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="12" width="7" height="7" rx="1.5"/><rect x="12" y="12" width="7" height="7" rx="1.5"/></svg>',
+  revise:  '<svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 11a6.5 6.5 0 1 1 1.7 4.4"/><polyline points="4.5,16.5 4.5,11 10,11"/></svg>',
+  progress:'<svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="18" x2="4" y2="12"/><line x1="9" y1="18" x2="9" y2="7"/><line x1="14" y1="18" x2="14" y2="10"/><line x1="19" y1="18" x2="19" y2="4"/></svg>',
+  stable:  '<svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9.5L11 3.5l9 6"/><rect x="4.5" y="9.5" width="5" height="9" rx="1"/><rect x="12.5" y="12" width="5" height="6.5" rx="1"/><line x1="2" y1="18.5" x2="20" y2="18.5"/></svg>'
+};
+
 /* ====== persistent store (localStorage + fallback) ====== */
 const STORE={ horses:[], tasks:[], mastered:{} };
 function loadStore(){
@@ -32,35 +41,36 @@ function show(screen,{crumb='',back=null,accent='#3F5E4E',nav=''}={}){
 }
 
 /* ====== bottom nav (contextual) ====== */
+function navBtn(active, key, icon, label){
+  return '<button class="navbtn'+(active===key?' on':'')+'" data-go="'+key+'"><span class="ni">'+icon+'</span><span class="nl">'+label+'</span></button>';
+}
 function buildNav(active){
   const nav=$('bottomnav');
   if(mode==='stable'){
     document.body.classList.add('stable-mode');
     nav.innerHTML=
-      '<button class="navbtn" data-go="landing"><span class="ni">⌂</span><span class="nl">Accueil</span></button>'+
-      '<button class="navbtn'+(active==='stable'?' on':'')+'" data-go="stable"><span class="ni">🐴</span><span class="nl">Écuries</span></button>';
+      navBtn(active,'landing',NAV_IC.home,'Accueil')+
+      navBtn(active,'stable',NAV_IC.stable,'Écuries');
   } else {
     document.body.classList.remove('stable-mode');
     nav.innerHTML=
-      '<button class="navbtn'+(active==='home'?' on':'')+'" data-go="home"><span class="ni">⌂</span><span class="nl">Accueil</span></button>'+
-      '<button class="navbtn'+(active==='domains'?' on':'')+'" data-go="domains"><span class="ni">❦</span><span class="nl">Domaines</span></button>'+
-      '<button class="navbtn'+(active==='revise'?' on':'')+'" data-go="revise"><span class="ni">⟲</span><span class="nl">Réviser</span></button>'+
-      '<button class="navbtn'+(active==='progress'?' on':'')+'" data-go="progress"><span class="ni">◔</span><span class="nl">Progression</span></button>';
+      navBtn(active,'domains',NAV_IC.explore,'Explorer')+
+      navBtn(active,'revise',NAV_IC.revise,'Réviser')+
+      navBtn(active,'progress',NAV_IC.progress,'Progrès');
   }
   nav.querySelectorAll('.navbtn').forEach(b=>b.onclick=()=>navGo(b.dataset.go));
 }
 function navGo(g){
   if(g==='landing'){ mode='landing'; goLanding(); }
-  else if(g==='home'){ goLanding(); }
-  else if(g==='domains'){ mode='learn'; renderHome(); show('scHome',{crumb:'<span class="cur">Domaines</span>',nav:'domains'}); }
-  else if(g==='progress'){ mode='learn'; renderProgress(); show('scProgress',{crumb:'<span class="cur">Progression</span>',nav:'progress'}); }
-  else if(g==='revise'){ mode='learn'; renderRevise(); show('scRevise',{crumb:'<span class="cur">Réviser</span>',back:{lbl:'accueil',fn:goLanding},nav:'revise'}); }
+  else if(g==='domains'){ mode='learn'; renderHome(); show('scHome',{back:{lbl:'accueil',fn:goLanding},nav:'domains'}); }
+  else if(g==='progress'){ mode='learn'; renderProgress(); show('scProgress',{back:{lbl:'accueil',fn:goLanding},nav:'progress'}); }
+  else if(g==='revise'){ mode='learn'; renderRevise(); show('scRevise',{back:{lbl:'accueil',fn:goLanding},nav:'revise'}); }
   else if(g==='stable'){ mode='stable'; const pend=(STORE.tasks||[]).filter(t=>!t.done).length; $('optTasksCount').textContent=pend?(pend+' tâche'+(pend>1?'s':'')+' à faire — voir et ajouter.'):'Voir et ajouter les tâches du jour.'; show('scStable',{back:{lbl:'accueil',fn:goLanding},accent:'#8A5A3C',nav:'stable'}); }
 }
 
 /* ====== landing ====== */
 function goLanding(){ mode='landing'; show('scLanding',{crumb:'',back:null,accent:'#3F5E4E',nav:''}); }
-$('doorLearn').onclick=()=>{ mode='learn'; renderHome(); show('scHome',{crumb:'<span class="cur">Apprendre</span>',back:{lbl:'accueil',fn:goLanding},nav:'home'}); };
+$('doorLearn').onclick=()=>{ mode='learn'; renderHome(); show('scHome',{back:{lbl:'accueil',fn:goLanding},nav:'domains'}); };
 $('doorStable').onclick=()=>navGo('stable');
 
 /* ====== learning ====== */
@@ -103,7 +113,7 @@ function openCourse(k,n){
   currentNode=n; currentSkillK=k; const c=C[n.id]; const s=D.SKILLS[k];
   $('cTag').textContent=c.tag; $('cTitle').textContent=c.title; $('cLead').textContent=c.lead; $('cBody').innerHTML=expandFigures(c.body);
   renderCourseFoot(k,n);
-  show('scCourse',{crumb:'<span>'+s.name+'</span><span class="sep">›</span><span class="cur">'+n.t+'</span>',back:{lbl:s.name,fn:()=>openDomain(k)},accent:s.color,nav:''});
+  show('scCourse',{back:{lbl:s.name,fn:()=>openDomain(k)},accent:s.color,nav:'domains'});
 }
 function questionsFor(nodeId){ return window.NEXUS_CARDS.filter(c=>c.node===nodeId); }
 function renderCourseFoot(k,n){
@@ -134,7 +144,7 @@ function startTest(k,n){
   $('testTitle').textContent=n.t;
   $('testResult').style.display='none'; $('testCard').style.display='flex';
   showTestCard();
-  show('scTest',{back:{lbl:'cours',fn:()=>openCourse(k,n)},accent:D.SKILLS[k].color,nav:''});
+  show('scTest',{back:{lbl:'cours',fn:()=>openCourse(k,n)},accent:D.SKILLS[k].color,nav:'domains'});
 }
 function showTestCard(){
   if(testIdx>=testQueue.length){ endTest(); return; }

@@ -6,7 +6,7 @@
  * Vérifie :
  * - 43 nœuds (26 course + 17 safety) répartis dans 6 domaines
  * - Chaque nœud a un contenu dans NEXUS_CONTENT
- * - Chaque nœud a au moins 5 questions dans NEXUS_CARDS
+ * - Chaque nœud a au moins 10 questions dans NEXUS_CARDS
  * - Les deps référencent des ids existants
  * - Les FIG référencés dans les contenus existent
  */
@@ -85,7 +85,7 @@ ok(`Questions total : ${CARDS.length}`);
 
 for (const n of allNodes) {
   const q = (cardsByNode[n.id] || []).length;
-  if (q < 5) err(`Nœud ${n.id} (${n.t}) : seulement ${q} questions (min 5)`);
+  if (q < 10) err(`Nœud ${n.id} (${n.t}) : seulement ${q} questions (min 10)`);
 }
 
 /* ---- résultat ---- */

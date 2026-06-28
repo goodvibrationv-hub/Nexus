@@ -234,6 +234,9 @@
   .cloze-in{display:inline-block; min-width:64px; width:auto; border:none; border-bottom:2px solid var(--line2); background:transparent; font:inherit; color:var(--ink); padding:0 4px; margin:0 1px}
   .cloze-in:focus{outline:none; border-bottom-color:var(--forest)}
   .cloze-fill{font-weight:700; color:var(--forest-d); border-bottom:2px solid var(--forest); padding:0 3px}
+  .fc-elab{display:none; margin-top:14px; padding-top:12px; border-top:1px dashed var(--line); font-size:14px; color:var(--mut); font-style:italic; line-height:1.5}
+  .fc-elab.show{display:block}
+  .fc-elab .elab-lbl{display:block; font-family:'JetBrains Mono',monospace; font-style:normal; font-size:9.5px; letter-spacing:.12em; text-transform:uppercase; color:var(--walnut); margin-bottom:4px}
   .rev-done{text-align:center; padding:40px 20px}
   .rev-done-ic{font-size:48px; color:var(--sage); margin-bottom:12px}
   .rev-done h3{font-family:'Fraunces',serif; font-size:22px; font-weight:600; margin-bottom:6px}
@@ -352,6 +355,7 @@
         <div class="fc-answer" id="fcAnswer"></div>
         <div class="fc-verdict" id="fcVerdict"></div>
         <div class="fc-a" id="fcA"></div>
+        <div class="fc-elab" id="fcElab"><span class="elab-lbl">Pour approfondir</span><span id="fcElabTxt"></span></div>
         <div class="fc-grades" id="fcGrades" style="display:none">
           <button class="grade" data-g="1">À revoir</button>
           <button class="grade" data-g="2">Difficile</button>

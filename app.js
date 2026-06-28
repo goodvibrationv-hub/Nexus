@@ -488,6 +488,7 @@ function showCard(){
   $('fcVerdict').className='fc-verdict'; $('fcVerdict').textContent='';
   $('fcA').classList.remove('show'); $('fcA').textContent='';
   $('fcAnswer').classList.remove('show'); $('fcAnswer').textContent='';
+  $('fcElab').classList.remove('show'); $('fcElabTxt').textContent='';
   $('fcGrades').style.display='none';
   $('fcReveal').style.display='none';
   $('fcNext').style.display='none';
@@ -502,6 +503,8 @@ function showCard(){
     $('fcChoice').querySelectorAll('.vf').forEach(b=>{ b.disabled=false; b.classList.remove('picked'); });
   }
 }
+/* élaboration : question de compréhension révélée après la réponse, sans note FSRS distincte */
+function showElab(c){ if(c&&c.elaboration){ $('fcElabTxt').textContent=c.elaboration; $('fcElab').classList.add('show'); } }
 $('fcChoice').querySelectorAll('.vf').forEach(btn=>btn.onclick=()=>{
   if(revRevealed) return;
   revRevealed=true;
@@ -514,6 +517,7 @@ $('fcChoice').querySelectorAll('.vf').forEach(btn=>btn.onclick=()=>{
   v.textContent=correct?'✓ Correct':('✗ Incorrect — réponse : '+(c.truth?'Vrai':'Faux'));
   v.className='fc-verdict show '+(correct?'right':'wrong');
   $('fcA').textContent=c.explain||''; $('fcA').classList.add('show');
+  showElab(c);
   reviewCard(c.id, correct?3:1);
   revStats++;
   $('fcNext').style.display='block';
@@ -527,6 +531,7 @@ $('fcReveal').onclick=()=>{
   if((c.type||'tf')==='cloze'){ $('fcQ').innerHTML=renderCloze(c.stmt, c.answers||[], true); }
   else{ $('fcAnswer').textContent=c.answer||''; $('fcAnswer').classList.add('show'); }
   if(c.explain){ $('fcA').textContent=c.explain; $('fcA').classList.add('show'); }
+  showElab(c);
   $('fcGrades').style.display='grid';
 };
 $('fcGrades').querySelectorAll('.grade').forEach(btn=>btn.onclick=()=>{

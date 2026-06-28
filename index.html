@@ -226,6 +226,18 @@
   .fc-a.show{display:block; animation:fade .25s ease}
   .fc-reveal{margin-top:20px; width:100%; padding:14px; border-radius:8px; border:1px solid var(--forest); background:var(--forest); color:var(--surf); font:inherit; font-weight:600; font-size:15px; cursor:pointer; transition:.15s}
   .fc-reveal:hover{background:var(--forest-d)}
+  .fc-answer{font-family:'Fraunces',serif; font-size:17px; font-weight:600; color:var(--forest-d); line-height:1.4; border-top:1px dashed var(--line); padding-top:14px; margin-top:16px; display:none}
+  .fc-answer.show{display:block}
+  .fc-grades{margin-top:16px; display:grid; grid-template-columns:repeat(2,1fr); gap:9px}
+  .fc-grades .grade{padding:13px; border-radius:9px; border:1.5px solid var(--line2); background:var(--surf); color:var(--mut); font:inherit; font-weight:600; font-size:14px; cursor:pointer; transition:.15s}
+  .fc-grades .grade:hover{border-color:var(--forest); color:var(--forest)}
+  .cloze-in{display:inline-block; min-width:64px; width:auto; border:none; border-bottom:2px solid var(--line2); background:transparent; font:inherit; color:var(--ink); padding:0 4px; margin:0 1px}
+  .cloze-in:focus{outline:none; border-bottom-color:var(--forest)}
+  .cloze-fill{font-weight:700; color:var(--forest-d); border-bottom:2px solid var(--forest); padding:0 3px}
+  .fc-elab{display:none; margin-top:14px; padding-top:12px; border-top:1px dashed var(--line); font-size:14px; color:var(--mut); font-style:italic; line-height:1.5}
+  .fc-elab.show{display:block}
+  .fc-elab .elab-lbl{display:block; font-family:'JetBrains Mono',monospace; font-style:normal; font-size:9.5px; letter-spacing:.12em; text-transform:uppercase; color:var(--walnut); margin-bottom:4px}
+  .fc-image{width:100%; max-height:200px; object-fit:contain; border-radius:10px; border:1px solid var(--line2); margin-top:14px; background:var(--surf)}
   .rev-done{text-align:center; padding:40px 20px}
   .rev-done-ic{font-size:48px; color:var(--sage); margin-bottom:12px}
   .rev-done h3{font-family:'Fraunces',serif; font-size:22px; font-weight:600; margin-bottom:6px}
@@ -340,8 +352,18 @@
           <button class="vf vrai" data-v="true">Vrai</button>
           <button class="vf faux" data-v="false">Faux</button>
         </div>
+        <button class="fc-reveal" id="fcReveal" style="display:none">Révéler</button>
+        <div class="fc-answer" id="fcAnswer"></div>
         <div class="fc-verdict" id="fcVerdict"></div>
         <div class="fc-a" id="fcA"></div>
+        <div class="fc-elab" id="fcElab"><span class="elab-lbl">Pour approfondir</span><span id="fcElabTxt"></span></div>
+        <img class="fc-image" id="fcImage" alt="" style="display:none">
+        <div class="fc-grades" id="fcGrades" style="display:none">
+          <button class="grade" data-g="1">À revoir</button>
+          <button class="grade" data-g="2">Difficile</button>
+          <button class="grade" data-g="3">Correct</button>
+          <button class="grade" data-g="4">Facile</button>
+        </div>
         <button class="fc-reveal" id="fcNext" style="display:none">Fiche suivante</button>
       </div>
       <div class="rev-done" id="revDone" style="display:none">
@@ -1311,6 +1333,13 @@ window.NEXUS_CARDS = [
   {"id":"c_w7_13","skill":"soudure","node":"w7","stmt":"Les plastiques thermodurcissables se soudent aussi facilement que les thermoplastiques.","truth":false,"explain":"Faux. Les thermodurcissables ne refondent pas en chauffant : on ne peut pas les souder à chaud comme les thermoplastiques, qui ramollissent."},
   {"id":"c_w7_14","skill":"soudure","node":"w7","stmt":"Souder de l'aluminium demande souvent de nettoyer la couche d'oxyde et parfois de préchauffer.","truth":true,"explain":"Vrai. On retire l'oxyde réfractaire (brossage inox, décapant) et on compense l'évacuation rapide de chaleur, parfois par un préchauffage. Sinon le joint rate."},
   {"id":"c_w7_15","skill":"soudure","node":"w7","stmt":"Pour souder un plastique, on utilise une baguette de la même matière que les pièces.","truth":true,"explain":"Vrai. La baguette d'apport doit être du même thermoplastique pour fusionner correctement avec les pièces. La compatibilité des matières est la règle."},
+  {"id":"r_g2_1","skill":"guitare","node":"g2","type":"recall","stmt":"Cite, de la plus grave à la plus aiguë, le nom des six cordes à vide d'une guitare.","answer":"Mi · La · Ré · Sol · Si · Mi (de la plus grave, la plus grosse, à la plus aiguë).","explain":"L'ordre Mi-La-Ré-Sol-Si-Mi est la base pour s'accorder, lire une tablature et construire des accords.","elaboration":"Pourquoi connaître l'ordre des cordes aide-t-il à retrouver une même note à plusieurs endroits du manche ?"},
+  {"id":"r_s1_1","skill":"survie","node":"s1","type":"recall","stmt":"Énonce la « règle des 3 » qui hiérarchise les priorités de survie.","answer":"Environ 3 minutes sans air, 3 heures sans protection thermique, 3 jours sans eau, 3 semaines sans nourriture.","explain":"Elle inverse l'intuition : protection et eau priment largement sur la recherche de nourriture."},
+  {"id":"r_w3_1","skill":"soudure","node":"w3","type":"recall","stmt":"En soudure à l'étain, que faut-il chauffer en priorité, et pourquoi ?","answer":"La pièce (patte et pastille), pas le fil d'étain : c'est la pièce chaude qui fait fondre et accrocher l'étain par mouillage.","explain":"Déposer une goutte fondue sur une pièce froide donne une soudure froide, terne et mal accrochée, qui finit par lâcher."},
+  {"id":"z_m6_1","skill":"meca","node":"m6","type":"cloze","stmt":"Sur un moteur 4 temps, l'arbre à cames tourne ___ fois moins vite que le vilebrequin.","answers":["deux"],"explain":"Un cycle complet prend deux tours de vilebrequin pour un seul tour d'arbre à cames.","elaboration":"Quelle conséquence ce rapport 2:1 a-t-il si la courroie de distribution saute d'une dent ?"},
+  {"id":"z_b3_1","skill":"bois","node":"b3","type":"cloze","stmt":"Principe de référence unique : tout se mesure depuis une seule ___ et un seul ___.","answers":["face","chant"],"explain":"Mesurer chaque cote depuis un bord différent fait s'accumuler les erreurs."},
+  {"id":"z_s6_1","skill":"survie","node":"s6","type":"cloze","stmt":"L'azimut est l'angle mesuré depuis le ___, dans le sens ___, de 0 à 360°.","answers":["nord","horaire"],"explain":"Il se détermine sur la carte puis se suit à la boussole, en tenant compte de la déclinaison."},
+  {"id":"r_e8_1","skill":"escalade","node":"e8","type":"recall","stmt":"Quel nœud d'encordement, vérifiable d'un coup d'œil et défaisable après une grosse chute, est la référence en escalade ?","answer":"Le nœud de huit (huit doublé / suivi).","image":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNDAiIGhlaWdodD0iMTAwIiB2aWV3Qm94PSIwIDAgMjQwIDEwMCI+PHJlY3Qgd2lkdGg9IjI0MCIgaGVpZ2h0PSIxMDAiIGZpbGw9IiNGQkY4RjEiLz48cGF0aCBkPSJNODAgMzAgQzQwIDQwIDQwIDc1IDgwIDcwIEMxMzAgNjMgMTQwIDMzIDkwIDMxIEM1NSAyOSA1NSA3MCAxMDUgNjUgQzE1MCA2MCAxNTggMzAgMTA4IDI1IiBmaWxsPSJub25lIiBzdHJva2U9IiNBNDU3MkYiIHN0cm9rZS13aWR0aD0iMTAiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPjx0ZXh0IHg9IjEyMCIgeT0iOTIiIGZvbnQtZmFtaWx5PSJtb25vc3BhY2UiIGZvbnQtc2l6ZT0iMTEiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiM2RTYyNTMiPm5vZXVkIGRlIGh1aXQ8L3RleHQ+PC9zdmc+","explain":"Deux brins parallèles sans croisement ; on le contrôle visuellement à chaque fois."}
 ];
 
 
@@ -1335,7 +1364,7 @@ const STORE={ horses:[], tasks:[], mastered:{} };
 function loadStore(){
   try{
     const raw=localStorage.getItem('nexus_stable');
-    if(raw){ const d=JSON.parse(raw); STORE.horses=d.horses||[]; STORE.tasks=d.tasks||[]; STORE.mastered=d.mastered||{}; }
+    if(raw){ const d=JSON.parse(raw); STORE.horses=d.horses||[]; STORE.tasks=d.tasks||[]; STORE.mastered=d.mastered||{}; STORE.srs=d.srs||{}; }
   }catch(e){ /* mémoire seule */ }
   Object.keys(D.SKILLS).forEach(k=>{ if(!STORE.mastered[k]) STORE.mastered[k]=[]; });
 }
@@ -1457,7 +1486,7 @@ let testK=null, testN=null, testQueue=[], testIdx=0, testErrors=0, testRevealed=
 function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
 function startTest(k,n){
   testK=k; testN=n;
-  const pool=questionsFor(n.id);
+  const pool=questionsFor(n.id).filter(c=>(c.type||'tf')==='tf');
   testQueue=shuffle(pool).slice(0,5);
   testIdx=0; testErrors=0;
   $('testTitle').textContent=n.t;
@@ -1757,6 +1786,23 @@ function reviewCard(id,g){
 }
 function isDue(id){ const st=cardState(id); return !st || st.due<=Date.now(); }
 function dueCards(skill){ return window.NEXUS_CARDS.filter(c=>(!skill||c.skill===skill)&&isDue(c.id)); }
+/* Entrelacement (Bloc 4) : réordonne UNIQUEMENT l'affichage. La priorité FSRS prime —
+   on regroupe par palier de retard (jours entiers, plus urgent d'abord), puis on alterne
+   les domaines à l'intérieur d'un même palier. Une carte plus en retard n'est jamais
+   repoussée derrière une moins en retard. Ne touche ni à la sélection ni aux échéances. */
+function overdueTier(c){ const st=cardState(c.id); if(!st) return 0; return Math.max(0,Math.floor((Date.now()-st.due)/DAY)); }
+function interleave(cards){
+  const tiers=new Map();
+  cards.forEach(c=>{ const t=overdueTier(c); (tiers.get(t)||tiers.set(t,[]).get(t)).push(c); });
+  const out=[];
+  [...tiers.keys()].sort((a,b)=>b-a).forEach(t=>{           // paliers : plus en retard d'abord
+    const bySkill=new Map();
+    tiers.get(t).forEach(c=>{ (bySkill.get(c.skill)||bySkill.set(c.skill,[]).get(c.skill)).push(c); });
+    const qs=[...bySkill.values()]; let left=tiers.get(t).length, i=0;
+    while(left>0){ const q=qs[i%qs.length]; if(q.length){ out.push(q.shift()); left--; } i++; } // round-robin domaines
+  });
+  return out;
+}
 
 function renderRevise(){
   $('reviseHome').style.display='block'; $('reviseSession').style.display='none';
@@ -1777,10 +1823,21 @@ function renderRevise(){
 }
 let revQueue=[], revIndex=0, revStats=0, revRevealed=false;
 function startSession(skill){
-  revQueue=dueCards(skill); revIndex=0; revStats=0;
+  revQueue=interleave(dueCards(skill)); revIndex=0; revStats=0;
   if(!revQueue.length) return;
   $('reviseHome').style.display='none'; $('reviseSession').style.display='block';
   $('revDone').style.display='none'; $('flashcard').style.display='flex'; showCard();
+}
+/* texte à trous : chaque ___ devient un champ de saisie (non corrigé), ou la réponse une fois révélé */
+function renderCloze(stmt, answers, revealed){
+  const parts=String(stmt).split('___');
+  let html=esc(parts[0]);
+  for(let i=1;i<parts.length;i++){
+    if(revealed){ const a=(answers&&answers[i-1]!=null)?answers[i-1]:'…'; html+='<span class="cloze-fill">'+esc(a)+'</span>'; }
+    else{ html+='<input class="cloze-in" type="text" autocomplete="off" autocapitalize="off" aria-label="à compléter">'; }
+    html+=esc(parts[i]);
+  }
+  return html;
 }
 function showCard(){
   if(revIndex>=revQueue.length){ endSession(); return; }
@@ -1789,15 +1846,42 @@ function showCard(){
   $('fcSkill').textContent=D.SKILLS[c.skill].name;
   $('fcQ').textContent=c.stmt;
   const node=D.SKILLS[c.skill].nodes.find(n=>n.id===c.node);
+  const ctype=c.type||'tf';
   const figEl=$('fcFig');
-  if(node&&node.fig&&D.FIG[node.fig]){ figEl.innerHTML=D.FIG[node.fig]; figEl.classList.add('has-fig'); }
-  else{ figEl.innerHTML=''; figEl.classList.remove('has-fig'); }
-  $('fcChoice').style.display='grid';
-  $('fcChoice').querySelectorAll('.vf').forEach(b=>{ b.disabled=false; b.classList.remove('picked'); });
+  const hasFig=node&&node.fig&&D.FIG[node.fig];
+  figEl.innerHTML=hasFig?D.FIG[node.fig]:'';
+  /* sur rappel/cloze, l'illustration du nœud ne s'affiche qu'après révélation (pas d'indice) */
+  const figLeak=(ctype==='recall'||ctype==='cloze');
+  if(hasFig&&!figLeak) figEl.classList.add('has-fig'); else figEl.classList.remove('has-fig');
+  /* image base64 (double codage) : masquée par défaut, révélée après réponse — paramétrable via imageUpfront */
+  const imgEl=$('fcImage');
+  if(c.image) imgEl.src=c.image; else imgEl.removeAttribute('src');
+  imgEl.style.display=(c.image&&c.imageUpfront===true)?'block':'none';
+  /* reset commun aux deux types */
   $('fcVerdict').className='fc-verdict'; $('fcVerdict').textContent='';
   $('fcA').classList.remove('show'); $('fcA').textContent='';
+  $('fcAnswer').classList.remove('show'); $('fcAnswer').textContent='';
+  $('fcElab').classList.remove('show'); $('fcElabTxt').textContent='';
+  $('fcGrades').style.display='none';
+  $('fcReveal').style.display='none';
   $('fcNext').style.display='none';
   revRevealed=false;
+  if(ctype==='recall'||ctype==='cloze'){
+    if(ctype==='cloze') $('fcQ').innerHTML=renderCloze(c.stmt, c.answers||[], false);
+    $('fcChoice').style.display='none';
+    $('fcReveal').style.display='block';
+  } else {
+    $('fcChoice').style.display='grid';
+    $('fcChoice').querySelectorAll('.vf').forEach(b=>{ b.disabled=false; b.classList.remove('picked'); });
+  }
+}
+/* élaboration : question de compréhension révélée après la réponse, sans note FSRS distincte */
+function showElab(c){ if(c&&c.elaboration){ $('fcElabTxt').textContent=c.elaboration; $('fcElab').classList.add('show'); } }
+/* double codage : révèle l'illustration du nœud et l'image base64 après la réponse (jamais d'indice avant) */
+function revealVisuals(c){
+  const node=D.SKILLS[c.skill].nodes.find(n=>n.id===c.node);
+  if(node&&node.fig&&D.FIG[node.fig]) $('fcFig').classList.add('has-fig');
+  if(c.image){ $('fcImage').src=c.image; $('fcImage').style.display='block'; }
 }
 $('fcChoice').querySelectorAll('.vf').forEach(btn=>btn.onclick=()=>{
   if(revRevealed) return;
@@ -1810,9 +1894,30 @@ $('fcChoice').querySelectorAll('.vf').forEach(btn=>btn.onclick=()=>{
   const v=$('fcVerdict');
   v.textContent=correct?'✓ Correct':('✗ Incorrect — réponse : '+(c.truth?'Vrai':'Faux'));
   v.className='fc-verdict show '+(correct?'right':'wrong');
-  $('fcA').textContent=c.explain; $('fcA').classList.add('show');
+  $('fcA').textContent=c.explain||''; $('fcA').classList.add('show');
+  showElab(c); revealVisuals(c);
   reviewCard(c.id, correct?3:1);
   revStats++;
+  $('fcNext').style.display='block';
+});
+/* rappel libre : révéler la réponse attendue, puis auto-évaluation mappée FSRS */
+$('fcReveal').onclick=()=>{
+  if(revRevealed) return;
+  revRevealed=true;
+  const c=revQueue[revIndex];
+  $('fcReveal').style.display='none';
+  if((c.type||'tf')==='cloze'){ $('fcQ').innerHTML=renderCloze(c.stmt, c.answers||[], true); }
+  else{ $('fcAnswer').textContent=c.answer||''; $('fcAnswer').classList.add('show'); }
+  if(c.explain){ $('fcA').textContent=c.explain; $('fcA').classList.add('show'); }
+  showElab(c); revealVisuals(c);
+  $('fcGrades').style.display='grid';
+};
+$('fcGrades').querySelectorAll('.grade').forEach(btn=>btn.onclick=()=>{
+  if(!revRevealed) return;
+  const c=revQueue[revIndex];
+  reviewCard(c.id, parseInt(btn.dataset.g,10));
+  revStats++;
+  $('fcGrades').style.display='none';
   $('fcNext').style.display='block';
 });
 $('fcNext').onclick=()=>{ revIndex++; showCard(); };

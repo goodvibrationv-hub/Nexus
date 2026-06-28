@@ -16,7 +16,7 @@ const STORE={ horses:[], tasks:[], mastered:{} };
 function loadStore(){
   try{
     const raw=localStorage.getItem('nexus_stable');
-    if(raw){ const d=JSON.parse(raw); STORE.horses=d.horses||[]; STORE.tasks=d.tasks||[]; STORE.mastered=d.mastered||{}; }
+    if(raw){ const d=JSON.parse(raw); STORE.horses=d.horses||[]; STORE.tasks=d.tasks||[]; STORE.mastered=d.mastered||{}; STORE.srs=d.srs||{}; }
   }catch(e){ /* mémoire seule */ }
   Object.keys(D.SKILLS).forEach(k=>{ if(!STORE.mastered[k]) STORE.mastered[k]=[]; });
 }
@@ -138,7 +138,7 @@ let testK=null, testN=null, testQueue=[], testIdx=0, testErrors=0, testRevealed=
 function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
 function startTest(k,n){
   testK=k; testN=n;
-  const pool=questionsFor(n.id);
+  const pool=questionsFor(n.id).filter(c=>(c.type||'tf')==='tf');
   testQueue=shuffle(pool).slice(0,5);
   testIdx=0; testErrors=0;
   $('testTitle').textContent=n.t;
@@ -473,12 +473,21 @@ function showCard(){
   const figEl=$('fcFig');
   if(node&&node.fig&&D.FIG[node.fig]){ figEl.innerHTML=D.FIG[node.fig]; figEl.classList.add('has-fig'); }
   else{ figEl.innerHTML=''; figEl.classList.remove('has-fig'); }
-  $('fcChoice').style.display='grid';
-  $('fcChoice').querySelectorAll('.vf').forEach(b=>{ b.disabled=false; b.classList.remove('picked'); });
+  /* reset commun aux deux types */
   $('fcVerdict').className='fc-verdict'; $('fcVerdict').textContent='';
   $('fcA').classList.remove('show'); $('fcA').textContent='';
+  $('fcAnswer').classList.remove('show'); $('fcAnswer').textContent='';
+  $('fcGrades').style.display='none';
+  $('fcReveal').style.display='none';
   $('fcNext').style.display='none';
   revRevealed=false;
+  if((c.type||'tf')==='recall'){
+    $('fcChoice').style.display='none';
+    $('fcReveal').style.display='block';
+  } else {
+    $('fcChoice').style.display='grid';
+    $('fcChoice').querySelectorAll('.vf').forEach(b=>{ b.disabled=false; b.classList.remove('picked'); });
+  }
 }
 $('fcChoice').querySelectorAll('.vf').forEach(btn=>btn.onclick=()=>{
   if(revRevealed) return;
@@ -491,9 +500,27 @@ $('fcChoice').querySelectorAll('.vf').forEach(btn=>btn.onclick=()=>{
   const v=$('fcVerdict');
   v.textContent=correct?'✓ Correct':('✗ Incorrect — réponse : '+(c.truth?'Vrai':'Faux'));
   v.className='fc-verdict show '+(correct?'right':'wrong');
-  $('fcA').textContent=c.explain; $('fcA').classList.add('show');
+  $('fcA').textContent=c.explain||''; $('fcA').classList.add('show');
   reviewCard(c.id, correct?3:1);
   revStats++;
+  $('fcNext').style.display='block';
+});
+/* rappel libre : révéler la réponse attendue, puis auto-évaluation mappée FSRS */
+$('fcReveal').onclick=()=>{
+  if(revRevealed) return;
+  revRevealed=true;
+  const c=revQueue[revIndex];
+  $('fcReveal').style.display='none';
+  $('fcAnswer').textContent=c.answer||''; $('fcAnswer').classList.add('show');
+  if(c.explain){ $('fcA').textContent=c.explain; $('fcA').classList.add('show'); }
+  $('fcGrades').style.display='grid';
+};
+$('fcGrades').querySelectorAll('.grade').forEach(btn=>btn.onclick=()=>{
+  if(!revRevealed) return;
+  const c=revQueue[revIndex];
+  reviewCard(c.id, parseInt(btn.dataset.g,10));
+  revStats++;
+  $('fcGrades').style.display='none';
   $('fcNext').style.display='block';
 });
 $('fcNext').onclick=()=>{ revIndex++; showCard(); };

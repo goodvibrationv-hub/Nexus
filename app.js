@@ -463,6 +463,17 @@ function startSession(skill){
   $('reviseHome').style.display='none'; $('reviseSession').style.display='block';
   $('revDone').style.display='none'; $('flashcard').style.display='flex'; showCard();
 }
+/* texte à trous : chaque ___ devient un champ de saisie (non corrigé), ou la réponse une fois révélé */
+function renderCloze(stmt, answers, revealed){
+  const parts=String(stmt).split('___');
+  let html=esc(parts[0]);
+  for(let i=1;i<parts.length;i++){
+    if(revealed){ const a=(answers&&answers[i-1]!=null)?answers[i-1]:'…'; html+='<span class="cloze-fill">'+esc(a)+'</span>'; }
+    else{ html+='<input class="cloze-in" type="text" autocomplete="off" autocapitalize="off" aria-label="à compléter">'; }
+    html+=esc(parts[i]);
+  }
+  return html;
+}
 function showCard(){
   if(revIndex>=revQueue.length){ endSession(); return; }
   const c=revQueue[revIndex];
@@ -481,7 +492,9 @@ function showCard(){
   $('fcReveal').style.display='none';
   $('fcNext').style.display='none';
   revRevealed=false;
-  if((c.type||'tf')==='recall'){
+  const ctype=c.type||'tf';
+  if(ctype==='recall'||ctype==='cloze'){
+    if(ctype==='cloze') $('fcQ').innerHTML=renderCloze(c.stmt, c.answers||[], false);
     $('fcChoice').style.display='none';
     $('fcReveal').style.display='block';
   } else {
@@ -511,7 +524,8 @@ $('fcReveal').onclick=()=>{
   revRevealed=true;
   const c=revQueue[revIndex];
   $('fcReveal').style.display='none';
-  $('fcAnswer').textContent=c.answer||''; $('fcAnswer').classList.add('show');
+  if((c.type||'tf')==='cloze'){ $('fcQ').innerHTML=renderCloze(c.stmt, c.answers||[], true); }
+  else{ $('fcAnswer').textContent=c.answer||''; $('fcAnswer').classList.add('show'); }
   if(c.explain){ $('fcA').textContent=c.explain; $('fcA').classList.add('show'); }
   $('fcGrades').style.display='grid';
 };

@@ -6,7 +6,8 @@
   "scripts": {
     "build": "node assemble.js",
     "check": "node check.js",
-    "build:check": "node assemble.js && node check.js"
+    "build:check": "node assemble.js && node check.js",
+    "test": "node test/test_harness.js"
   },
   "private": true
 }

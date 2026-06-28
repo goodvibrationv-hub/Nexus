@@ -498,9 +498,17 @@ function showCard(){
   $('fcSkill').textContent=D.SKILLS[c.skill].name;
   $('fcQ').textContent=c.stmt;
   const node=D.SKILLS[c.skill].nodes.find(n=>n.id===c.node);
+  const ctype=c.type||'tf';
   const figEl=$('fcFig');
-  if(node&&node.fig&&D.FIG[node.fig]){ figEl.innerHTML=D.FIG[node.fig]; figEl.classList.add('has-fig'); }
-  else{ figEl.innerHTML=''; figEl.classList.remove('has-fig'); }
+  const hasFig=node&&node.fig&&D.FIG[node.fig];
+  figEl.innerHTML=hasFig?D.FIG[node.fig]:'';
+  /* sur rappel/cloze, l'illustration du nœud ne s'affiche qu'après révélation (pas d'indice) */
+  const figLeak=(ctype==='recall'||ctype==='cloze');
+  if(hasFig&&!figLeak) figEl.classList.add('has-fig'); else figEl.classList.remove('has-fig');
+  /* image base64 (double codage) : masquée par défaut, révélée après réponse — paramétrable via imageUpfront */
+  const imgEl=$('fcImage');
+  if(c.image) imgEl.src=c.image; else imgEl.removeAttribute('src');
+  imgEl.style.display=(c.image&&c.imageUpfront===true)?'block':'none';
   /* reset commun aux deux types */
   $('fcVerdict').className='fc-verdict'; $('fcVerdict').textContent='';
   $('fcA').classList.remove('show'); $('fcA').textContent='';
@@ -510,7 +518,6 @@ function showCard(){
   $('fcReveal').style.display='none';
   $('fcNext').style.display='none';
   revRevealed=false;
-  const ctype=c.type||'tf';
   if(ctype==='recall'||ctype==='cloze'){
     if(ctype==='cloze') $('fcQ').innerHTML=renderCloze(c.stmt, c.answers||[], false);
     $('fcChoice').style.display='none';
@@ -522,6 +529,12 @@ function showCard(){
 }
 /* élaboration : question de compréhension révélée après la réponse, sans note FSRS distincte */
 function showElab(c){ if(c&&c.elaboration){ $('fcElabTxt').textContent=c.elaboration; $('fcElab').classList.add('show'); } }
+/* double codage : révèle l'illustration du nœud et l'image base64 après la réponse (jamais d'indice avant) */
+function revealVisuals(c){
+  const node=D.SKILLS[c.skill].nodes.find(n=>n.id===c.node);
+  if(node&&node.fig&&D.FIG[node.fig]) $('fcFig').classList.add('has-fig');
+  if(c.image){ $('fcImage').src=c.image; $('fcImage').style.display='block'; }
+}
 $('fcChoice').querySelectorAll('.vf').forEach(btn=>btn.onclick=()=>{
   if(revRevealed) return;
   revRevealed=true;
@@ -534,7 +547,7 @@ $('fcChoice').querySelectorAll('.vf').forEach(btn=>btn.onclick=()=>{
   v.textContent=correct?'✓ Correct':('✗ Incorrect — réponse : '+(c.truth?'Vrai':'Faux'));
   v.className='fc-verdict show '+(correct?'right':'wrong');
   $('fcA').textContent=c.explain||''; $('fcA').classList.add('show');
-  showElab(c);
+  showElab(c); revealVisuals(c);
   reviewCard(c.id, correct?3:1);
   revStats++;
   $('fcNext').style.display='block';
@@ -548,7 +561,7 @@ $('fcReveal').onclick=()=>{
   if((c.type||'tf')==='cloze'){ $('fcQ').innerHTML=renderCloze(c.stmt, c.answers||[], true); }
   else{ $('fcAnswer').textContent=c.answer||''; $('fcAnswer').classList.add('show'); }
   if(c.explain){ $('fcA').textContent=c.explain; $('fcA').classList.add('show'); }
-  showElab(c);
+  showElab(c); revealVisuals(c);
   $('fcGrades').style.display='grid';
 };
 $('fcGrades').querySelectorAll('.grade').forEach(btn=>btn.onclick=()=>{

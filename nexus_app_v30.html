@@ -1783,6 +1783,23 @@ function reviewCard(id,g){
 }
 function isDue(id){ const st=cardState(id); return !st || st.due<=Date.now(); }
 function dueCards(skill){ return window.NEXUS_CARDS.filter(c=>(!skill||c.skill===skill)&&isDue(c.id)); }
+/* Entrelacement (Bloc 4) : réordonne UNIQUEMENT l'affichage. La priorité FSRS prime —
+   on regroupe par palier de retard (jours entiers, plus urgent d'abord), puis on alterne
+   les domaines à l'intérieur d'un même palier. Une carte plus en retard n'est jamais
+   repoussée derrière une moins en retard. Ne touche ni à la sélection ni aux échéances. */
+function overdueTier(c){ const st=cardState(c.id); if(!st) return 0; return Math.max(0,Math.floor((Date.now()-st.due)/DAY)); }
+function interleave(cards){
+  const tiers=new Map();
+  cards.forEach(c=>{ const t=overdueTier(c); (tiers.get(t)||tiers.set(t,[]).get(t)).push(c); });
+  const out=[];
+  [...tiers.keys()].sort((a,b)=>b-a).forEach(t=>{           // paliers : plus en retard d'abord
+    const bySkill=new Map();
+    tiers.get(t).forEach(c=>{ (bySkill.get(c.skill)||bySkill.set(c.skill,[]).get(c.skill)).push(c); });
+    const qs=[...bySkill.values()]; let left=tiers.get(t).length, i=0;
+    while(left>0){ const q=qs[i%qs.length]; if(q.length){ out.push(q.shift()); left--; } i++; } // round-robin domaines
+  });
+  return out;
+}
 
 function renderRevise(){
   $('reviseHome').style.display='block'; $('reviseSession').style.display='none';
@@ -1803,7 +1820,7 @@ function renderRevise(){
 }
 let revQueue=[], revIndex=0, revStats=0, revRevealed=false;
 function startSession(skill){
-  revQueue=dueCards(skill); revIndex=0; revStats=0;
+  revQueue=interleave(dueCards(skill)); revIndex=0; revStats=0;
   if(!revQueue.length) return;
   $('reviseHome').style.display='none'; $('reviseSession').style.display='block';
   $('revDone').style.display='none'; $('flashcard').style.display='flex'; showCard();

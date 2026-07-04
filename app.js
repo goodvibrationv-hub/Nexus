@@ -12,11 +12,11 @@ const NAV_IC={
 };
 
 /* ====== persistent store (localStorage + fallback) ====== */
-const STORE={ horses:[], tasks:[], mastered:{} };
+const STORE={ horses:[], tasks:[], mastered:{}, hardMode:false };
 function loadStore(){
   try{
     const raw=localStorage.getItem('nexus_stable');
-    if(raw){ const d=JSON.parse(raw); STORE.horses=d.horses||[]; STORE.tasks=d.tasks||[]; STORE.mastered=d.mastered||{}; STORE.srs=d.srs||{}; }
+    if(raw){ const d=JSON.parse(raw); STORE.horses=d.horses||[]; STORE.tasks=d.tasks||[]; STORE.mastered=d.mastered||{}; STORE.srs=d.srs||{}; STORE.hardMode=d.hardMode||false; }
   }catch(e){ /* mémoire seule */ }
   Object.keys(D.SKILLS).forEach(k=>{ if(!STORE.mastered[k]) STORE.mastered[k]=[]; });
 }
@@ -530,6 +530,7 @@ function renderRevise(){
   $('startRevise').textContent=due.length?'Commencer la révision ('+due.length+')':'Tout est à jour ✓';
   $('startRevise').disabled=!due.length; $('startRevise').style.opacity=due.length?'1':'.5';
   ['modeEclair','modePioche','modeSafety'].forEach(id=>{ const b=$(id); if(b){ b.disabled=!due.length; b.style.opacity=due.length?'1':'.45'; } });
+  if($('hardToggle')){ $('hardToggle').checked=!!STORE.hardMode; $('hardToggle').onchange=()=>{ STORE.hardMode=$('hardToggle').checked; saveStore(); }; }
   const list=$('reviseList'); list.innerHTML='';
   Object.entries(D.SKILLS).forEach(([k,s])=>{
     const total=window.NEXUS_CARDS.filter(c=>c.skill===k).length;
@@ -579,19 +580,20 @@ function showCard(){
   const figEl=$('fcFig');
   const hasFig=node&&node.fig&&D.FIG[node.fig];
   figEl.innerHTML=hasFig?D.FIG[node.fig]:'';
-  /* sur rappel/cloze, l'illustration du nœud ne s'affiche qu'après révélation (pas d'indice) */
-  const figLeak=(ctype==='recall'||ctype==='cloze');
+  /* sur rappel/cloze — et en Mode difficile sur tout — l'illustration ne s'affiche pas comme indice */
+  const figLeak=(ctype==='recall'||ctype==='cloze')||STORE.hardMode;
   if(hasFig&&!figLeak) figEl.classList.add('has-fig'); else figEl.classList.remove('has-fig');
-  /* image base64 (double codage) : masquée par défaut, révélée après réponse — paramétrable via imageUpfront */
+  /* image base64 (double codage) : masquée par défaut, révélée après réponse — jamais en Mode difficile en amont */
   const imgEl=$('fcImage');
   if(c.image) imgEl.src=c.image; else imgEl.removeAttribute('src');
-  imgEl.style.display=(c.image&&c.imageUpfront===true)?'block':'none';
+  imgEl.style.display=(c.image&&c.imageUpfront===true&&!STORE.hardMode)?'block':'none';
   /* reset commun aux deux types */
   $('fcVerdict').className='fc-verdict'; $('fcVerdict').textContent='';
   $('fcA').classList.remove('show'); $('fcA').textContent='';
   $('fcAnswer').classList.remove('show'); $('fcAnswer').textContent='';
   $('fcElab').classList.remove('show'); $('fcElabTxt').textContent='';
   $('fcGrades').style.display='none';
+  if($('fcConf')) $('fcConf').style.display='none';
   $('fcReveal').style.display='none';
   $('fcNext').style.display='none';
   revRevealed=false;
@@ -608,6 +610,7 @@ function showCard(){
 function showElab(c){ if(c&&c.elaboration){ $('fcElabTxt').textContent=c.elaboration; $('fcElab').classList.add('show'); } }
 /* double codage : révèle l'illustration du nœud et l'image base64 après la réponse (jamais d'indice avant) */
 function revealVisuals(c){
+  if(STORE.hardMode) return;   // Mode difficile : aucune aide visuelle, même après réponse
   const node=D.SKILLS[c.skill].nodes.find(n=>n.id===c.node);
   if(node&&node.fig&&D.FIG[node.fig]) $('fcFig').classList.add('has-fig');
   if(c.image){ $('fcImage').src=c.image; $('fcImage').style.display='block'; }
@@ -625,8 +628,23 @@ $('fcChoice').querySelectorAll('.vf').forEach(btn=>btn.onclick=()=>{
   v.className='fc-verdict show '+(correct?'right':'wrong');
   $('fcA').textContent=c.explain||''; $('fcA').classList.add('show');
   showElab(c); revealVisuals(c);
-  reviewCard(c.id, correct?3:1);
-  revStats++;
+  if(STORE.hardMode && $('fcConf')){
+    /* Mode difficile : pas de note automatique — le pilote déclare sa confiance (anti-devinette). */
+    pendingCorrect=correct;
+    $('fcConf').style.display='grid';
+  } else {
+    reviewCard(c.id, correct?3:1);
+    revStats++;
+    $('fcNext').style.display='block';
+  }
+});
+/* Mode difficile — confiance après un vrai/faux : une bonne réponse « au feeling » revient plus tôt. */
+let pendingCorrect=false;
+if($('fcConf')) $('fcConf').querySelectorAll('.conf').forEach(btn=>btn.onclick=()=>{
+  const c=revQueue[revIndex]; const sure=btn.dataset.sure==='1';
+  const g = !pendingCorrect ? 1 : (sure ? 3 : 2);   // faux→Again ; juste+sûr→Good ; juste+feeling→Hard
+  reviewCard(c.id, g); revStats++;
+  $('fcConf').style.display='none';
   $('fcNext').style.display='block';
 });
 /* rappel libre : révéler la réponse attendue, puis auto-évaluation mappée FSRS */

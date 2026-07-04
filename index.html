@@ -1720,7 +1720,7 @@ function openCourse(k,n){
 function questionsFor(nodeId){ return window.NEXUS_CARDS.filter(c=>c.node===nodeId); }
 function renderCourseFoot(k,n){
   const foot=$('courseFoot'); const done=mastered[k].has(n.id);
-  const pool=questionsFor(n.id); const nb=Math.min(5,pool.length);
+  const tfPool=questionsFor(n.id).filter(c=>(c.type||'tf')==='tf'); const nb=Math.min(TEST_LEN,tfPool.length);
   foot.innerHTML='';
   if(done){
     const ok=document.createElement('div'); ok.className='course-acquired'; ok.innerHTML='<span>✓</span> Cours validé';

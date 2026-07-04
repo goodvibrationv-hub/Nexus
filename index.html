@@ -264,6 +264,15 @@
   .fc-grades{margin-top:16px; display:grid; grid-template-columns:repeat(2,1fr); gap:9px}
   .fc-grades .grade{padding:13px; border-radius:9px; border:1.5px solid var(--line2); background:var(--surf); color:var(--mut); font:inherit; font-weight:600; font-size:14px; cursor:pointer; transition:.15s}
   .fc-grades .grade:hover{border-color:var(--forest); color:var(--forest)}
+  .fc-conf{margin-top:16px; display:grid; grid-template-columns:1fr 1fr; gap:9px}
+  .fc-conf .conf{padding:13px; border-radius:9px; border:1.5px solid var(--line2); background:var(--surf); font:inherit; font-weight:600; font-size:14px; cursor:pointer; transition:.15s}
+  .fc-conf .conf.sure{color:var(--sage)} .fc-conf .conf.sure:hover{border-color:var(--sage)}
+  .fc-conf .conf.feeling{color:var(--terra)} .fc-conf .conf.feeling:hover{border-color:var(--terra)}
+  .hardtoggle{display:flex; align-items:center; gap:11px; padding:12px 14px; margin-bottom:18px; border:1px solid var(--line); border-radius:12px; background:var(--surf); cursor:pointer}
+  .hardtoggle input{width:20px; height:20px; accent-color:var(--terra); flex:none; cursor:pointer}
+  .hardtoggle .ht-txt{display:flex; flex-direction:column; line-height:1.3}
+  .hardtoggle .ht-txt b{font-size:14.5px}
+  .hardtoggle .ht-d{font-family:'JetBrains Mono',monospace; font-size:10.5px; color:var(--mut)}
   .cloze-in{display:inline-block; min-width:64px; width:auto; border:none; border-bottom:2px solid var(--line2); background:transparent; font:inherit; color:var(--ink); padding:0 4px; margin:0 1px}
   .cloze-in:focus{outline:none; border-bottom-color:var(--forest)}
   .cloze-fill{font-weight:700; color:var(--forest-d); border-bottom:2px solid var(--forest); padding:0 3px}
@@ -383,7 +392,8 @@
     <p class="intro">Fiches de rappel actif, planifiées par répétition espacée.</p>
     <div id="reviseHome">
       <div class="totalcard"><div class="big" id="dueCount">0</div><div class="lbl">fiches à revoir aujourd'hui</div></div>
-      <button class="doneBtn" id="startRevise" style="margin-bottom:18px">Commencer la révision</button>
+      <button class="doneBtn" id="startRevise" style="margin-bottom:14px">Commencer la révision</button>
+      <label class="hardtoggle"><input type="checkbox" id="hardToggle"><span class="ht-txt"><b>Mode difficile</b><span class="ht-d">aides masquées · anti-devinette</span></span></label>
       <div class="sectlabel">Autres façons de réviser</div>
       <div class="rev-modes" id="reviseModes">
         <button class="rev-mode" id="modeEclair"><span class="rm-ic">⚡</span><span class="rm-t">Mode éclair</span><span class="rm-d">série courte</span></button>
@@ -414,6 +424,10 @@
           <button class="grade" data-g="2">Difficile</button>
           <button class="grade" data-g="3">Correct</button>
           <button class="grade" data-g="4">Facile</button>
+        </div>
+        <div class="fc-conf" id="fcConf" style="display:none">
+          <button class="conf sure" data-sure="1">Je maîtrisais</button>
+          <button class="conf feeling" data-sure="0">Au feeling</button>
         </div>
         <button class="fc-reveal" id="fcNext" style="display:none">Fiche suivante</button>
       </div>
@@ -1640,11 +1654,11 @@ const NAV_IC={
 };
 
 /* ====== persistent store (localStorage + fallback) ====== */
-const STORE={ horses:[], tasks:[], mastered:{} };
+const STORE={ horses:[], tasks:[], mastered:{}, hardMode:false };
 function loadStore(){
   try{
     const raw=localStorage.getItem('nexus_stable');
-    if(raw){ const d=JSON.parse(raw); STORE.horses=d.horses||[]; STORE.tasks=d.tasks||[]; STORE.mastered=d.mastered||{}; STORE.srs=d.srs||{}; }
+    if(raw){ const d=JSON.parse(raw); STORE.horses=d.horses||[]; STORE.tasks=d.tasks||[]; STORE.mastered=d.mastered||{}; STORE.srs=d.srs||{}; STORE.hardMode=d.hardMode||false; }
   }catch(e){ /* mémoire seule */ }
   Object.keys(D.SKILLS).forEach(k=>{ if(!STORE.mastered[k]) STORE.mastered[k]=[]; });
 }
@@ -2158,6 +2172,7 @@ function renderRevise(){
   $('startRevise').textContent=due.length?'Commencer la révision ('+due.length+')':'Tout est à jour ✓';
   $('startRevise').disabled=!due.length; $('startRevise').style.opacity=due.length?'1':'.5';
   ['modeEclair','modePioche','modeSafety'].forEach(id=>{ const b=$(id); if(b){ b.disabled=!due.length; b.style.opacity=due.length?'1':'.45'; } });
+  if($('hardToggle')){ $('hardToggle').checked=!!STORE.hardMode; $('hardToggle').onchange=()=>{ STORE.hardMode=$('hardToggle').checked; saveStore(); }; }
   const list=$('reviseList'); list.innerHTML='';
   Object.entries(D.SKILLS).forEach(([k,s])=>{
     const total=window.NEXUS_CARDS.filter(c=>c.skill===k).length;
@@ -2207,19 +2222,20 @@ function showCard(){
   const figEl=$('fcFig');
   const hasFig=node&&node.fig&&D.FIG[node.fig];
   figEl.innerHTML=hasFig?D.FIG[node.fig]:'';
-  /* sur rappel/cloze, l'illustration du nœud ne s'affiche qu'après révélation (pas d'indice) */
-  const figLeak=(ctype==='recall'||ctype==='cloze');
+  /* sur rappel/cloze — et en Mode difficile sur tout — l'illustration ne s'affiche pas comme indice */
+  const figLeak=(ctype==='recall'||ctype==='cloze')||STORE.hardMode;
   if(hasFig&&!figLeak) figEl.classList.add('has-fig'); else figEl.classList.remove('has-fig');
-  /* image base64 (double codage) : masquée par défaut, révélée après réponse — paramétrable via imageUpfront */
+  /* image base64 (double codage) : masquée par défaut, révélée après réponse — jamais en Mode difficile en amont */
   const imgEl=$('fcImage');
   if(c.image) imgEl.src=c.image; else imgEl.removeAttribute('src');
-  imgEl.style.display=(c.image&&c.imageUpfront===true)?'block':'none';
+  imgEl.style.display=(c.image&&c.imageUpfront===true&&!STORE.hardMode)?'block':'none';
   /* reset commun aux deux types */
   $('fcVerdict').className='fc-verdict'; $('fcVerdict').textContent='';
   $('fcA').classList.remove('show'); $('fcA').textContent='';
   $('fcAnswer').classList.remove('show'); $('fcAnswer').textContent='';
   $('fcElab').classList.remove('show'); $('fcElabTxt').textContent='';
   $('fcGrades').style.display='none';
+  if($('fcConf')) $('fcConf').style.display='none';
   $('fcReveal').style.display='none';
   $('fcNext').style.display='none';
   revRevealed=false;
@@ -2236,6 +2252,7 @@ function showCard(){
 function showElab(c){ if(c&&c.elaboration){ $('fcElabTxt').textContent=c.elaboration; $('fcElab').classList.add('show'); } }
 /* double codage : révèle l'illustration du nœud et l'image base64 après la réponse (jamais d'indice avant) */
 function revealVisuals(c){
+  if(STORE.hardMode) return;   // Mode difficile : aucune aide visuelle, même après réponse
   const node=D.SKILLS[c.skill].nodes.find(n=>n.id===c.node);
   if(node&&node.fig&&D.FIG[node.fig]) $('fcFig').classList.add('has-fig');
   if(c.image){ $('fcImage').src=c.image; $('fcImage').style.display='block'; }
@@ -2253,8 +2270,23 @@ $('fcChoice').querySelectorAll('.vf').forEach(btn=>btn.onclick=()=>{
   v.className='fc-verdict show '+(correct?'right':'wrong');
   $('fcA').textContent=c.explain||''; $('fcA').classList.add('show');
   showElab(c); revealVisuals(c);
-  reviewCard(c.id, correct?3:1);
-  revStats++;
+  if(STORE.hardMode && $('fcConf')){
+    /* Mode difficile : pas de note automatique — le pilote déclare sa confiance (anti-devinette). */
+    pendingCorrect=correct;
+    $('fcConf').style.display='grid';
+  } else {
+    reviewCard(c.id, correct?3:1);
+    revStats++;
+    $('fcNext').style.display='block';
+  }
+});
+/* Mode difficile — confiance après un vrai/faux : une bonne réponse « au feeling » revient plus tôt. */
+let pendingCorrect=false;
+if($('fcConf')) $('fcConf').querySelectorAll('.conf').forEach(btn=>btn.onclick=()=>{
+  const c=revQueue[revIndex]; const sure=btn.dataset.sure==='1';
+  const g = !pendingCorrect ? 1 : (sure ? 3 : 2);   // faux→Again ; juste+sûr→Good ; juste+feeling→Hard
+  reviewCard(c.id, g); revStats++;
+  $('fcConf').style.display='none';
   $('fcNext').style.display='block';
 });
 /* rappel libre : révéler la réponse attendue, puis auto-évaluation mappée FSRS */

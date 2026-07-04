@@ -134,14 +134,19 @@ function renderCourseFoot(k,n){
   }
 }
 /* ===== moteur de test ===== */
-let testK=null, testN=null, testQueue=[], testIdx=0, testErrors=0, testRevealed=false;
+/* Test de validation durci : 15 questions vrai/faux tirées à neuf dans le nœud,
+   conditions d'examen (aucune correction avant la fin), sans-faute requis pour valider,
+   puis bilan ciblé listant les affirmations ratées. Indépendant du moteur FSRS. */
+const TEST_LEN=15;
+let testK=null, testN=null, testQueue=[], testIdx=0, testAnswers=[], testRevealed=false;
 function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
 function startTest(k,n){
   testK=k; testN=n;
   const pool=questionsFor(n.id).filter(c=>(c.type||'tf')==='tf');
-  testQueue=shuffle(pool).slice(0,5);
-  testIdx=0; testErrors=0;
+  testQueue=shuffle(pool).slice(0,Math.min(TEST_LEN,pool.length));
+  testIdx=0; testAnswers=[];
   $('testTitle').textContent=n.t;
+  $('trReview').innerHTML='';
   $('testResult').style.display='none'; $('testCard').style.display='flex';
   showTestCard();
   show('scTest',{back:{lbl:'cours',fn:()=>openCourse(k,n)},accent:D.SKILLS[k].color,nav:'domains'});
@@ -153,37 +158,44 @@ function showTestCard(){
   $('tcQ').textContent=c.stmt;
   $('tcChoice').style.display='grid';
   $('tcChoice').querySelectorAll('.vf').forEach(b=>{ b.disabled=false; b.classList.remove('picked'); });
-  $('tcVerdict').className='fc-verdict'; $('tcVerdict').textContent='';
-  $('tcA').classList.remove('show'); $('tcA').textContent='';
+  $('tcPicked').textContent='';
   $('tcNext').style.display='none';
   testRevealed=false;
 }
+/* Conditions d'examen : on enregistre la réponse SANS révéler si elle est juste. */
 $('tcChoice').querySelectorAll('.vf').forEach(btn=>btn.onclick=()=>{
   if(testRevealed) return; testRevealed=true;
   const c=testQueue[testIdx]; const answer=btn.dataset.v==='true'; const correct=answer===c.truth;
   $('tcChoice').querySelectorAll('.vf').forEach(b=>b.disabled=true); btn.classList.add('picked');
-  const v=$('tcVerdict');
-  v.textContent=correct?'✓ Correct':'✗ Incorrect — réponse : '+(c.truth?'Vrai':'Faux');
-  v.className='fc-verdict show '+(correct?'right':'wrong');
-  if(!correct) testErrors++;
-  $('tcA').textContent=c.explain; $('tcA').classList.add('show');
+  testAnswers.push({c:c, picked:answer, correct:correct});
+  $('tcPicked').textContent='Réponse enregistrée · '+(answer?'Vrai':'Faux');
+  const last=(testIdx+1>=testQueue.length);
+  $('tcNext').textContent=last?'Voir le résultat':'Question suivante';
   $('tcNext').style.display='block';
 });
 $('tcNext').onclick=()=>{ testIdx++; showTestCard(); };
 function endTest(){
   $('testCard').style.display='none'; $('testResult').style.display='block';
-  const passed=testErrors===0;
+  const misses=testAnswers.filter(a=>!a.correct);
+  const passed=misses.length===0;
+  const total=testQueue.length;
+  const rv=$('trReview'); rv.innerHTML='';
   $('trIc').textContent=passed?'🎉':'✗';
   $('trIc').style.color=passed?'var(--sage)':'var(--terra)';
   if(passed){
     $('trTitle').textContent='Cours validé !';
-    $('trMsg').textContent='Sans-faute. Le cours est acquis et la suite se débloque.';
+    $('trMsg').textContent='Sans-faute sur '+total+' questions. Le cours est acquis et la suite se débloque.';
     mastered[testK].add(testN.id); persistMastered();
     $('trAction').textContent='Continuer'; $('trAction').className='doneBtn';
     $('trAction').onclick=()=>openDomain(testK);
   } else {
     $('trTitle').textContent='Pas encore';
-    $('trMsg').textContent=testErrors+' erreur'+(testErrors>1?'s':'')+' sur '+testQueue.length+'. Il faut un sans-faute pour valider — relis le cours et réessaie.';
+    $('trMsg').textContent=misses.length+' erreur'+(misses.length>1?'s':'')+' sur '+total+'. Il faut un sans-faute pour valider. À revoir :';
+    misses.forEach(a=>{
+      const item=document.createElement('div'); item.className='test-miss';
+      item.innerHTML='<div class="tm-q">'+esc(a.c.stmt)+'</div><div class="tm-a">Bonne réponse : '+(a.c.truth?'Vrai':'Faux')+'</div><div class="tm-e">'+esc(a.c.explain||'')+'</div>';
+      rv.appendChild(item);
+    });
     $('trAction').textContent='Réessayer le test'; $('trAction').className='doneBtn';
     $('trAction').onclick=()=>startTest(testK,testN);
   }

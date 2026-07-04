@@ -1,7 +1,7 @@
 {
   "name": "nexus-learn",
   "version": "1.0.0",
-  "nexusVersion": 32,
+  "nexusVersion": 33,
   "description": "PWA autonome d'apprentissage de savoir-faire (offline, mono-fichier HTML).",
   "scripts": {
     "build": "node assemble.js",

@@ -474,6 +474,7 @@ function renderRevise(){
   $('dueCount').textContent=due.length;
   $('startRevise').textContent=due.length?'Commencer la révision ('+due.length+')':'Tout est à jour ✓';
   $('startRevise').disabled=!due.length; $('startRevise').style.opacity=due.length?'1':'.5';
+  ['modeEclair','modePioche','modeSafety'].forEach(id=>{ const b=$(id); if(b){ b.disabled=!due.length; b.style.opacity=due.length?'1':'.45'; } });
   const list=$('reviseList'); list.innerHTML='';
   Object.entries(D.SKILLS).forEach(([k,s])=>{
     const total=window.NEXUS_CARDS.filter(c=>c.skill===k).length;
@@ -486,12 +487,21 @@ function renderRevise(){
   });
 }
 let revQueue=[], revIndex=0, revStats=0, revRevealed=false;
-function startSession(skill){
-  revQueue=interleave(dueCards(skill)); revIndex=0; revStats=0;
-  if(!revQueue.length) return;
+function startQueue(cards){
+  if(!cards||!cards.length) return;
+  revQueue=cards; revIndex=0; revStats=0;
   $('reviseHome').style.display='none'; $('reviseSession').style.display='block';
   $('revDone').style.display='none'; $('flashcard').style.display='flex'; showCard();
 }
+function startSession(skill){ startQueue(interleave(dueCards(skill))); }
+/* Modes de session récréatifs — opèrent TOUJOURS sur les cartes dues, donc le planning
+   FSRS reste respecté ; seuls le tri et la taille de la file changent. */
+const SAFETY_NODES=new Set();
+Object.values(D.SKILLS).forEach(s=>s.nodes.forEach(n=>{ if(n.kind==='safety') SAFETY_NODES.add(n.id); }));
+function daySeed(){ const s=new Date().toISOString().slice(0,10); let h=2166136261; for(let i=0;i<s.length;i++){ h=Math.imul(h^s.charCodeAt(i),16777619); } return h>>>0; }
+function seededShuffle(arr, seed){ const a=arr.slice(); let s=seed>>>0;
+  const rnd=()=>{ s=(s+0x6D2B79F5)>>>0; let t=Math.imul(s^(s>>>15),1|s); t=(t+Math.imul(t^(t>>>7),61|t))^t; return ((t^(t>>>14))>>>0)/4294967296; };
+  for(let i=a.length-1;i>0;i--){ const j=Math.floor(rnd()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
 /* texte à trous : chaque ___ devient un champ de saisie (non corrigé), ou la réponse une fois révélé */
 function renderCloze(stmt, answers, revealed){
   const parts=String(stmt).split('___');
@@ -586,11 +596,37 @@ $('fcGrades').querySelectorAll('.grade').forEach(btn=>btn.onclick=()=>{
 });
 $('fcNext').onclick=()=>{ revIndex++; showCard(); };
 
+/* « Le savais-tu ? » — anecdotes de fin de session (curiosité, ludique et calme). */
+const FUNFACTS={
+  escalade:["Le nœud de huit tient parce qu'il se serre sur lui-même : plus la corde tire, plus il verrouille.","En tête, la dureté d'une chute se mesure au « facteur de chute » — le rapport hauteur chutée sur longueur de corde qui l'absorbe, pas la hauteur seule.","La magnésie n'augmente pas l'adhérence : elle assèche la transpiration qui, elle, fait glisser."],
+  meca:["Trop serré, un boulon s'allonge et casse : la clé dynamométrique existe pour doser cette tension, pas seulement la force.","Un moteur thermique ne transforme qu'environ 30 à 40 % de l'énergie du carburant en mouvement ; le reste part surtout en chaleur.","Les freins convertissent le mouvement en chaleur — d'où des disques brûlants après une longue descente."],
+  survie:["La règle des 3 : environ 3 minutes sans air, 3 jours sans eau, 3 semaines sans nourriture. D'où l'ordre des priorités.","L'hypothermie tue plus souvent que la faim : rester au sec et coupé du vent prime sur trouver à manger.","Une eau claire n'est pas une eau potable : la plupart des micro-organismes dangereux sont invisibles."],
+  apiculture:["Une abeille ouvrière ne produit qu'environ un douzième de cuillère à café de miel dans toute sa vie.","La danse en huit de l'abeille indique aux autres la direction ET la distance d'une source de nectar.","La reine peut pondre jusqu'à 2000 œufs par jour, soit davantage que son propre poids."],
+  bois:["Le bois « travaille » surtout en largeur : une planche gonfle et rétrécit avec l'humidité, presque pas en longueur.","Les scies japonaises coupent en tirant, pas en poussant : la lame reste tendue et le trait est plus fin.","Le sens du fil décide de tout : raboter à contre-fil arrache les fibres au lieu de les trancher."],
+  cheval:["Le cheval sommeille debout grâce à un blocage de ses articulations, mais doit se coucher pour le sommeil paradoxal.","Ses yeux latéraux lui offrent près de 350° de champ visuel, avec deux angles morts : pile devant le nez et juste derrière lui.","On aborde un cheval par l'épaule : ni de face, ni par l'arrière, pour rester dans son champ de vision."],
+  guitare:["Ce n'est pas la force mais la tension qui fixe la note d'une corde : trop tendue, elle casse au lieu de monter indéfiniment.","Les frettes suivent un rapport constant : chaque case divise la longueur vibrante par le même facteur, environ 1,059.","Pincer plus fort ne monte pas dans les aigus : la corde sonne plus fort, pas plus haut."],
+  soudure:["Souder, c'est fondre les pièces elles-mêmes ; braser, c'est les assembler avec un métal d'apport qui fond plus bas, sans les fondre.","L'arc de soudage dépasse 3000 °C et émet des UV : un « coup d'arc » brûle les yeux comme un coup de soleil.","L'aluminium se soude mal car sa couche d'oxyde fond vers 2000 °C alors que le métal dessous fond vers 660 °C."],
+  drone:["En mode Acro, le drone n'a aucune notion d'horizontale : il obéit à des vitesses de rotation et ne se remet jamais à plat seul.","La vidéo analogique, moins belle que le numérique, reste prisée en course : sa latence quasi nulle laisse réagir à pleine vitesse.","Une LiPo tire sa puissance de sa chimie très dense — la même densité qui la rend dangereuse en cas de choc ou de surcharge."],
+  camdrone:["Le stationnaire parfait d'un drone-caméra vient du GPS combiné à des caméras vers le sol qui « voient » qu'il ne bouge pas.","Règle du 180° : en vidéo, on cale la vitesse d'obturation au double de la cadence d'images pour un flou de mouvement naturel.","Les capteurs d'obstacles ne voient ni les câbles fins ni le verre : la plupart des drones perdus le sont par excès de confiance."]
+};
+function pickFact(domains){
+  const pool=[]; (domains||[]).forEach(d=>{ (FUNFACTS[d]||[]).forEach(f=>pool.push(f)); });
+  if(!pool.length) Object.values(FUNFACTS).forEach(a=>a.forEach(f=>pool.push(f)));
+  return pool.length?pool[Math.floor(Math.random()*pool.length)]:'';
+}
 function endSession(){
   $('flashcard').style.display='none'; $('revDone').style.display='block';
   $('revDoneMsg').textContent=revStats+' fiche'+(revStats>1?'s':'')+' révisée'+(revStats>1?'s':'')+'. Elles reviendront au bon moment.';
+  const domains=[...new Set(revQueue.map(c=>c.skill))];
+  const fact=pickFact(domains);
+  if(fact){ $('revFactTxt').textContent=fact; $('revFact').style.display='block'; }
+  else $('revFact').style.display='none';
 }
 $('revBackBtn').onclick=()=>renderRevise();
 $('startRevise').onclick=()=>{ if(dueCards(null).length) startSession(null); };
+/* Modes récréatifs (sur cartes dues → planning FSRS intact) */
+if($('modeEclair')) $('modeEclair').onclick=()=>{ startQueue(interleave(dueCards(null)).slice(0,7)); };
+if($('modePioche')) $('modePioche').onclick=()=>{ startQueue(seededShuffle(dueCards(null), daySeed()).slice(0,12)); };
+if($('modeSafety')) $('modeSafety').onclick=()=>{ startQueue(interleave(dueCards(null).filter(c=>SAFETY_NODES.has(c.node)))); };
 
 goLanding();

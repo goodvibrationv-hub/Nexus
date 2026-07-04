@@ -134,6 +134,16 @@
   .test-miss .tm-q{font-size:14.5px; color:var(--ink); line-height:1.5}
   .test-miss .tm-a{font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--terra); margin:6px 0 4px}
   .test-miss .tm-e{font-size:13px; color:var(--mut); line-height:1.5}
+  .rev-modes{display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:22px}
+  .rev-mode{display:flex; flex-direction:column; align-items:center; gap:3px; padding:14px 6px; background:var(--surf); border:1px solid var(--line); border-radius:12px; cursor:pointer; font:inherit; color:var(--ink); text-align:center; transition:border-color .15s, transform .1s}
+  .rev-mode:hover{border-color:var(--terra)}
+  .rev-mode:active{transform:scale(.97)}
+  .rev-mode:disabled{opacity:.45; cursor:default}
+  .rev-mode .rm-ic{font-size:22px; line-height:1}
+  .rev-mode .rm-t{font-family:'Fraunces',serif; font-size:13px; font-weight:600}
+  .rev-mode .rm-d{font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--mut)}
+  .rev-fact{text-align:left; background:var(--paper2); border-radius:12px; padding:14px 16px; margin:0 auto 18px; max-width:440px; font-size:14px; line-height:1.55; color:var(--ink)}
+  .rev-fact .rf-lbl{display:block; font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--terra); margin-bottom:5px}
   .course-locked{font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--mut); text-align:center; padding:8px 0 14px}
   .course-acquired{display:flex; align-items:center; justify-content:center; gap:8px; font-family:'JetBrains Mono',monospace; font-size:13px; color:var(--sage); margin-bottom:12px}
   .doneBtn{width:100%; padding:14px; border-radius:8px; border:1px solid var(--forest); background:var(--forest); color:var(--surf); font:inherit; font-weight:600; cursor:pointer; font-size:15px; transition:.15s}
@@ -346,6 +356,12 @@
     <div id="reviseHome">
       <div class="totalcard"><div class="big" id="dueCount">0</div><div class="lbl">fiches à revoir aujourd'hui</div></div>
       <button class="doneBtn" id="startRevise" style="margin-bottom:18px">Commencer la révision</button>
+      <div class="sectlabel">Autres façons de réviser</div>
+      <div class="rev-modes" id="reviseModes">
+        <button class="rev-mode" id="modeEclair"><span class="rm-ic">⚡</span><span class="rm-t">Mode éclair</span><span class="rm-d">série courte</span></button>
+        <button class="rev-mode" id="modePioche"><span class="rm-ic">🎲</span><span class="rm-t">Pioche du jour</span><span class="rm-d">mélange surprise</span></button>
+        <button class="rev-mode" id="modeSafety"><span class="rm-ic">🛡️</span><span class="rm-t">Spécial sécurité</span><span class="rm-d">tous domaines</span></button>
+      </div>
       <div class="sectlabel">Par domaine</div>
       <div id="reviseList"></div>
     </div>
@@ -377,6 +393,7 @@
         <div class="rev-done-ic">✓</div>
         <h3>Session terminée</h3>
         <p id="revDoneMsg"></p>
+        <div class="rev-fact" id="revFact" style="display:none"><span class="rf-lbl">Le savais-tu ?</span><span id="revFactTxt"></span></div>
         <button class="doneBtn" id="revBackBtn">Retour</button>
       </div>
     </div>

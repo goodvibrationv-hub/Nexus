@@ -202,8 +202,63 @@ function endTest(){
 }
 $('trBack').onclick=()=>openCourse(testK,testN);
 let resetArmed=false;
+/* Niveau + indicateurs (victoires/lacunes) + coaching personnalisé, à partir de
+   mastered (nœuds) et de l'état FSRS de chaque fiche. Lecture seule, aucun schéma ajouté. */
+const LEVELS=[[0,'Novice'],[0.10,'Débutant'],[0.25,'Apprenti'],[0.50,'Confirmé'],[0.75,'Avancé'],[0.95,'Expert']];
+function renderLevelSection(){
+  const now=Date.now();
+  let masteredN=0, totalN=0, dDone=0; const domPct={}, nDom=Object.keys(D.SKILLS).length;
+  for(const [k,s] of Object.entries(D.SKILLS)){
+    masteredN+=mastered[k].size; totalN+=s.nodes.length;
+    if(mastered[k].size===s.nodes.length) dDone++;
+    domPct[k]=pct(k);
+  }
+  let solide=0, fragile=0, retard=0, vue=0, reps=0, jamais=0; const domOverdue={};
+  for(const c of window.NEXUS_CARDS){
+    const st=cardState(c.id);
+    if(!st){ jamais++; continue; }
+    vue++; reps+=(st.reps||0);
+    if(st.s>=21) solide++;
+    if(st.s<10) fragile++;
+    if(st.due<=now){ retard++; domOverdue[c.skill]=(domOverdue[c.skill]||0)+1; }
+  }
+  const p=totalN?masteredN/totalN:0;
+  let li=0; for(let i=0;i<LEVELS.length;i++){ if(p>=LEVELS[i][0]) li=i; }
+  $('lvlName').textContent=LEVELS[li][1];
+  $('lvlSub').textContent=masteredN+' nœud'+(masteredN>1?'s':'')+' maîtrisé'+(masteredN>1?'s':'')+' sur '+totalN;
+  $('lvlBar').style.width=Math.round(p*100)+'%';
+  if(li<LEVELS.length-1){ const need=Math.max(1,Math.ceil(LEVELS[li+1][0]*totalN)-masteredN); $('lvlNext').textContent='Plus que '+need+' nœud'+(need>1?'s':'')+' pour « '+LEVELS[li+1][1]+' ».'; }
+  else $('lvlNext').textContent='Niveau maximum atteint — bravo.';
+  const tile=(v,l,cls)=>'<div class="ind '+cls+'"><span class="v">'+v+'</span><span class="l">'+l+'</span></div>';
+  $('winGrid').innerHTML=[
+    tile(masteredN+' / '+totalN,'nœuds maîtrisés','win'),
+    tile(dDone+' / '+nDom,'domaines complétés','win'),
+    tile(solide,'fiches solides','win'),
+    tile(reps,'révisions faites','win')
+  ].join('');
+  $('gapGrid').innerHTML=[
+    tile(totalN-masteredN,'nœuds à débloquer','gap'),
+    tile(fragile,'fiches fragiles','gap'),
+    tile(retard,'fiches en retard','gap'),
+    tile(jamais,'fiches à découvrir','gap')
+  ].join('');
+  const nameOf=k=>D.SKILLS[k].name;
+  const weakest=Object.entries(domPct).filter(([k])=>mastered[k].size<D.SKILLS[k].nodes.length).sort((a,b)=>a[1]-b[1])[0];
+  const neglected=Object.entries(domOverdue).sort((a,b)=>b[1]-a[1])[0];
+  const tips=[];
+  if(masteredN===0) tips.push('🚀 Valide un premier cours pour lancer ta progression : lis-le, puis passe le test.');
+  if(retard>0) tips.push('🔁 '+retard+' fiche'+(retard>1?'s':'')+' en retard — une session de révision les remet d’aplomb.');
+  if(neglected && neglected[1]>0) tips.push('🕒 Tu délaisses « '+nameOf(neglected[0])+' » : '+neglected[1]+' fiche'+(neglected[1]>1?'s':'')+' y attendent une révision.');
+  if(weakest) tips.push('📉 Ton domaine le plus en retrait : « '+nameOf(weakest[0])+' » ('+weakest[1]+' %). Débloque le prochain nœud pour combler l’écart.');
+  if(fragile>0) tips.push('🧠 '+fragile+' fiche'+(fragile>1?'s':'')+' encore fragile'+(fragile>1?'s':'')+' : les revoir les ancre durablement.');
+  if(solide>0) tips.push('✅ '+solide+' fiche'+(solide>1?'s':'')+' désormais solide'+(solide>1?'s':'')+' — tes révisions paient.');
+  if(dDone>0) tips.push('🏆 '+dDone+' domaine'+(dDone>1?'s':'')+' complété'+(dDone>1?'s':'')+'. Continue sur cette lancée.');
+  if(retard===0 && vue>0) tips.push('🌿 Tout est à jour côté révisions. Profites-en pour débloquer un nouveau nœud.');
+  $('proTips').innerHTML = tips.length ? tips.slice(0,4).map(t=>'<div class="tip">'+t+'</div>').join('') : '<div class="tip">Commence à apprendre pour recevoir des conseils personnalisés.</div>';
+}
 function renderProgress(){
   $('totalPc').textContent=totalPct()+'%';
+  renderLevelSection();
   if($('resetProgress')){ resetArmed=false; $('resetProgress').textContent='Réinitialiser ma progression d\'apprentissage'; $('resetProgress').classList.remove('armed'); }
   const g=$('progList'); g.innerHTML='';
   Object.entries(D.SKILLS).forEach(([k,s])=>{

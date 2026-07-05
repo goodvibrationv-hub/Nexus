@@ -16,7 +16,8 @@ const STORE={ horses:[], tasks:[], mastered:{}, hardMode:false };
 function loadStore(){
   try{
     const raw=localStorage.getItem('nexus_stable');
-    if(raw){ const d=JSON.parse(raw); STORE.horses=d.horses||[]; STORE.tasks=d.tasks||[]; STORE.mastered=d.mastered||{}; STORE.srs=d.srs||{}; STORE.hardMode=d.hardMode||false; }
+    if(raw){ const d=JSON.parse(raw); STORE.horses=d.horses||[]; STORE.tasks=d.tasks||[]; STORE.mastered=d.mastered||{}; STORE.srs=d.srs||{}; STORE.hardMode=d.hardMode||false;
+      if(d.animals) STORE.animals=d.animals; if(d.orders) STORE.orders=d.orders; if(d.stock) STORE.stock=d.stock; if(d.contacts) STORE.contacts=d.contacts; }
   }catch(e){ /* mémoire seule */ }
   Object.keys(D.SKILLS).forEach(k=>{ if(!STORE.mastered[k]) STORE.mastered[k]=[]; });
 }
@@ -50,7 +51,7 @@ function buildNav(active){
     document.body.classList.add('stable-mode');
     nav.innerHTML=
       navBtn(active,'landing',NAV_IC.home,'Accueil')+
-      navBtn(active,'stable',NAV_IC.stable,'Écuries');
+      navBtn(active,'stable',NAV_IC.stable,'Domaine');
   } else {
     document.body.classList.remove('stable-mode');
     nav.innerHTML=
@@ -65,7 +66,7 @@ function navGo(g){
   else if(g==='domains'){ mode='learn'; renderHome(); show('scHome',{back:{lbl:'accueil',fn:goLanding},nav:'domains'}); }
   else if(g==='progress'){ mode='learn'; renderProgress(); show('scProgress',{back:{lbl:'accueil',fn:goLanding},nav:'progress'}); }
   else if(g==='revise'){ mode='learn'; renderRevise(); show('scRevise',{back:{lbl:'accueil',fn:goLanding},nav:'revise'}); }
-  else if(g==='stable'){ mode='stable'; const pend=(STORE.tasks||[]).filter(t=>!t.done).length; $('optTasksCount').textContent=pend?(pend+' tâche'+(pend>1?'s':'')+' à faire — voir et ajouter.'):'Voir et ajouter les tâches du jour.'; show('scStable',{back:{lbl:'accueil',fn:goLanding},accent:'#8A5A3C',nav:'stable'}); }
+  else if(g==='stable'){ mode='stable'; const pend=(STORE.tasks||[]).filter(t=>!t.done).length; $('optTasksCount').textContent=pend?(pend+' tâche'+(pend>1?'s':'')+' à faire — voir et ajouter.'):'Voir et ajouter les tâches du jour.'; const na=(STORE.animals||[]).length; $('optEcuriesCount').textContent=na?(na+(na>1?' animaux':' animal')+' · soins et santé.'):'Ajoute tes chevaux et leurs soins.'; show('scStable',{back:{lbl:'accueil',fn:goLanding},accent:'#8A5A3C',nav:'stable'}); }
 }
 
 /* ====== landing ====== */
@@ -313,11 +314,12 @@ function renderStableMenu(){
     g.appendChild(b);
   });
 }
-function openGestion(){ mode='stable'; renderStableMenu(); show('scGestion',{back:{lbl:'écuries',fn:()=>navGo('stable')},accent:'#8A5A3C',nav:'stable'}); }
+function openGestion(){ mode='stable'; renderStableMenu(); show('scGestion',{back:{lbl:'domaine',fn:()=>navGo('stable')},accent:'#8A5A3C',nav:'stable'}); }
 $('optGestion').onclick=openGestion;
 $('optTasks').onclick=()=>{ mode='stable'; openStableSection('planning'); };
-const SECTION_TITLES={animals:'Animaux',care:'Soins / santé',orders:'Commandes de grain',planning:'Planning',stock:'Stock / matériel',contacts:'Contacts'};
-const SECTION_ADD={animals:'+ Ajouter un animal',care:'+ Ajouter un soin',orders:'+ Ajouter une commande',planning:'+ Ajouter une tâche',stock:'+ Ajouter un article',contacts:'+ Ajouter un contact'};
+$('optEcuries').onclick=()=>{ mode='stable'; openStableSection('ecuries'); };
+const SECTION_TITLES={ecuries:'Écuries',animals:'Animaux',care:'Soins / santé',orders:'Commandes de grain',planning:'Planning',stock:'Stock / matériel',contacts:'Contacts'};
+const SECTION_ADD={ecuries:'+ Ajouter un cheval',animals:'+ Ajouter un animal',care:'+ Ajouter un soin',orders:'+ Ajouter une commande',planning:'+ Ajouter une tâche',stock:'+ Ajouter un article',contacts:'+ Ajouter un contact'};
 let currentSection=null;
 function openStableSection(key){
   currentSection=key; mode='stable';
@@ -325,11 +327,35 @@ function openStableSection(key){
   $('ssAdd').textContent=SECTION_ADD[key];
   $('ssAdd').onclick=SECTION_ADD_FN[key];
   renderSection(key);
-  const backFn = key==='planning' ? (()=>navGo('stable')) : openGestion;
-  const backLbl = key==='planning' ? 'écuries' : 'gestion';
+  const toHome = (key==='planning'||key==='ecuries');   // ces sections reviennent au domaine, pas à la gestion
+  const backFn = toHome ? (()=>navGo('stable')) : openGestion;
+  const backLbl = toHome ? 'domaine' : 'gestion';
   show('scStableSection',{back:{lbl:backLbl,fn:backFn},accent:'#8A5A3C',nav:'stable'});
 }
-function renderSection(key){ ({animals:renderAnimals,care:renderCare,orders:renderOrders,planning:renderTasks,stock:renderStock,contacts:renderContacts}[key])(); }
+function renderSection(key){ ({ecuries:renderEcuries,animals:renderAnimals,care:renderCare,orders:renderOrders,planning:renderTasks,stock:renderStock,contacts:renderContacts}[key])(); }
+/* --- ÉCURIES : chevaux + leurs soins réunis --- */
+function renderEcuries(){
+  const list=$('ssList'); list.innerHTML='';
+  if(!STORE.animals.length){ list.innerHTML='<div class="empty">Aucun cheval pour l\'instant. Ajoute-en un.</div>'; return; }
+  STORE.animals.forEach(a=>{
+    const card=document.createElement('div'); card.className='horsecard';
+    const soins=(a.care||[]).slice().sort((x,y)=>(y.date||'').localeCompare(x.date||''));
+    const soinsHtml = soins.length
+      ? '<div class="ec-care">'+soins.map(c=>'<div class="ec-soin"><span class="ec-t">'+esc(c.type)+'</span><span class="ec-d">'+(c.date||'')+(c.next?' → '+c.next:'')+(c.note?' · '+esc(c.note):'')+'</span></div>').join('')+'</div>'
+      : '<div class="ec-nocare">Aucun soin enregistré.</div>';
+    card.innerHTML='<div class="hc-top"><span class="hi">'+(SP_ICON[a.species]||'🐾')+'</span><div style="flex:1"><h4>'+esc(a.name)+'</h4><div class="hmeta">'+[esc(a.species),esc(a.breed),a.age?esc(''+a.age):''].filter(Boolean).join(' · ')+'</div></div></div>'+
+      (a.notes?'<div class="hnotes">'+esc(a.notes)+'</div>':'')+
+      soinsHtml+
+      '<div class="hactions"><button class="miniBtn" data-edit="'+a.id+'">Modifier</button><button class="miniBtn" data-soin="'+a.id+'">+ Soin</button><button class="miniBtn del" data-del="'+a.id+'">Supprimer</button></div>';
+    list.appendChild(card);
+  });
+  list.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>openAnimalModal(b.dataset.edit));
+  list.querySelectorAll('[data-soin]').forEach(b=>b.onclick=()=>openCareModal(b.dataset.soin));
+  list.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{
+    if(b.dataset.armed!=='1'){ b.dataset.armed='1'; b.textContent='Confirmer ?'; setTimeout(()=>{ if(b.dataset.armed==='1'){ b.dataset.armed='0'; b.textContent='Supprimer'; } },4000); return; }
+    STORE.animals=STORE.animals.filter(x=>x.id!==b.dataset.del); saveStore(); renderSection(currentSection);
+  });
+}
 
 /* --- ANIMALS --- */
 function renderAnimals(){
@@ -425,12 +451,13 @@ $('aSave').onclick=()=>{
   const name=$('aName').value.trim(); if(!name){ $('aName').focus(); return; }
   const data={ name, species:$('aSpecies').value, breed:$('aBreed').value.trim(), age:$('aAge').value.trim(), notes:$('aNotes').value.trim() };
   if(editingAnimal){ Object.assign(editingAnimal,data); } else { STORE.animals.push({ id:'a_'+Date.now(), ...data, care:[] }); }
-  saveStore(); $('animalModal').classList.remove('open'); renderSection('animals');
+  saveStore(); $('animalModal').classList.remove('open'); renderSection(currentSection||'animals');
 };
 /* --- modals : care --- */
-function openCareModal(){
+function openCareModal(preId){
   if(!STORE.animals.length){ alert('Ajoute d\'abord un animal.'); return; }
   const sel=$('careAnimal'); sel.innerHTML=STORE.animals.map(a=>'<option value="'+a.id+'">'+(SP_ICON[a.species]||'')+' '+esc(a.name)+'</option>').join('');
+  if(preId) sel.value=preId;
   $('cType').value='Vermifuge'; $('cDate').value=new Date().toISOString().slice(0,10); $('cNext').value=''; $('cNote').value='';
   $('careModal').classList.add('open');
 }
@@ -438,7 +465,7 @@ $('cCancel').onclick=()=>$('careModal').classList.remove('open');
 $('cSave').onclick=()=>{
   const a=STORE.animals.find(x=>x.id===$('careAnimal').value); if(!a) return;
   a.care=a.care||[]; a.care.push({ id:'c_'+Date.now(), type:$('cType').value, date:$('cDate').value, next:$('cNext').value, note:$('cNote').value.trim() });
-  saveStore(); $('careModal').classList.remove('open'); renderSection('care');
+  saveStore(); $('careModal').classList.remove('open'); renderSection(currentSection||'care');
 };
 /* --- modals : order --- */
 function openOrderModal(){ $('oItem').value=''; $('oQty').value=''; $('oSupplier').value=''; $('oDate').value=new Date().toISOString().slice(0,10); $('orderModal').classList.add('open'); }

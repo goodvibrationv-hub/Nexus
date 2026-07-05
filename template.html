@@ -214,6 +214,11 @@
   .horsecard .careline{display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-top:1px solid var(--line); font-size:13px; margin-top:10px}
   .horsecard .careline:first-of-type{margin-top:12px}
   .careline .ct{font-weight:500} .careline .cd{font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--mut)}
+  .horsecard .ec-care{margin-top:10px; border-top:1px solid var(--line); padding-top:8px; display:flex; flex-direction:column; gap:6px}
+  .horsecard .ec-soin{display:flex; justify-content:space-between; align-items:baseline; gap:10px; font-size:12.5px}
+  .horsecard .ec-soin .ec-t{font-weight:600; color:var(--ink); flex:none}
+  .horsecard .ec-soin .ec-d{font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--mut); text-align:right}
+  .horsecard .ec-nocare{margin-top:10px; border-top:1px solid var(--line); padding-top:8px; font-size:12px; color:var(--mut); font-style:italic}
   .horsecard .hactions{display:flex; gap:8px; margin-top:12px}
   .miniBtn{flex:1; padding:8px; border-radius:6px; border:1px solid var(--line2); background:transparent; color:var(--mut); font:inherit; font-size:11px; font-family:'JetBrains Mono',monospace; cursor:pointer; transition:.15s}
   .miniBtn:hover{color:var(--walnut); border-color:var(--walnut)}
@@ -328,9 +333,9 @@
         <span class="go">Explorer les domaines →</span>
       </button>
       <button class="door stable" id="doorStable">
-        <span class="di">🐴</span><h2>Écuries du Freyche</h2>
+        <span class="di">🐴</span><h2>Domaine du Freyche</h2>
         <p>Tes chevaux, leurs soins et le planning, au même endroit. Sauvegardé sur ton appareil.</p>
-        <span class="go">Ouvrir l'écurie →</span>
+        <span class="go">Ouvrir le domaine →</span>
       </button>
     </div>
   </section>
@@ -456,9 +461,14 @@
   <!-- STABLE -->
   <!-- STABLE : 2 options -->
   <section class="screen" id="scStable">
-    <h1 class="title">Écuries du Freyche</h1>
+    <h1 class="title">Domaine du Freyche</h1>
     <p class="intro">Que veux-tu faire ?</p>
     <div class="doors">
+      <button class="door stable" id="optEcuries">
+        <span class="di">🐴</span><h2>Écuries</h2>
+        <p id="optEcuriesCount">Tes chevaux et leurs soins.</p>
+        <span class="go">Ouvrir les écuries →</span>
+      </button>
       <button class="door stable" id="optTasks">
         <span class="di">🗓️</span><h2>Liste des tâches</h2>
         <p id="optTasksCount">Voir et ajouter les tâches du jour.</p>

@@ -8,11 +8,11 @@ function mkEl(id){ const st={},cls=new Set(),qsa={},at={};
   return { id,tagName:'DIV',_html:'',_text:'',_class:'',children:[],dataset:{},disabled:false,value:'',checked:false,onclick:null,onchange:null,files:[],_qsa:qsa,
     style:new Proxy(st,{get(t,p){return p==='setProperty'?((k,v)=>{t[k]=v;}):t[p];},set(t,p,v){t[p]=v;return true;}}),
     classList:{add:c=>cls.add(c),remove:c=>cls.delete(c),contains:c=>cls.has(c),toggle:c=>{cls.has(c)?cls.delete(c):cls.add(c);}},
-    get innerHTML(){return this._html;},set innerHTML(v){this._html=v==null?'':String(v);},
+    get innerHTML(){return this._html;},set innerHTML(v){this._html=v==null?'':String(v);this.children.length=0;},
     get textContent(){return this._text;},set textContent(v){this._text=v==null?'':String(v);},
     get className(){return this._class;},set className(v){this._class=v==null?'':String(v);},
     querySelectorAll(s){ if(qsa[s])return qsa[s]; const out=[]; const attr=(s.match(/^\[(.+?)=/)||[])[1]; if(attr){ const re=new RegExp(attr+'="([^"]+)"','g'); let m; while((m=re.exec(this._html))){ const e=mkEl('_x'); const key=attr.replace(/^data-/,'').replace(/-([a-z])/g,(_,c)=>c.toUpperCase()); e.dataset[key]=m[1]; out.push(e); } } return out; },
-    querySelector(s){return (qsa[s]||[])[0]||null;},
+    querySelector(s){return (qsa[s]||[])[0]||mkEl('_qs');},   // stub non-null : les rows câblent .onclick sans planter
     appendChild(c){this.children.push(c);return c;},removeChild(c){const i=this.children.indexOf(c);if(i>=0)this.children.splice(i,1);return c;},
     setAttribute(k,v){at[k]=v;},removeAttribute(k){delete at[k];},getAttribute(k){return at[k];},addEventListener(){},removeEventListener(){},focus(){},blur(){} }; }
 function makeEnv(seed){ const reg={}; const $id=id=>{ if(!reg[id])reg[id]=mkEl(id); return reg[id]; };
@@ -84,6 +84,17 @@ env2.ctx.openAnimal('old1');           // migration en mémoire
 env2.ctx.openNoteModal('old1'); R2.nText.value='ok'; R2.nSave.onclick();   // déclenche saveStore
 const a2=JSON.parse(env2.ctx.localStorage.getItem('nexus_stable')).animals.find(x=>x.id==='old1');
 ok('R1 — ancien animal migré et persisté (photos ajouté par la migration)', Array.isArray(a2.photos)&&a2.sex!==undefined&&a2.regime!==undefined);
+
+// --- Projets du domaine (remplace Animaux ; Soins retiré du menu Gestion) ---
+ok('PJ1 — graine : 3 projets', store().projects.length===3 && ['Nettoyage panneaux solaires','Clôtures enclos n°2','Bord des sentiers'].every(t=>store().projects.some(p=>p.title===t)));
+c.openGestion();
+const menuHtml=R.stableMenu.children.map(x=>x.innerHTML).join(' ');
+ok('PJ2 — menu Gestion : Projets présent, Animaux et Soins retirés', /Projets/.test(menuHtml) && !/Animaux/.test(menuHtml) && !/Soins/.test(menuHtml) && R.stableMenu.children.length===4);
+c.openStableSection('projects');
+ok('PJ3 — section Projets : titre + 3 lignes', R.ssTitle.textContent==='Projets' && R.ssList.children.length===3);
+c.openProjectModal(); R.pjTitle.value='Réparer abreuvoir'; R.pjDetail.value='pré du bas'; R.pjSave.onclick();
+ok('PJ4 — ajout de projet', store().projects.length===4 && store().projects.some(p=>p.title==='Réparer abreuvoir'));
+ok('PJ5 — santé toujours dans la fiche animal (section Soins présente)', /Soins \/ santé/.test(require('fs').readFileSync('/home/user/Nexus/template.html','utf8').match(/id="scAnimal"[\s\S]*?<\/section>/)[0]));
 
 console.log('\n=== Bilan verif Domaine/Écuries :', pass, 'réussis,', fail, 'échoués ===');
 process.exit(fail?1:0);

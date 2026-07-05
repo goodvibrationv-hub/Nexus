@@ -31,15 +31,48 @@ function totalPct(){let m=0,t=0;for(const k in D.SKILLS){m+=mastered[k].size;t+=
 
 /* ====== screen mgmt ====== */
 let current=null,currentNode=null,currentSkillK=null,mode='landing';
-function show(screen,{crumb='',back=null,accent='#3F5E4E',nav=''}={}){
+function show(screen,{accent='#3F5E4E',nav=''}={}){
   document.documentElement.style.setProperty('--forest',accent);
   ['scLanding','scHome','scDetail','scCourse','scTest','scProgress','scStable','scGestion','scStableSection','scRevise'].forEach(s=>$(s).classList.remove('active'));
   $(screen).classList.add('active');
-  if(back){ $('backBtn').style.display='flex'; $('backLbl').textContent=back.lbl; $('backBtn').onclick=back.fn; }
-  else $('backBtn').style.display='none';
   buildNav(nav);
   window.scrollTo({top:0,behavior:'smooth'});
 }
+
+/* ====== historique de navigation ======
+   Vrai « retour » : chaque écran s'empile ; le bouton ← (et le bouton retour
+   du téléphone via popstate) reviennent exactement à l'écran précédent. */
+const BROWSER_NAV = (typeof window!=='undefined' && typeof history!=='undefined' && typeof history.pushState==='function');
+let navHist=[];        // pile des écrans précédents : {go, label}
+let navCur=null;       // écran courant
+let navPopping=false;
+function go(replay, label){
+  label=label||'';
+  if(navCur && navCur.label===label){ navCur={go:replay,label}; replay(); refreshBack(); return; }  // re-tap du même écran : remplace
+  if(navCur) navHist.push(navCur);
+  navCur={go:replay, label};
+  replay(); refreshBack();
+  if(BROWSER_NAV && !navPopping){ try{ history.pushState({n:navHist.length},''); }catch(e){} }
+}
+function goRoot(replay, label){    // réinitialise la pile (retour à l'accueil)
+  navHist=[]; navCur={go:replay, label:label||''};
+  replay(); refreshBack();
+  if(BROWSER_NAV){ try{ history.replaceState({n:0},''); }catch(e){} }
+}
+function navBack(){
+  if(!navHist.length) return false;
+  navCur=navHist.pop();
+  navPopping=true; navCur.go(); navPopping=false;
+  refreshBack();
+  return true;
+}
+function doBack(){ if(BROWSER_NAV){ try{ history.back(); return; }catch(e){} } navBack(); }
+function refreshBack(){
+  const b=$('backBtn');
+  if(navHist.length){ b.style.display='flex'; $('backLbl').textContent=navHist[navHist.length-1].label||'retour'; b.onclick=doBack; }
+  else { b.style.display='none'; b.onclick=null; }
+}
+if(BROWSER_NAV) window.addEventListener('popstate', ()=>{ navBack(); });
 
 /* ====== bottom nav (contextual) ====== */
 function navBtn(active, key, icon, label){
@@ -55,23 +88,34 @@ function buildNav(active){
   } else {
     document.body.classList.remove('stable-mode');
     nav.innerHTML=
+      navBtn(active,'landing',NAV_IC.home,'Accueil')+
       navBtn(active,'domains',NAV_IC.explore,'Explorer')+
       navBtn(active,'revise',NAV_IC.revise,'Réviser')+
       navBtn(active,'progress',NAV_IC.progress,'Progrès');
   }
   nav.querySelectorAll('.navbtn').forEach(b=>b.onclick=()=>navGo(b.dataset.go));
 }
+/* rendus purs (appelés par go/navBack) */
+function rDomains(){ mode='learn'; renderHome(); show('scHome',{nav:'domains'}); }
+function rProgress(){ mode='learn'; renderProgress(); show('scProgress',{nav:'progress'}); }
+function rRevise(){ mode='learn'; renderRevise(); show('scRevise',{nav:'revise'}); }
+function rStable(){ mode='stable';
+  const pend=(STORE.tasks||[]).filter(t=>!t.done).length; $('optTasksCount').textContent=pend?(pend+' tâche'+(pend>1?'s':'')+' à faire — voir et ajouter.'):'Voir et ajouter les tâches du jour.';
+  const na=(STORE.animals||[]).length; $('optEcuriesCount').textContent=na?(na+(na>1?' animaux':' animal')+' · soins et santé.'):'Ajoute tes chevaux et leurs soins.';
+  show('scStable',{accent:'#8A5A3C',nav:'stable'});
+}
 function navGo(g){
-  if(g==='landing'){ mode='landing'; goLanding(); }
-  else if(g==='domains'){ mode='learn'; renderHome(); show('scHome',{back:{lbl:'accueil',fn:goLanding},nav:'domains'}); }
-  else if(g==='progress'){ mode='learn'; renderProgress(); show('scProgress',{back:{lbl:'accueil',fn:goLanding},nav:'progress'}); }
-  else if(g==='revise'){ mode='learn'; renderRevise(); show('scRevise',{back:{lbl:'accueil',fn:goLanding},nav:'revise'}); }
-  else if(g==='stable'){ mode='stable'; const pend=(STORE.tasks||[]).filter(t=>!t.done).length; $('optTasksCount').textContent=pend?(pend+' tâche'+(pend>1?'s':'')+' à faire — voir et ajouter.'):'Voir et ajouter les tâches du jour.'; const na=(STORE.animals||[]).length; $('optEcuriesCount').textContent=na?(na+(na>1?' animaux':' animal')+' · soins et santé.'):'Ajoute tes chevaux et leurs soins.'; show('scStable',{back:{lbl:'accueil',fn:goLanding},accent:'#8A5A3C',nav:'stable'}); }
+  if(g==='landing') goHome();
+  else if(g==='domains') go(rDomains,'domaines');
+  else if(g==='progress') go(rProgress,'progrès');
+  else if(g==='revise') go(rRevise,'révision');
+  else if(g==='stable') go(rStable,'domaine');
 }
 
 /* ====== landing ====== */
-function goLanding(){ mode='landing'; show('scLanding',{crumb:'',back:null,accent:'#3F5E4E',nav:''}); }
-$('doorLearn').onclick=()=>{ mode='learn'; renderHome(); show('scHome',{back:{lbl:'accueil',fn:goLanding},nav:'domains'}); };
+function goLanding(){ mode='landing'; show('scLanding',{accent:'#3F5E4E',nav:'landing'}); }
+function goHome(){ goRoot(goLanding,'accueil'); }
+$('doorLearn').onclick=()=>go(rDomains,'domaines');
 $('doorStable').onclick=()=>navGo('stable');
 
 /* ====== learning ====== */
@@ -87,11 +131,11 @@ function renderHome(){
 }
 function statusOf(k,n){ if(mastered[k].has(n.id))return 'mastered'; if(n.deps.every(d=>mastered[k].has(d)))return 'available'; return 'locked'; }
 function nameOf(k,id){ return D.SKILLS[k].nodes.find(x=>x.id===id).t; }
-function openDomain(k){
-  current=k; mode='learn'; const s=D.SKILLS[k];
+function openDomain(k){ const s=D.SKILLS[k]; go(()=>{
+  current=k; mode='learn';
   $('dIc').textContent=s.icon; $('dTitle').textContent=s.name; $('dMeta').textContent=s.meta; renderTree();
-  show('scDetail',{crumb:'<span class="cur">'+s.name+'</span>',back:{lbl:'domaines',fn:()=>navGo('domains')},accent:s.color,nav:'domains'});
-}
+  show('scDetail',{accent:s.color,nav:'domains'});
+}, s.name); }
 function renderTree(){
   const k=current,s=D.SKILLS[k];
   $('dProg').innerHTML='<b>'+mastered[k].size+'</b> / '+s.nodes.length+' étapes acquises';
@@ -112,12 +156,12 @@ function renderTree(){
   });
 }
 function expandFigures(html){ return html.replace(/<FIG:(\w+)>/g,(_,key)=>'<figure class="figure">'+D.FIG[key]+'<figcaption>Schéma — Nexus Learn</figcaption></figure>'); }
-function openCourse(k,n){
-  currentNode=n; currentSkillK=k; const c=C[n.id]; const s=D.SKILLS[k];
+function openCourse(k,n){ const s=D.SKILLS[k]; go(()=>{
+  currentNode=n; currentSkillK=k; const c=C[n.id];
   $('cTag').textContent=c.tag; $('cTitle').textContent=c.title; $('cLead').textContent=c.lead; $('cBody').innerHTML=expandFigures(c.body);
   renderCourseFoot(k,n);
-  show('scCourse',{back:{lbl:s.name,fn:()=>openDomain(k)},accent:s.color,nav:'domains'});
-}
+  show('scCourse',{accent:s.color,nav:'domains'});
+}, n.t); }
 function questionsFor(nodeId){ return window.NEXUS_CARDS.filter(c=>c.node===nodeId); }
 function renderCourseFoot(k,n){
   const foot=$('courseFoot'); const done=mastered[k].has(n.id);
@@ -143,7 +187,7 @@ function renderCourseFoot(k,n){
 const TEST_LEN=15;
 let testK=null, testN=null, testQueue=[], testIdx=0, testAnswers=[], testRevealed=false;
 function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
-function startTest(k,n){
+function startTest(k,n){ go(()=>{
   testK=k; testN=n;
   const pool=questionsFor(n.id).filter(c=>(c.type||'tf')==='tf');
   testQueue=shuffle(pool).slice(0,Math.min(TEST_LEN,pool.length));
@@ -152,8 +196,8 @@ function startTest(k,n){
   $('trReview').innerHTML='';
   $('testResult').style.display='none'; $('testCard').style.display='flex';
   showTestCard();
-  show('scTest',{back:{lbl:'cours',fn:()=>openCourse(k,n)},accent:D.SKILLS[k].color,nav:'domains'});
-}
+  show('scTest',{accent:D.SKILLS[k].color,nav:'domains'});
+}, 'test'); }
 function showTestCard(){
   if(testIdx>=testQueue.length){ endTest(); return; }
   const c=testQueue[testIdx];
@@ -203,7 +247,7 @@ function endTest(){
     $('trAction').onclick=()=>startTest(testK,testN);
   }
 }
-$('trBack').onclick=()=>openCourse(testK,testN);
+$('trBack').onclick=()=>doBack();
 let resetArmed=false;
 /* Niveau + indicateurs (victoires/lacunes) + coaching personnalisé, à partir de
    mastered (nœuds) et de l'état FSRS de chaque fiche. Lecture seule, aucun schéma ajouté. */
@@ -314,24 +358,21 @@ function renderStableMenu(){
     g.appendChild(b);
   });
 }
-function openGestion(){ mode='stable'; renderStableMenu(); show('scGestion',{back:{lbl:'domaine',fn:()=>navGo('stable')},accent:'#8A5A3C',nav:'stable'}); }
+function openGestion(){ go(()=>{ mode='stable'; renderStableMenu(); show('scGestion',{accent:'#8A5A3C',nav:'stable'}); }, 'gestion'); }
 $('optGestion').onclick=openGestion;
 $('optTasks').onclick=()=>{ mode='stable'; openStableSection('planning'); };
 $('optEcuries').onclick=()=>{ mode='stable'; openStableSection('ecuries'); };
 const SECTION_TITLES={ecuries:'Écuries',animals:'Animaux',care:'Soins / santé',orders:'Commandes de grain',planning:'Planning',stock:'Stock / matériel',contacts:'Contacts'};
 const SECTION_ADD={ecuries:'+ Ajouter un cheval',animals:'+ Ajouter un animal',care:'+ Ajouter un soin',orders:'+ Ajouter une commande',planning:'+ Ajouter une tâche',stock:'+ Ajouter un article',contacts:'+ Ajouter un contact'};
 let currentSection=null;
-function openStableSection(key){
+function openStableSection(key){ go(()=>{
   currentSection=key; mode='stable';
   $('ssTitle').textContent=SECTION_TITLES[key];
   $('ssAdd').textContent=SECTION_ADD[key];
   $('ssAdd').onclick=SECTION_ADD_FN[key];
   renderSection(key);
-  const toHome = (key==='planning'||key==='ecuries');   // ces sections reviennent au domaine, pas à la gestion
-  const backFn = toHome ? (()=>navGo('stable')) : openGestion;
-  const backLbl = toHome ? 'domaine' : 'gestion';
-  show('scStableSection',{back:{lbl:backLbl,fn:backFn},accent:'#8A5A3C',nav:'stable'});
-}
+  show('scStableSection',{accent:'#8A5A3C',nav:'stable'});
+}, SECTION_TITLES[key]); }
 function renderSection(key){ ({ecuries:renderEcuries,animals:renderAnimals,care:renderCare,orders:renderOrders,planning:renderTasks,stock:renderStock,contacts:renderContacts}[key])(); }
 /* --- ÉCURIES : chevaux + leurs soins réunis --- */
 function renderEcuries(){
@@ -731,4 +772,4 @@ if($('modeEclair')) $('modeEclair').onclick=()=>{ startQueue(interleave(dueCards
 if($('modePioche')) $('modePioche').onclick=()=>{ startQueue(seededShuffle(dueCards(null), daySeed()).slice(0,12)); };
 if($('modeSafety')) $('modeSafety').onclick=()=>{ startQueue(interleave(dueCards(null).filter(c=>SAFETY_NODES.has(c.node)))); };
 
-goLanding();
+goHome();

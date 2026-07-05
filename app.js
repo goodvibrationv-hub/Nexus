@@ -76,9 +76,11 @@ $('doorStable').onclick=()=>navGo('stable');
 /* ====== learning ====== */
 function renderHome(){
   const g=$('domainList'); g.innerHTML='';
+  const n=Object.keys(D.SKILLS).length;
+  if($('domainCount')) $('domainCount').textContent=n+' domaines';
   Object.entries(D.SKILLS).forEach(([k,s])=>{
-    const b=document.createElement('button'); b.className='domain'; b.style.setProperty('--c',s.color);
-    b.innerHTML='<span class="ic">'+s.icon+'</span><div class="mid"><h3>'+s.name+'</h3><div class="meta">'+s.meta+'</div><div class="barwrap"><span class="bar"><i style="width:'+pct(k)+'%"></i></span><span class="pc">'+pct(k)+'%</span></div></div><span class="chev">›</span>';
+    const b=document.createElement('button'); b.className='dtile'; b.style.setProperty('--c',s.color);
+    b.innerHTML='<div class="top"><span class="ic">'+s.icon+'</span><h3>'+s.name+'</h3></div><div class="barwrap"><span class="bar"><i style="width:'+pct(k)+'%"></i></span><span class="pc">'+pct(k)+'%</span></div>';
     b.onclick=()=>openDomain(k); g.appendChild(b);
   });
 }

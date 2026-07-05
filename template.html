@@ -63,6 +63,19 @@
   .domain .bar i{display:block;height:100%;background:var(--c,var(--forest));width:0;transition:width .5s}
   .domain .pc{font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--mut); flex-shrink:0}
   .domain .chev{color:var(--mut); font-size:18px; flex-shrink:0}
+  /* Accueil : grille de miniatures de domaines (tient sur un écran, sans scroll) */
+  .domain-grid{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:9px; margin-top:10px}
+  .dtile{position:relative; display:flex; flex-direction:column; gap:8px; text-align:left; cursor:pointer; border:1px solid var(--line2); border-left:4px solid var(--c,var(--forest)); border-radius:12px; padding:11px 12px; background:var(--surf); color:inherit; font:inherit; min-height:78px; transition:transform .12s, border-color .15s, box-shadow .15s}
+  .dtile:active{transform:scale(.98)}
+  .dtile:hover{border-color:var(--c,var(--forest)); box-shadow:0 8px 20px -16px rgba(42,37,32,.5)}
+  .dtile{overflow:hidden}
+  .dtile .top{display:flex; align-items:center; gap:8px; min-width:0}
+  .dtile .ic{font-size:23px; flex:none; line-height:1}
+  .dtile h3{font-family:'Fraunces',serif; font-size:14px; font-weight:600; line-height:1.12; min-width:0; overflow-wrap:anywhere}
+  .dtile .barwrap{margin-top:auto; display:flex; align-items:center; gap:7px}
+  .dtile .bar{flex:1; height:5px; border-radius:99px; background:var(--paper2); overflow:hidden}
+  .dtile .bar i{display:block; height:100%; background:var(--c,var(--forest)); border-radius:99px; width:0; transition:width .5s}
+  .dtile .pc{font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--mut); flex:none}
   .domhead{display:flex; align-items:center; gap:12px; margin-bottom:6px}
   .domhead .ic{font-size:28px}
   .domhead h1{font-family:'Fraunces',serif; font-size:22px; font-weight:600; line-height:1}
@@ -325,9 +338,8 @@
   <!-- LEARNING : domain list -->
   <section class="screen" id="scHome">
     <h1 class="title">Apprendre un savoir-faire</h1>
-    <p class="intro">Choisis un domaine et avance étape par étape.</p>
-    <div class="sectlabel">Cinq domaines</div>
-    <div class="domains" id="domainList"></div>
+    <div class="sectlabel" id="domainCount">Domaines</div>
+    <div class="domain-grid" id="domainList"></div>
   </section>
 
   <section class="screen" id="scDetail">

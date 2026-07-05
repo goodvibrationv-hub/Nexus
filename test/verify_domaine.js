@@ -1,16 +1,18 @@
-/* e2e Domaine du Freyche : section Écuries (chevaux + soins), ajout de soin. */
+/* e2e Domaine/Écuries + fiche animal : seed, tableau de bord, notes, soins, photos. */
 const fs=require('fs'), vm=require('vm'), path=require('path');
-const ROOT='/home/user/Nexus'; const P=f=>path.join(ROOT,f);
+const ROOT=path.join(__dirname,'..','..','..','..','..','home','user','Nexus');
+const R0='/home/user/Nexus'; const P=f=>path.join(R0,f);
 let pass=0, fail=0; const ok=(n,c)=>{ if(c){pass++;console.log('  ✓',n);} else {fail++;console.log('  ✗ ÉCHEC :',n);} };
 
 function mkEl(id){ const st={},cls=new Set(),qsa={},at={};
-  return { id,tagName:'DIV',_html:'',_text:'',_class:'',children:[],dataset:{},disabled:false,value:'',checked:false,onclick:null,onchange:null,_qsa:qsa,
+  return { id,tagName:'DIV',_html:'',_text:'',_class:'',children:[],dataset:{},disabled:false,value:'',checked:false,onclick:null,onchange:null,files:[],_qsa:qsa,
     style:new Proxy(st,{get(t,p){return p==='setProperty'?((k,v)=>{t[k]=v;}):t[p];},set(t,p,v){t[p]=v;return true;}}),
     classList:{add:c=>cls.add(c),remove:c=>cls.delete(c),contains:c=>cls.has(c),toggle:c=>{cls.has(c)?cls.delete(c):cls.add(c);}},
     get innerHTML(){return this._html;},set innerHTML(v){this._html=v==null?'':String(v);},
     get textContent(){return this._text;},set textContent(v){this._text=v==null?'':String(v);},
     get className(){return this._class;},set className(v){this._class=v==null?'':String(v);},
-    querySelectorAll(s){return qsa[s]||[];},querySelector(s){return (qsa[s]||[])[0]||null;},
+    querySelectorAll(s){ if(qsa[s])return qsa[s]; const out=[]; const attr=(s.match(/^\[(.+?)=/)||[])[1]; if(attr){ const re=new RegExp(attr+'="([^"]+)"','g'); let m; while((m=re.exec(this._html))){ const e=mkEl('_x'); const key=attr.replace(/^data-/,'').replace(/-([a-z])/g,(_,c)=>c.toUpperCase()); e.dataset[key]=m[1]; out.push(e); } } return out; },
+    querySelector(s){return (qsa[s]||[])[0]||null;},
     appendChild(c){this.children.push(c);return c;},removeChild(c){const i=this.children.indexOf(c);if(i>=0)this.children.splice(i,1);return c;},
     setAttribute(k,v){at[k]=v;},removeAttribute(k){delete at[k];},getAttribute(k){return at[k];},addEventListener(){},removeEventListener(){},focus(){},blur(){} }; }
 function makeEnv(seed){ const reg={}; const $id=id=>{ if(!reg[id])reg[id]=mkEl(id); return reg[id]; };
@@ -25,39 +27,63 @@ function makeEnv(seed){ const reg={}; const $id=id=>{ if(!reg[id])reg[id]=mkEl(i
   vm.createContext(ctx); return {ctx,reg}; }
 function loadApp(env){ for(const f of ['data_core.js','content_courses.js','cards.js','app.js']) vm.runInContext(fs.readFileSync(P(f),'utf8'),env.ctx,{filename:f}); }
 
-const seed={ animals:[{id:'a1',name:'Éclipse',species:'Cheval',breed:'Selle Français',age:'8 ans',notes:'Ombrageux',care:[{id:'c1',type:'Vermifuge',date:'2026-06-01',next:'2026-12-01',note:''}]},
-                     {id:'a2',name:'Bijou',species:'Poney',breed:'',age:'',notes:'',care:[]}], tasks:[], mastered:{} };
-const env=makeEnv(seed); loadApp(env); const c=env.ctx; const R=env.reg;
+// --- profil vierge : la graine crée les 7 chevaux + le rappel alimentation ---
+const env=makeEnv(); loadApp(env); const c=env.ctx; const R=env.reg;
+const store=()=>JSON.parse(env.ctx.localStorage.getItem('nexus_stable'));
+const names=()=>store().animals.map(a=>a.name);
+ok('S1 — graine : 7 chevaux créés', store().animals.length===7);
+ok('S2 — TINA … GEORGETTE présents', ['TINA','ERMES','JAGUAR','KITAÏ','BRADDY','JAM','GEORGETTE'].every(n=>names().includes(n)));
+ok('S3 — régime pré-rempli (JAGUAR)', (store().animals.find(a=>a.name==='JAGUAR')||{}).regime==='2 senior, ⅔ orge, ⅓ happy');
+ok('S4 — rappel « humidifier l\'orge » enregistré', /humidifier l.orge/i.test(store().ecuriesNote||''));
+ok('S5 — champs fiche initialisés', store().animals.every(a=>a.sex!==undefined&&a.regime!==undefined&&Array.isArray(a.noteLog)&&Array.isArray(a.photos)));
 
-// accueil du domaine : compteur d'animaux
-c.navGo('stable');
-ok('D1 — compteur Écuries reflète les animaux', /2 animaux/.test(R.optEcuriesCount.textContent));
+// --- liste Écuries ---
+c.navGo('stable'); c.openStableSection('ecuries');
+ok('E1 — bannière alimentation affichée', /ecuries-banner/.test(R.ssList.innerHTML));
+ok('E2 — 7 fiches chevaux', R.ssList.children.length===7);
+ok('E3 — fiche montre le régime', /Régime/.test(R.ssList.children[0].innerHTML));
 
-// section Écuries
-c.openStableSection('ecuries');
-ok('D2 — titre de section = « Écuries »', R.ssTitle.textContent==='Écuries');
-ok('D3 — bouton ajout = « + Ajouter un cheval »', R.ssAdd.textContent==='+ Ajouter un cheval');
-ok('D4 — 2 fiches chevaux affichées', R.ssList.children.length===2);
-const card0=R.ssList.children[0].innerHTML;
-ok('D5 — 1re fiche montre le cheval', /Éclipse/.test(card0)&&/Selle Français/.test(card0));
-ok('D6 — 1re fiche montre son soin', /Vermifuge/.test(card0));
-ok('D7 — fiche sans soin affiche « Aucun soin »', /Aucun soin/.test(R.ssList.children[1].innerHTML));
-ok('D8 — actions présentes (Modifier / + Soin / Supprimer)', /data-soin="a2"/.test(R.ssList.children[1].innerHTML));
+// --- ouvrir une fiche ---
+const tina=store().animals.find(a=>a.name==='TINA').id;
+c.openAnimal(tina);
+ok('F1 — écran fiche actif', R.scAnimal.classList.contains('active'));
+ok('F2 — nom affiché', R.anName.textContent==='TINA');
+ok('F3 — tableau de bord (Espèce)', /Espèce/.test(R.anDash.innerHTML));
+ok('F4 — régime dans la fiche', R.anRegime.style.display==='block' && /floc/.test(R.anRegime.innerHTML));
 
-// ajout d'un soin à Éclipse via le pré-ciblage
-c.openCareModal('a1');
-ok('D9 — modal soin pré-cible l\'animal', R.careAnimal.value==='a1');
-R.cType.value='Parage'; R.cDate.value='2026-07-01'; R.cNext.value=''; R.cNote.value='pieds avant';
-R.cSave.onclick();
-ok('D10 — après ajout, la vue Écuries se re-rend (pas la section care)', R.ssTitle.textContent==='Écuries');
-const saved=JSON.parse(env.ctx.localStorage.getItem('nexus_stable'));
-const a1=saved.animals.find(a=>a.id==='a1');
-ok('D11 — le soin est bien enregistré sur le bon cheval', a1.care.length===2 && a1.care.some(s=>s.type==='Parage'));
-ok('D12 — le nouveau soin apparaît dans la fiche re-rendue', R.ssList.children.some(ch=>/Parage/.test(ch.innerHTML)));
+// --- écrire une note ---
+c.openNoteModal(tina); R.nText.value='Boiterie légère AD'; R.nSave.onclick();
+ok('F5 — note ajoutée au journal', (store().animals.find(a=>a.id===tina).noteLog||[]).some(n=>/Boiterie/.test(n.text)));
+ok('F6 — note visible', /Boiterie/.test(R.anNotes.innerHTML));
 
-// retour : la section Écuries revient au domaine (pas à la gestion) — vérifie via renderStableMenu intact
-c.openGestion();
-ok('D13 — la gestion reste accessible (menu rendu)', R.stableMenu.children.length>=5);
+// --- soin depuis la fiche (rafraîchit la fiche) ---
+c.openCareModal(tina); R.cType.value='Vermifuge'; R.cDate.value='2026-07-01'; R.cNext.value=''; R.cNote.value=''; R.cSave.onclick();
+ok('F7 — soin enregistré', (store().animals.find(a=>a.id===tina).care||[]).some(s=>s.type==='Vermifuge'));
+ok('F8 — fiche reste active après soin', R.scAnimal.classList.contains('active'));
+ok('F9 — soin visible dans la fiche', /Vermifuge/.test(R.anCare.innerHTML));
+
+// --- édition : sexe + régime ---
+c.openAnimalModal(tina);
+ok('F10 — modal pré-remplit le régime', R.aRegime.value==='¾ floc, ¾ orge, ⅓ happy');
+R.aSex.value='Jument'; R.aName.value='TINA'; R.aSpecies.value='Cheval'; R.aBreed.value=''; R.aAge.value='12 ans'; R.aRegime.value='¾ floc, ¾ orge, ⅓ happy'; R.aNotes.value='';
+R.aSave.onclick();
+ok('F11 — sexe enregistré', store().animals.find(a=>a.id===tina).sex==='Jument');
+ok('F12 — fiche re-rendue après édition', R.scAnimal.classList.contains('active') && /Jument/.test(R.anDash.innerHTML));
+
+// --- photos : rendu + suppression (via un animal pré-doté d'une photo) ---
+const env3=makeEnv({ seedFreyche:true, animals:[{id:'ph1',name:'Photo',species:'Cheval',sex:'',breed:'',age:'',regime:'',notes:'',noteLog:[],photos:['data:image/jpeg;base64,AAAA','data:image/jpeg;base64,BBBB'],care:[]}], mastered:{} });
+loadApp(env3); const c3=env3.ctx, R3=env3.reg;
+c3.openAnimal('ph1');
+ok('P1 — 2 photos rendues (img)', (R3.anPhotos.innerHTML.match(/<img/g)||[]).length===2);
+ok('P2 — chaque photo a son bouton de suppression', /data-photo="0"/.test(R3.anPhotos.innerHTML) && /data-photo="1"/.test(R3.anPhotos.innerHTML) && /class="rm"/.test(R3.anPhotos.innerHTML));
+
+// --- rétro-compat : ancien animal sans nouveaux champs ---
+const env2=makeEnv({ animals:[{id:'old1',name:'Vieux',species:'Cheval'}], seedFreyche:true, mastered:{} });
+loadApp(env2); const R2=env2.reg;
+env2.ctx.openAnimal('old1');           // migration en mémoire
+env2.ctx.openNoteModal('old1'); R2.nText.value='ok'; R2.nSave.onclick();   // déclenche saveStore
+const a2=JSON.parse(env2.ctx.localStorage.getItem('nexus_stable')).animals.find(x=>x.id==='old1');
+ok('R1 — ancien animal migré et persisté (photos ajouté par la migration)', Array.isArray(a2.photos)&&a2.sex!==undefined&&a2.regime!==undefined);
 
 console.log('\n=== Bilan verif Domaine/Écuries :', pass, 'réussis,', fail, 'échoués ===');
 process.exit(fail?1:0);

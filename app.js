@@ -17,7 +17,8 @@ function loadStore(){
   try{
     const raw=localStorage.getItem('nexus_stable');
     if(raw){ const d=JSON.parse(raw); STORE.horses=d.horses||[]; STORE.tasks=d.tasks||[]; STORE.mastered=d.mastered||{}; STORE.srs=d.srs||{}; STORE.hardMode=d.hardMode||false;
-      if(d.animals) STORE.animals=d.animals; if(d.orders) STORE.orders=d.orders; if(d.stock) STORE.stock=d.stock; if(d.contacts) STORE.contacts=d.contacts; }
+      if(d.animals) STORE.animals=d.animals; if(d.orders) STORE.orders=d.orders; if(d.stock) STORE.stock=d.stock; if(d.contacts) STORE.contacts=d.contacts;
+      if(d.ecuriesNote!==undefined) STORE.ecuriesNote=d.ecuriesNote; if(d.seedFreyche) STORE.seedFreyche=d.seedFreyche; }
   }catch(e){ /* mémoire seule */ }
   Object.keys(D.SKILLS).forEach(k=>{ if(!STORE.mastered[k]) STORE.mastered[k]=[]; });
 }
@@ -33,7 +34,7 @@ function totalPct(){let m=0,t=0;for(const k in D.SKILLS){m+=mastered[k].size;t+=
 let current=null,currentNode=null,currentSkillK=null,mode='landing';
 function show(screen,{accent='#3F5E4E',nav=''}={}){
   document.documentElement.style.setProperty('--forest',accent);
-  ['scLanding','scHome','scDetail','scCourse','scTest','scProgress','scStable','scGestion','scStableSection','scRevise'].forEach(s=>$(s).classList.remove('active'));
+  ['scLanding','scHome','scDetail','scCourse','scTest','scProgress','scStable','scGestion','scStableSection','scAnimal','scRevise'].forEach(s=>$(s).classList.remove('active'));
   $(screen).classList.add('active');
   buildNav(nav);
   window.scrollTo({top:0,behavior:'smooth'});
@@ -341,6 +342,18 @@ if(!STORE.orders) STORE.orders=[];
 if(!STORE.stock) STORE.stock=[];
 if(!STORE.contacts) STORE.contacts=[];
 if(!STORE.tasks) STORE.tasks=[];
+/* migration : nouveaux champs de fiche animal */
+STORE.animals.forEach(a=>{ if(a.sex===undefined)a.sex=''; if(a.regime===undefined)a.regime=''; if(!Array.isArray(a.noteLog))a.noteLog=[]; if(!Array.isArray(a.photos))a.photos=[]; if(!Array.isArray(a.care))a.care=[]; });
+if(STORE.ecuriesNote===undefined) STORE.ecuriesNote="Toujours humidifier l'orge (à peine humide) · Mouiller le son";
+/* graine unique : chevaux du Freyche avec leur régime */
+if(!STORE.seedFreyche){
+  [ ['TINA','¾ floc, ¾ orge, ⅓ happy'], ['ERMES','1 floc, ½ orge, ⅓ happy'], ['JAGUAR','2 senior, ⅔ orge, ⅓ happy'],
+    ['KITAÏ','1 floc, ½ orge, ⅓ happy — le soir seulement'], ['BRADDY','1 son, ½ orge, ½ floc, ⅓ happy'],
+    ['JAM','½ floc + ½ orge, ⅓ happy'], ['GEORGETTE','½ orge + ½ floc, ⅓ happy — 1 fois par jour, le matin'] ]
+  .forEach(([name,regime],i)=>{ if(!STORE.animals.some(a=>(a.name||'').trim().toLowerCase()===name.toLowerCase())) STORE.animals.push({ id:'a_seed_'+i, name, species:'Cheval', sex:'', breed:'', age:'', regime, notes:'', noteLog:[], photos:[], care:[] }); });
+  STORE.seedFreyche=true; saveStore();
+}
+function saveStoreOk(){ try{ localStorage.setItem('nexus_stable', JSON.stringify(STORE)); return true; }catch(e){ return false; } }
 
 const STABLE_MENU=[
   {key:'animals', ic:'🐴', t:'Animaux', count:()=>STORE.animals.length+' fiches'},
@@ -376,26 +389,71 @@ function openStableSection(key){ go(()=>{
 function renderSection(key){ ({ecuries:renderEcuries,animals:renderAnimals,care:renderCare,orders:renderOrders,planning:renderTasks,stock:renderStock,contacts:renderContacts}[key])(); }
 /* --- ÉCURIES : chevaux + leurs soins réunis --- */
 function renderEcuries(){
-  const list=$('ssList'); list.innerHTML='';
-  if(!STORE.animals.length){ list.innerHTML='<div class="empty">Aucun cheval pour l\'instant. Ajoute-en un.</div>'; return; }
+  const list=$('ssList');
+  list.innerHTML = STORE.ecuriesNote ? '<div class="ecuries-banner"><span class="bl">Rappel alimentation</span>'+esc(STORE.ecuriesNote)+'</div>' : '';
+  if(!STORE.animals.length){ list.innerHTML += '<div class="empty">Aucun cheval pour l\'instant. Ajoute-en un.</div>'; return; }
   STORE.animals.forEach(a=>{
-    const card=document.createElement('div'); card.className='horsecard';
-    const soins=(a.care||[]).slice().sort((x,y)=>(y.date||'').localeCompare(x.date||''));
-    const soinsHtml = soins.length
-      ? '<div class="ec-care">'+soins.map(c=>'<div class="ec-soin"><span class="ec-t">'+esc(c.type)+'</span><span class="ec-d">'+(c.date||'')+(c.next?' → '+c.next:'')+(c.note?' · '+esc(c.note):'')+'</span></div>').join('')+'</div>'
-      : '<div class="ec-nocare">Aucun soin enregistré.</div>';
-    card.innerHTML='<div class="hc-top"><span class="hi">'+(SP_ICON[a.species]||'🐾')+'</span><div style="flex:1"><h4>'+esc(a.name)+'</h4><div class="hmeta">'+[esc(a.species),esc(a.breed),a.age?esc(''+a.age):''].filter(Boolean).join(' · ')+'</div></div></div>'+
-      (a.notes?'<div class="hnotes">'+esc(a.notes)+'</div>':'')+
-      soinsHtml+
-      '<div class="hactions"><button class="miniBtn" data-edit="'+a.id+'">Modifier</button><button class="miniBtn" data-soin="'+a.id+'">+ Soin</button><button class="miniBtn del" data-del="'+a.id+'">Supprimer</button></div>';
+    const card=document.createElement('button'); card.className='horsecard';
+    card.style.cssText='display:block;width:100%;text-align:left;cursor:pointer;font:inherit';
+    const meta=[esc(a.species),a.sex?esc(a.sex):'',esc(a.breed),a.age?esc(''+a.age):''].filter(Boolean).join(' · ');
+    const np=(a.photos||[]).length, ns=(a.care||[]).length;
+    card.innerHTML='<div class="hc-top"><span class="hi">'+(SP_ICON[a.species]||'🐾')+'</span><div style="flex:1"><h4>'+esc(a.name)+'</h4><div class="hmeta">'+meta+'</div></div><span class="chev">›</span></div>'+
+      (a.regime?'<div style="border-top:1px solid var(--line);margin-top:8px;padding-top:8px;font-size:13px;line-height:1.5"><b>Régime :</b> '+esc(a.regime)+'</div>':'')+
+      ((np||ns)?'<div class="hmeta" style="margin-top:6px">'+[ns?ns+' soin'+(ns>1?'s':''):'',np?np+' photo'+(np>1?'s':''):''].filter(Boolean).join(' · ')+'</div>':'');
+    card.onclick=()=>openAnimal(a.id);
     list.appendChild(card);
   });
-  list.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>openAnimalModal(b.dataset.edit));
-  list.querySelectorAll('[data-soin]').forEach(b=>b.onclick=()=>openCareModal(b.dataset.soin));
-  list.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{
-    if(b.dataset.armed!=='1'){ b.dataset.armed='1'; b.textContent='Confirmer ?'; setTimeout(()=>{ if(b.dataset.armed==='1'){ b.dataset.armed='0'; b.textContent='Supprimer'; } },4000); return; }
-    STORE.animals=STORE.animals.filter(x=>x.id!==b.dataset.del); saveStore(); renderSection(currentSection);
-  });
+}
+/* --- FICHE ANIMAL : tableau de bord + notes + soins + photos --- */
+let currentAnimal=null;
+function openAnimal(id){ const a=STORE.animals.find(x=>x.id===id); if(!a) return; go(()=>{ currentAnimal=id; mode='stable'; renderAnimal(id); show('scAnimal',{accent:'#8A5A3C',nav:'stable'}); }, a.name); }
+function renderAnimal(id){
+  const a=STORE.animals.find(x=>x.id===id); if(!a){ navBack(); return; }
+  $('anIc').textContent=SP_ICON[a.species]||'🐾';
+  $('anName').textContent=a.name;
+  const rows=[['Espèce',a.species],['Sexe',a.sex],['Race',a.breed],['Âge',a.age]].filter(r=>r[1]);
+  $('anDash').innerHTML=rows.length?rows.map(r=>'<tr><td class="k">'+r[0]+'</td><td class="v">'+esc(''+r[1])+'</td></tr>').join(''):'<tr><td class="v" style="color:var(--mut)">Complète la fiche avec « Modifier ».</td></tr>';
+  if(a.regime){ $('anRegime').style.display='block'; $('anRegime').innerHTML='<span class="rl">Régime alimentaire</span>'+esc(a.regime); } else $('anRegime').style.display='none';
+  const nl=(a.noteLog||[]).slice().sort((x,y)=>(y.date||'').localeCompare(x.date||''));
+  $('anNotes').innerHTML = nl.length ? nl.map(n=>'<div class="notelog"><div class="nd"><span>'+(n.date||'')+'</span><span class="nx" data-noterm="'+n.id+'">×</span></div>'+esc(n.text)+'</div>').join('') : '<div class="empty">Aucune note pour l\'instant.</div>';
+  $('anNotes').querySelectorAll('[data-noterm]').forEach(b=>b.onclick=()=>{ a.noteLog=(a.noteLog||[]).filter(x=>x.id!==b.dataset.noterm); saveStore(); renderAnimal(id); });
+  const soins=(a.care||[]).slice().sort((x,y)=>(y.date||'').localeCompare(x.date||''));
+  $('anCare').innerHTML = soins.length ? soins.map(c=>'<div class="notelog"><div class="nd"><span>'+esc(c.type)+' · '+(c.date||'')+(c.next?' → '+c.next:'')+'</span><span class="nx" data-carerm="'+c.id+'">×</span></div>'+(c.note?esc(c.note):'')+'</div>').join('') : '<div class="empty">Aucun soin enregistré.</div>';
+  $('anCare').querySelectorAll('[data-carerm]').forEach(b=>b.onclick=()=>{ a.care=(a.care||[]).filter(x=>x.id!==b.dataset.carerm); saveStore(); renderAnimal(id); });
+  $('anPhotos').innerHTML=(a.photos||[]).map((p,i)=>'<div class="ph"><img src="'+p+'" alt=""><button class="rm" data-photo="'+i+'">×</button></div>').join('');
+  $('anPhotos').querySelectorAll('[data-photo]').forEach(b=>b.onclick=()=>{ a.photos.splice(+b.dataset.photo,1); saveStore(); renderAnimal(id); });
+}
+if($('anEdit')) $('anEdit').onclick=()=>{ if(currentAnimal) openAnimalModal(currentAnimal); };
+if($('anDel')) $('anDel').onclick=()=>{ const b=$('anDel'); if(b.dataset.armed!=='1'){ b.dataset.armed='1'; b.textContent='Confirmer la suppression ?'; setTimeout(()=>{ if(b.dataset.armed==='1'){b.dataset.armed='0';b.textContent='Supprimer';} },4000); return; } STORE.animals=STORE.animals.filter(x=>x.id!==currentAnimal); saveStore(); navBack(); };
+if($('anNoteAdd')) $('anNoteAdd').onclick=()=>openNoteModal(currentAnimal);
+if($('anCareAdd')) $('anCareAdd').onclick=()=>openCareModal(currentAnimal);
+if($('anPhotoAdd')) $('anPhotoAdd').onclick=()=>$('anPhotoInput').click();
+if($('anPhotoInput')) $('anPhotoInput').onchange=e=>{ const f=e.target.files&&e.target.files[0]; if(f) addPhotoFile(f,currentAnimal); e.target.value=''; };
+/* note modal */
+let noteAnimalId=null;
+function openNoteModal(id){ noteAnimalId=id; $('nText').value=''; $('noteModal').classList.add('open'); }
+if($('nCancel')) $('nCancel').onclick=()=>$('noteModal').classList.remove('open');
+if($('nSave')) $('nSave').onclick=()=>{ const t=$('nText').value.trim(); if(!t){ $('nText').focus&&$('nText').focus(); return; } const a=STORE.animals.find(x=>x.id===noteAnimalId); if(!a) return; a.noteLog=a.noteLog||[]; a.noteLog.push({ id:'n_'+Date.now(), date:new Date().toISOString().slice(0,10), text:t }); saveStore(); $('noteModal').classList.remove('open'); renderAnimal(noteAnimalId); };
+/* photo : redimensionne (max 1000px, JPEG 0.72) puis stocke en base64 — 100% hors-ligne */
+function addPhotoFile(file, animalId){
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    const img=new Image();
+    img.onload=()=>{
+      let w=img.width, h=img.height; const max=1000;
+      if(w>max||h>max){ const r=Math.min(max/w,max/h); w=Math.round(w*r); h=Math.round(h*r); }
+      const cv=document.createElement('canvas'); cv.width=w; cv.height=h;
+      cv.getContext('2d').drawImage(img,0,0,w,h);
+      let data; try{ data=cv.toDataURL('image/jpeg',0.72); }catch(err){ alert('Image illisible.'); return; }
+      const a=STORE.animals.find(x=>x.id===animalId); if(!a) return;
+      a.photos=a.photos||[]; a.photos.push(data);
+      if(!saveStoreOk()){ a.photos.pop(); alert('Stockage plein — photo non enregistrée. Supprime des photos existantes.'); }
+      renderAnimal(animalId);
+    };
+    img.onerror=()=>alert('Format d\'image non supporté (essaie une photo JPG/PNG).');
+    img.src=ev.target.result;
+  };
+  reader.readAsDataURL(file);
 }
 
 /* --- ANIMALS --- */
@@ -482,17 +540,21 @@ function renderContacts(){
 let editingAnimal=null;
 function openAnimalModal(id){
   editingAnimal=id?STORE.animals.find(a=>a.id===id):null;
-  $('animalModalTitle').textContent=editingAnimal?'Modifier l\'animal':'Nouvel animal';
+  $('animalModalTitle').textContent=editingAnimal?'Modifier la fiche':'Nouvel animal';
   $('aName').value=editingAnimal?editingAnimal.name:''; $('aSpecies').value=editingAnimal?editingAnimal.species||'Cheval':'Cheval';
-  $('aBreed').value=editingAnimal?editingAnimal.breed||'':''; $('aAge').value=editingAnimal?editingAnimal.age||'':''; $('aNotes').value=editingAnimal?editingAnimal.notes||'':'';
+  $('aSex').value=editingAnimal?editingAnimal.sex||'':'';
+  $('aBreed').value=editingAnimal?editingAnimal.breed||'':''; $('aAge').value=editingAnimal?editingAnimal.age||'':'';
+  $('aRegime').value=editingAnimal?editingAnimal.regime||'':''; $('aNotes').value=editingAnimal?editingAnimal.notes||'':'';
   $('animalModal').classList.add('open');
 }
 $('aCancel').onclick=()=>$('animalModal').classList.remove('open');
 $('aSave').onclick=()=>{
   const name=$('aName').value.trim(); if(!name){ $('aName').focus(); return; }
-  const data={ name, species:$('aSpecies').value, breed:$('aBreed').value.trim(), age:$('aAge').value.trim(), notes:$('aNotes').value.trim() };
-  if(editingAnimal){ Object.assign(editingAnimal,data); } else { STORE.animals.push({ id:'a_'+Date.now(), ...data, care:[] }); }
-  saveStore(); $('animalModal').classList.remove('open'); renderSection(currentSection||'animals');
+  const data={ name, species:$('aSpecies').value, sex:$('aSex').value, breed:$('aBreed').value.trim(), age:$('aAge').value.trim(), regime:$('aRegime').value.trim(), notes:$('aNotes').value.trim() };
+  if(editingAnimal){ Object.assign(editingAnimal,data); } else { STORE.animals.push({ id:'a_'+Date.now(), ...data, noteLog:[], photos:[], care:[] }); }
+  saveStore(); $('animalModal').classList.remove('open');
+  if($('scAnimal').classList.contains('active') && currentAnimal) renderAnimal(currentAnimal);
+  else renderSection(currentSection||'animals');
 };
 /* --- modals : care --- */
 function openCareModal(preId){
@@ -506,7 +568,9 @@ $('cCancel').onclick=()=>$('careModal').classList.remove('open');
 $('cSave').onclick=()=>{
   const a=STORE.animals.find(x=>x.id===$('careAnimal').value); if(!a) return;
   a.care=a.care||[]; a.care.push({ id:'c_'+Date.now(), type:$('cType').value, date:$('cDate').value, next:$('cNext').value, note:$('cNote').value.trim() });
-  saveStore(); $('careModal').classList.remove('open'); renderSection(currentSection||'care');
+  saveStore(); $('careModal').classList.remove('open');
+  if($('scAnimal').classList.contains('active') && currentAnimal) renderAnimal(currentAnimal);
+  else renderSection(currentSection||'care');
 };
 /* --- modals : order --- */
 function openOrderModal(){ $('oItem').value=''; $('oQty').value=''; $('oSupplier').value=''; $('oDate').value=new Date().toISOString().slice(0,10); $('orderModal').classList.add('open'); }
@@ -544,8 +608,8 @@ $('tSave').onclick=()=>{
   STORE.tasks.push({ id:'t_'+Date.now(), label, date:$('tDate').value, horseId:$('tHorse').value||null, done:false });
   saveStore(); $('taskModal').classList.remove('open'); renderSection('planning');
 };
-const SECTION_ADD_FN={animals:()=>openAnimalModal(null),care:openCareModal,orders:openOrderModal,planning:openTaskModal,stock:openStockModal,contacts:openContactModal};
-[ 'animalModal','careModal','orderModal','stockModal','contactModal','taskModal' ].forEach(id=>$(id).addEventListener('click',e=>{ if(e.target===$(id))$(id).classList.remove('open'); }));
+const SECTION_ADD_FN={ecuries:()=>openAnimalModal(null),animals:()=>openAnimalModal(null),care:openCareModal,orders:openOrderModal,planning:openTaskModal,stock:openStockModal,contacts:openContactModal};
+[ 'animalModal','noteModal','careModal','orderModal','stockModal','contactModal','taskModal' ].forEach(id=>$(id).addEventListener('click',e=>{ if(e.target===$(id))$(id).classList.remove('open'); }));
 
 /* ====== REVISION : moteur FSRS + écran ====== */
 const FSRS_W=[0.4072,1.1829,3.1262,15.4722,7.2102,0.5316,1.0651,0.0234,1.616,0.1544,1.0824,1.9813,0.0953,0.2975,2.2042,0.2407,2.9466,0.5034,0.6567];

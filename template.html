@@ -219,6 +219,28 @@
   .horsecard .ec-soin .ec-t{font-weight:600; color:var(--ink); flex:none}
   .horsecard .ec-soin .ec-d{font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--mut); text-align:right}
   .horsecard .ec-nocare{margin-top:10px; border-top:1px solid var(--line); padding-top:8px; font-size:12px; color:var(--mut); font-style:italic}
+  .ecuries-banner{background:var(--forest); color:var(--surf); border-radius:10px; padding:10px 13px; font-size:12.5px; line-height:1.4; margin-bottom:14px}
+  .ecuries-banner .bl{display:block; font-family:'JetBrains Mono',monospace; font-size:10px; opacity:.85; margin-bottom:2px}
+  .animalhead{display:flex; align-items:center; gap:12px; margin-bottom:8px}
+  .animalhead .ah-ic{font-size:34px; line-height:1}
+  .animalhead h1{margin:0}
+  .dashtable{width:100%; border-collapse:collapse; margin:6px 0 16px; background:var(--surf); border:1px solid var(--line2); border-radius:12px; overflow:hidden}
+  .dashtable td{padding:11px 14px; font-size:14px; border-top:1px solid var(--line)}
+  .dashtable tr:first-child td{border-top:none}
+  .dashtable td.k{font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--mut); text-transform:uppercase; letter-spacing:.05em; width:38%; vertical-align:top}
+  .dashtable td.v{color:var(--ink); font-weight:500}
+  .regimebox{background:var(--paper2); border-left:3px solid var(--walnut); border-radius:8px; padding:12px 14px; font-size:14px; line-height:1.5; margin-bottom:16px; white-space:pre-wrap}
+  .regimebox .rl{display:block; font-family:'JetBrains Mono',monospace; font-size:10.5px; color:var(--walnut); margin-bottom:4px; text-transform:uppercase}
+  .animalactions{display:flex; gap:8px; margin-bottom:6px}
+  .notelog{border-top:1px solid var(--line); padding:11px 0; font-size:13.5px; line-height:1.5}
+  .notelog:first-of-type{border-top:1px solid var(--line2)}
+  .notelog .nd{font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--mut); margin-bottom:3px; display:flex; justify-content:space-between; align-items:center}
+  .notelog .nx{color:var(--terra); cursor:pointer; font-size:14px}
+  .notelog .empty, #anCare .empty, #anPhotos+.empty{padding:10px 0}
+  .photogrid{display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:8px}
+  .photogrid .ph{position:relative; border-radius:10px; overflow:hidden; background:var(--paper2); aspect-ratio:1}
+  .photogrid .ph img{width:100%; height:100%; object-fit:cover; display:block}
+  .photogrid .ph .rm{position:absolute; top:4px; right:4px; width:22px; height:22px; border-radius:50%; border:none; background:rgba(42,37,32,.72); color:#fff; font-size:13px; line-height:1; cursor:pointer; display:flex; align-items:center; justify-content:center}
   .horsecard .hactions{display:flex; gap:8px; margin-top:12px}
   .miniBtn{flex:1; padding:8px; border-radius:6px; border:1px solid var(--line2); background:transparent; color:var(--mut); font:inherit; font-size:11px; font-family:'JetBrains Mono',monospace; cursor:pointer; transition:.15s}
   .miniBtn:hover{color:var(--walnut); border-color:var(--walnut)}
@@ -495,6 +517,24 @@
     <button class="addbtn" id="ssAdd"></button>
     <div id="ssList"></div>
   </section>
+
+  <!-- STABLE : fiche animal (tableau de bord) -->
+  <section class="screen" id="scAnimal">
+    <div class="animalhead"><span class="ah-ic" id="anIc">🐴</span><h1 class="title" id="anName"></h1></div>
+    <table class="dashtable"><tbody id="anDash"></tbody></table>
+    <div class="regimebox" id="anRegime" style="display:none"></div>
+    <div class="animalactions"><button class="miniBtn" id="anEdit">Modifier la fiche</button><button class="miniBtn del" id="anDel">Supprimer</button></div>
+    <div class="sectlabel">Notes</div>
+    <button class="addbtn" id="anNoteAdd">✏️ Écrire une note</button>
+    <div id="anNotes"></div>
+    <div class="sectlabel">Soins / santé</div>
+    <button class="addbtn" id="anCareAdd">+ Ajouter un soin</button>
+    <div id="anCare"></div>
+    <div class="sectlabel">Photos</div>
+    <button class="addbtn" id="anPhotoAdd">📷 Ajouter une photo</button>
+    <input type="file" id="anPhotoInput" accept="image/*" style="display:none">
+    <div class="photogrid" id="anPhotos"></div>
+  </section>
 </div>
 
 <!-- modals -->
@@ -502,10 +542,17 @@
   <h3 id="animalModalTitle">Nouvel animal</h3>
   <div class="field"><label>Nom</label><input id="aName" placeholder="Éclipse"></div>
   <div class="field"><label>Espèce</label><select id="aSpecies"><option>Cheval</option><option>Poney</option><option>Poule</option><option>Mouton</option><option>Chien</option><option>Chat</option><option>Autre</option></select></div>
+  <div class="field"><label>Sexe</label><select id="aSex"><option value="">—</option><option>Jument</option><option>Hongre</option><option>Étalon</option><option>Femelle</option><option>Mâle</option></select></div>
   <div class="field"><label>Race / précision (optionnel)</label><input id="aBreed" placeholder="Selle Français"></div>
   <div class="field"><label>Âge (optionnel)</label><input id="aAge" placeholder="8 ans"></div>
+  <div class="field"><label>Régime alimentaire</label><textarea id="aRegime" placeholder="¾ floc, ¾ orge, ⅓ happy…"></textarea></div>
   <div class="field"><label>Notes</label><textarea id="aNotes" placeholder="Particularités…"></textarea></div>
   <div class="sheetbtns"><button class="cancel" id="aCancel">Annuler</button><button class="save" id="aSave">Enregistrer</button></div>
+</div></div>
+<div class="modal" id="noteModal"><div class="sheet">
+  <h3>Écrire une note</h3>
+  <div class="field"><label>Note</label><textarea id="nText" placeholder="Observation, comportement, visite véto…"></textarea></div>
+  <div class="sheetbtns"><button class="cancel" id="nCancel">Annuler</button><button class="save" id="nSave">Ajouter</button></div>
 </div></div>
 
 <div class="modal" id="careModal"><div class="sheet">

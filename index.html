@@ -554,6 +554,12 @@
   <div class="field"><label>Note</label><textarea id="nText" placeholder="Observation, comportement, visite véto…"></textarea></div>
   <div class="sheetbtns"><button class="cancel" id="nCancel">Annuler</button><button class="save" id="nSave">Ajouter</button></div>
 </div></div>
+<div class="modal" id="projectModal"><div class="sheet">
+  <h3>Nouveau projet</h3>
+  <div class="field"><label>Projet</label><input id="pjTitle" placeholder="Nettoyage panneaux solaires"></div>
+  <div class="field"><label>Détail (optionnel)</label><textarea id="pjDetail" placeholder="Lieu, échéance, précisions…"></textarea></div>
+  <div class="sheetbtns"><button class="cancel" id="pjCancel">Annuler</button><button class="save" id="pjSave">Enregistrer</button></div>
+</div></div>
 
 <div class="modal" id="careModal"><div class="sheet">
   <h3>Ajouter un soin</h3>
@@ -1729,7 +1735,8 @@ function loadStore(){
     const raw=localStorage.getItem('nexus_stable');
     if(raw){ const d=JSON.parse(raw); STORE.horses=d.horses||[]; STORE.tasks=d.tasks||[]; STORE.mastered=d.mastered||{}; STORE.srs=d.srs||{}; STORE.hardMode=d.hardMode||false;
       if(d.animals) STORE.animals=d.animals; if(d.orders) STORE.orders=d.orders; if(d.stock) STORE.stock=d.stock; if(d.contacts) STORE.contacts=d.contacts;
-      if(d.ecuriesNote!==undefined) STORE.ecuriesNote=d.ecuriesNote; if(d.seedFreyche) STORE.seedFreyche=d.seedFreyche; }
+      if(d.ecuriesNote!==undefined) STORE.ecuriesNote=d.ecuriesNote; if(d.seedFreyche) STORE.seedFreyche=d.seedFreyche;
+      if(d.projects) STORE.projects=d.projects; if(d.seedProjects) STORE.seedProjects=d.seedProjects; }
   }catch(e){ /* mémoire seule */ }
   Object.keys(D.SKILLS).forEach(k=>{ if(!STORE.mastered[k]) STORE.mastered[k]=[]; });
 }
@@ -2053,6 +2060,7 @@ if(!STORE.orders) STORE.orders=[];
 if(!STORE.stock) STORE.stock=[];
 if(!STORE.contacts) STORE.contacts=[];
 if(!STORE.tasks) STORE.tasks=[];
+if(!STORE.projects) STORE.projects=[];
 /* migration : nouveaux champs de fiche animal */
 STORE.animals.forEach(a=>{ if(a.sex===undefined)a.sex=''; if(a.regime===undefined)a.regime=''; if(!Array.isArray(a.noteLog))a.noteLog=[]; if(!Array.isArray(a.photos))a.photos=[]; if(!Array.isArray(a.care))a.care=[]; });
 if(STORE.ecuriesNote===undefined) STORE.ecuriesNote="Toujours humidifier l'orge (à peine humide) · Mouiller le son";
@@ -2064,11 +2072,16 @@ if(!STORE.seedFreyche){
   .forEach(([name,regime],i)=>{ if(!STORE.animals.some(a=>(a.name||'').trim().toLowerCase()===name.toLowerCase())) STORE.animals.push({ id:'a_seed_'+i, name, species:'Cheval', sex:'', breed:'', age:'', regime, notes:'', noteLog:[], photos:[], care:[] }); });
   STORE.seedFreyche=true; saveStore();
 }
+/* graine unique : projets du domaine (exemples) */
+if(!STORE.seedProjects){
+  ['Nettoyage panneaux solaires','Clôtures enclos n°2','Bord des sentiers']
+    .forEach((title,i)=>{ if(!STORE.projects.some(p=>(p.title||'').trim().toLowerCase()===title.toLowerCase())) STORE.projects.push({ id:'pj_seed_'+i, title, detail:'', done:false }); });
+  STORE.seedProjects=true; saveStore();
+}
 function saveStoreOk(){ try{ localStorage.setItem('nexus_stable', JSON.stringify(STORE)); return true; }catch(e){ return false; } }
 
 const STABLE_MENU=[
-  {key:'animals', ic:'🐴', t:'Animaux', count:()=>STORE.animals.length+' fiches'},
-  {key:'care', ic:'➕', t:'Soins / santé', count:()=>{let n=0;STORE.animals.forEach(a=>n+=(a.care||[]).length);return n+' soins'}},
+  {key:'projects', ic:'🧰', t:'Projets', count:()=>{const td=STORE.projects.filter(p=>!p.done).length; return td?td+' à faire':STORE.projects.length+' projets';}},
   {key:'orders', ic:'🌾', t:'Commandes', count:()=>{const p=STORE.orders.filter(o=>!o.received).length;return p?p+' en attente':STORE.orders.length+' commandes'}},
   {key:'stock', ic:'📦', t:'Stock / matériel', count:()=>STORE.stock.length+' articles'},
   {key:'contacts', ic:'📇', t:'Contacts', count:()=>STORE.contacts.length+' contacts'},
@@ -2086,8 +2099,8 @@ function openGestion(){ go(()=>{ mode='stable'; renderStableMenu(); show('scGest
 $('optGestion').onclick=openGestion;
 $('optTasks').onclick=()=>{ mode='stable'; openStableSection('planning'); };
 $('optEcuries').onclick=()=>{ mode='stable'; openStableSection('ecuries'); };
-const SECTION_TITLES={ecuries:'Écuries',animals:'Animaux',care:'Soins / santé',orders:'Commandes de grain',planning:'Planning',stock:'Stock / matériel',contacts:'Contacts'};
-const SECTION_ADD={ecuries:'+ Ajouter un cheval',animals:'+ Ajouter un animal',care:'+ Ajouter un soin',orders:'+ Ajouter une commande',planning:'+ Ajouter une tâche',stock:'+ Ajouter un article',contacts:'+ Ajouter un contact'};
+const SECTION_TITLES={ecuries:'Écuries',projects:'Projets',animals:'Animaux',care:'Soins / santé',orders:'Commandes de grain',planning:'Planning',stock:'Stock / matériel',contacts:'Contacts'};
+const SECTION_ADD={ecuries:'+ Ajouter un cheval',projects:'+ Ajouter un projet',animals:'+ Ajouter un animal',care:'+ Ajouter un soin',orders:'+ Ajouter une commande',planning:'+ Ajouter une tâche',stock:'+ Ajouter un article',contacts:'+ Ajouter un contact'};
 let currentSection=null;
 function openStableSection(key){ go(()=>{
   currentSection=key; mode='stable';
@@ -2097,7 +2110,20 @@ function openStableSection(key){ go(()=>{
   renderSection(key);
   show('scStableSection',{accent:'#8A5A3C',nav:'stable'});
 }, SECTION_TITLES[key]); }
-function renderSection(key){ ({ecuries:renderEcuries,animals:renderAnimals,care:renderCare,orders:renderOrders,planning:renderTasks,stock:renderStock,contacts:renderContacts}[key])(); }
+function renderSection(key){ ({ecuries:renderEcuries,projects:renderProjects,animals:renderAnimals,care:renderCare,orders:renderOrders,planning:renderTasks,stock:renderStock,contacts:renderContacts}[key])(); }
+/* --- PROJETS du domaine (chantiers, entretien) --- */
+function renderProjects(){
+  const list=$('ssList'); list.innerHTML='';
+  if(!STORE.projects.length){ list.innerHTML='<div class="empty">Aucun projet. Ajoute un chantier du domaine (entretien, clôtures, sentiers…).</div>'; return; }
+  const items=STORE.projects.slice().sort((a,b)=>(a.done?1:0)-(b.done?1:0));
+  items.forEach(p=>{
+    const row=document.createElement('div'); row.className='taskrow'+(p.done?' done':'');
+    row.innerHTML='<button class="taskcheck">'+(p.done?'✓':'')+'</button><div class="taskmid"><div class="tl">'+esc(p.title)+'</div>'+(p.detail?'<div class="tm">'+esc(p.detail)+'</div>':'')+'</div><button class="taskdel">×</button>';
+    row.querySelector('.taskcheck').onclick=()=>{ p.done=!p.done; saveStore(); renderSection('projects'); };
+    row.querySelector('.taskdel').onclick=()=>{ STORE.projects=STORE.projects.filter(x=>x.id!==p.id); saveStore(); renderSection('projects'); };
+    list.appendChild(row);
+  });
+}
 /* --- ÉCURIES : chevaux + leurs soins réunis --- */
 function renderEcuries(){
   const list=$('ssList');
@@ -2319,8 +2345,12 @@ $('tSave').onclick=()=>{
   STORE.tasks.push({ id:'t_'+Date.now(), label, date:$('tDate').value, horseId:$('tHorse').value||null, done:false });
   saveStore(); $('taskModal').classList.remove('open'); renderSection('planning');
 };
-const SECTION_ADD_FN={ecuries:()=>openAnimalModal(null),animals:()=>openAnimalModal(null),care:openCareModal,orders:openOrderModal,planning:openTaskModal,stock:openStockModal,contacts:openContactModal};
-[ 'animalModal','noteModal','careModal','orderModal','stockModal','contactModal','taskModal' ].forEach(id=>$(id).addEventListener('click',e=>{ if(e.target===$(id))$(id).classList.remove('open'); }));
+/* --- modals : projet --- */
+function openProjectModal(){ $('pjTitle').value=''; $('pjDetail').value=''; $('projectModal').classList.add('open'); }
+if($('pjCancel')) $('pjCancel').onclick=()=>$('projectModal').classList.remove('open');
+if($('pjSave')) $('pjSave').onclick=()=>{ const t=$('pjTitle').value.trim(); if(!t){ $('pjTitle').focus&&$('pjTitle').focus(); return; } STORE.projects.push({ id:'pj_'+Date.now(), title:t, detail:$('pjDetail').value.trim(), done:false }); saveStore(); $('projectModal').classList.remove('open'); renderSection('projects'); };
+const SECTION_ADD_FN={ecuries:()=>openAnimalModal(null),projects:openProjectModal,animals:()=>openAnimalModal(null),care:openCareModal,orders:openOrderModal,planning:openTaskModal,stock:openStockModal,contacts:openContactModal};
+[ 'animalModal','noteModal','projectModal','careModal','orderModal','stockModal','contactModal','taskModal' ].forEach(id=>$(id).addEventListener('click',e=>{ if(e.target===$(id))$(id).classList.remove('open'); }));
 
 /* ====== REVISION : moteur FSRS + écran ====== */
 const FSRS_W=[0.4072,1.1829,3.1262,15.4722,7.2102,0.5316,1.0651,0.0234,1.616,0.1544,1.0824,1.9813,0.0953,0.2975,2.2042,0.2407,2.9466,0.5034,0.6567];

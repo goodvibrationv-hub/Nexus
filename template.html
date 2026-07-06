@@ -241,6 +241,20 @@
   .photogrid .ph{position:relative; border-radius:10px; overflow:hidden; background:var(--paper2); aspect-ratio:1}
   .photogrid .ph img{width:100%; height:100%; object-fit:cover; display:block}
   .photogrid .ph .rm{position:absolute; top:4px; right:4px; width:22px; height:22px; border-radius:50%; border:none; background:rgba(42,37,32,.72); color:#fff; font-size:13px; line-height:1; cursor:pointer; display:flex; align-items:center; justify-content:center}
+  .daily-sec{margin-bottom:22px}
+  .daily-h{font-family:'Fraunces',serif; font-size:18px; font-weight:600; margin:0 0 11px; display:flex; align-items:baseline; gap:9px}
+  .daily-h .daily-t{font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--terra); font-weight:400}
+  .dailytask{display:flex; align-items:center; gap:12px; width:100%; text-align:left; font:inherit; cursor:pointer; border:1px solid var(--line2); border-radius:12px; padding:12px 14px; margin-bottom:9px; background:var(--surf); color:var(--ink); transition:background .25s, border-color .25s, transform .1s}
+  .dailytask:active{transform:scale(.98)}
+  .dailytask .dt-check{width:27px; height:27px; flex:none; border-radius:50%; border:2px solid var(--line2); display:flex; align-items:center; justify-content:center; font-size:15px; color:transparent; transition:background .25s, border-color .25s}
+  .dailytask .dt-body{display:flex; flex-direction:column; min-width:0}
+  .dailytask .dt-name{font-family:'Fraunces',serif; font-size:15.5px; font-weight:600; line-height:1.2}
+  .dailytask .dt-detail{font-size:12.5px; color:var(--mut); line-height:1.4; margin-top:1px}
+  .dailytask.done{background:#E7F0E6; border-color:var(--sage)}
+  .dailytask.done .dt-check{background:var(--sage); border-color:var(--sage); color:#fff; animation:pop .32s ease}
+  .dailytask.done .dt-name{color:var(--forest)}
+  .dailytask.done .dt-detail{text-decoration:line-through; opacity:.7}
+  @keyframes pop{0%{transform:scale(.55)} 55%{transform:scale(1.18)} 100%{transform:scale(1)}}
   .horsecard .hactions{display:flex; gap:8px; margin-top:12px}
   .miniBtn{flex:1; padding:8px; border-radius:6px; border:1px solid var(--line2); background:transparent; color:var(--mut); font:inherit; font-size:11px; font-family:'JetBrains Mono',monospace; cursor:pointer; transition:.15s}
   .miniBtn:hover{color:var(--walnut); border-color:var(--walnut)}
@@ -492,9 +506,9 @@
         <span class="go">Ouvrir les écuries →</span>
       </button>
       <button class="door stable" id="optTasks">
-        <span class="di">🗓️</span><h2>Liste des tâches</h2>
-        <p id="optTasksCount">Voir et ajouter les tâches du jour.</p>
-        <span class="go">Ouvrir les tâches →</span>
+        <span class="di">🗓️</span><h2>Tâches quotidiennes</h2>
+        <p id="optTasksCount">Repas des chevaux — matin 9h, soir 19h.</p>
+        <span class="go">Ouvrir les repas →</span>
       </button>
       <button class="door learn" id="optGestion" style="--dc:var(--walnut)">
         <span class="di">📋</span><h2>Gestion</h2>
@@ -546,6 +560,7 @@
   <div class="field"><label>Race / précision (optionnel)</label><input id="aBreed" placeholder="Selle Français"></div>
   <div class="field"><label>Âge (optionnel)</label><input id="aAge" placeholder="8 ans"></div>
   <div class="field"><label>Régime alimentaire</label><textarea id="aRegime" placeholder="¾ floc, ¾ orge, ⅓ happy…"></textarea></div>
+  <div class="field"><label>Foin (brouettes / repas)</label><input id="aHay" type="number" min="0" step="1" value="1"></div>
   <div class="field"><label>Notes</label><textarea id="aNotes" placeholder="Particularités…"></textarea></div>
   <div class="sheetbtns"><button class="cancel" id="aCancel">Annuler</button><button class="save" id="aSave">Enregistrer</button></div>
 </div></div>

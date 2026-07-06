@@ -19,7 +19,8 @@ function loadStore(){
     if(raw){ const d=JSON.parse(raw); STORE.horses=d.horses||[]; STORE.tasks=d.tasks||[]; STORE.mastered=d.mastered||{}; STORE.srs=d.srs||{}; STORE.hardMode=d.hardMode||false;
       if(d.animals) STORE.animals=d.animals; if(d.orders) STORE.orders=d.orders; if(d.stock) STORE.stock=d.stock; if(d.contacts) STORE.contacts=d.contacts;
       if(d.ecuriesNote!==undefined) STORE.ecuriesNote=d.ecuriesNote; if(d.seedFreyche) STORE.seedFreyche=d.seedFreyche;
-      if(d.projects) STORE.projects=d.projects; if(d.seedProjects) STORE.seedProjects=d.seedProjects; }
+      if(d.projects) STORE.projects=d.projects; if(d.seedProjects) STORE.seedProjects=d.seedProjects;
+      if(d.daily) STORE.daily=d.daily; }
   }catch(e){ /* mémoire seule */ }
   Object.keys(D.SKILLS).forEach(k=>{ if(!STORE.mastered[k]) STORE.mastered[k]=[]; });
 }
@@ -102,7 +103,9 @@ function rDomains(){ mode='learn'; renderHome(); show('scHome',{nav:'domains'});
 function rProgress(){ mode='learn'; renderProgress(); show('scProgress',{nav:'progress'}); }
 function rRevise(){ mode='learn'; renderRevise(); show('scRevise',{nav:'revise'}); }
 function rStable(){ mode='stable';
-  const pend=(STORE.tasks||[]).filter(t=>!t.done).length; $('optTasksCount').textContent=pend?(pend+' tâche'+(pend>1?'s':'')+' à faire — voir et ajouter.'):'Voir et ajouter les tâches du jour.';
+  const today=new Date().toISOString().slice(0,10); const dd=(STORE.daily&&STORE.daily.date===today)?STORE.daily.done:{};
+  let tot=0,dn=0; (STORE.animals||[]).forEach(a=>{ const t=feedTimes(a); if(t.matin){tot++; if(dd['m_'+a.id])dn++;} if(t.soir){tot++; if(dd['s_'+a.id])dn++;} });
+  $('optTasksCount').textContent = tot ? ((tot-dn)+' repas à faire — matin 9h, soir 19h.') : 'Repas des chevaux — matin & soir.';
   const na=(STORE.animals||[]).length; $('optEcuriesCount').textContent=na?(na+(na>1?' animaux':' animal')+' · soins et santé.'):'Ajoute tes chevaux et leurs soins.';
   show('scStable',{accent:'#8A5A3C',nav:'stable'});
 }
@@ -345,7 +348,7 @@ if(!STORE.contacts) STORE.contacts=[];
 if(!STORE.tasks) STORE.tasks=[];
 if(!STORE.projects) STORE.projects=[];
 /* migration : nouveaux champs de fiche animal */
-STORE.animals.forEach(a=>{ if(a.sex===undefined)a.sex=''; if(a.regime===undefined)a.regime=''; if(!Array.isArray(a.noteLog))a.noteLog=[]; if(!Array.isArray(a.photos))a.photos=[]; if(!Array.isArray(a.care))a.care=[]; });
+STORE.animals.forEach(a=>{ if(a.sex===undefined)a.sex=''; if(a.regime===undefined)a.regime=''; if(a.hay===undefined)a.hay=/braddy/i.test(a.name||'')?2:1; if(!Array.isArray(a.noteLog))a.noteLog=[]; if(!Array.isArray(a.photos))a.photos=[]; if(!Array.isArray(a.care))a.care=[]; });
 if(STORE.ecuriesNote===undefined) STORE.ecuriesNote="Toujours humidifier l'orge (à peine humide) · Mouiller le son";
 /* graine unique : chevaux du Freyche avec leur régime */
 if(!STORE.seedFreyche){
@@ -380,20 +383,49 @@ function renderStableMenu(){
 }
 function openGestion(){ go(()=>{ mode='stable'; renderStableMenu(); show('scGestion',{accent:'#8A5A3C',nav:'stable'}); }, 'gestion'); }
 $('optGestion').onclick=openGestion;
-$('optTasks').onclick=()=>{ mode='stable'; openStableSection('planning'); };
+$('optTasks').onclick=()=>{ mode='stable'; openStableSection('daily'); };
 $('optEcuries').onclick=()=>{ mode='stable'; openStableSection('ecuries'); };
-const SECTION_TITLES={ecuries:'Écuries',projects:'Projets',animals:'Animaux',care:'Soins / santé',orders:'Commandes de grain',planning:'Planning',stock:'Stock / matériel',contacts:'Contacts'};
-const SECTION_ADD={ecuries:'+ Ajouter un cheval',projects:'+ Ajouter un projet',animals:'+ Ajouter un animal',care:'+ Ajouter un soin',orders:'+ Ajouter une commande',planning:'+ Ajouter une tâche',stock:'+ Ajouter un article',contacts:'+ Ajouter un contact'};
+const SECTION_TITLES={ecuries:'Écuries',daily:'Tâches quotidiennes',projects:'Projets',animals:'Animaux',care:'Soins / santé',orders:'Commandes de grain',planning:'Planning',stock:'Stock / matériel',contacts:'Contacts'};
+const SECTION_ADD={ecuries:'+ Ajouter un cheval',daily:'',projects:'+ Ajouter un projet',animals:'+ Ajouter un animal',care:'+ Ajouter un soin',orders:'+ Ajouter une commande',planning:'+ Ajouter une tâche',stock:'+ Ajouter un article',contacts:'+ Ajouter un contact'};
 let currentSection=null;
 function openStableSection(key){ go(()=>{
   currentSection=key; mode='stable';
   $('ssTitle').textContent=SECTION_TITLES[key];
-  $('ssAdd').textContent=SECTION_ADD[key];
-  $('ssAdd').onclick=SECTION_ADD_FN[key];
+  if(SECTION_ADD[key]){ $('ssAdd').style.display=''; $('ssAdd').textContent=SECTION_ADD[key]; $('ssAdd').onclick=SECTION_ADD_FN[key]; }
+  else { $('ssAdd').style.display='none'; }
   renderSection(key);
   show('scStableSection',{accent:'#8A5A3C',nav:'stable'});
 }, SECTION_TITLES[key]); }
-function renderSection(key){ ({ecuries:renderEcuries,projects:renderProjects,animals:renderAnimals,care:renderCare,orders:renderOrders,planning:renderTasks,stock:renderStock,contacts:renderContacts}[key])(); }
+function renderSection(key){ ({ecuries:renderEcuries,daily:renderDaily,projects:renderProjects,animals:renderAnimals,care:renderCare,orders:renderOrders,planning:renderTasks,stock:renderStock,contacts:renderContacts}[key])(); }
+/* --- TÂCHES QUOTIDIENNES : repas des chevaux, matin/soir, d'après le régime --- */
+function feedTimes(a){
+  const r=(a.regime||'').toLowerCase();
+  if(/soir seulement|uniquement le soir|que le soir/.test(r)) return {matin:false,soir:true};
+  if(/le matin|matin seulement|uniquement le matin/.test(r)) return {matin:true,soir:false};
+  return {matin:true,soir:true};
+}
+function dailyState(){
+  const today=new Date().toISOString().slice(0,10);
+  if(!STORE.daily || STORE.daily.date!==today){ STORE.daily={date:today, done:{}}; saveStore(); }  // reset chaque jour
+  return STORE.daily;
+}
+function renderDaily(){
+  const list=$('ssList');
+  const st=dailyState(); const done=st.done;
+  const matin=[], soir=[];
+  STORE.animals.forEach(a=>{ const t=feedTimes(a); if(t.matin) matin.push(a); if(t.soir) soir.push(a); });
+  const task=(a,slot)=>{ const key=slot+'_'+a.id; const hay=(a.hay!=null?a.hay:1); const d=!!done[key];
+    return '<button class="dailytask'+(d?' done':'')+'" data-daily="'+key+'"><span class="dt-check">'+(d?'✓':'')+'</span><span class="dt-body"><span class="dt-name">Nourrir '+esc(a.name)+'</span><span class="dt-detail">'+esc(a.regime||'ration')+' · '+hay+' brouette'+(hay>1?'s':'')+' de foin</span></span></button>'; };
+  const sec=(label,time,animals,slot)=>'<div class="daily-sec"><div class="daily-h">'+label+' <span class="daily-t">'+time+'</span></div>'+(animals.length?animals.map(a=>task(a,slot)).join(''):'<div class="empty">Aucun repas.</div>')+'</div>';
+  let html = STORE.ecuriesNote ? '<div class="ecuries-banner"><span class="bl">Rappel</span>'+esc(STORE.ecuriesNote)+'</div>' : '';
+  html += sec('Matin','9h',matin,'m') + sec('Soir','19h',soir,'s');
+  list.innerHTML=html;
+  /* clic : bascule + animation, sans re-render (l'anim vient de la transition CSS) */
+  list.querySelectorAll('[data-daily]').forEach(b=>b.onclick=()=>{
+    const k=b.dataset.daily; const now=!STORE.daily.done[k]; STORE.daily.done[k]=now; saveStore();
+    b.classList.toggle('done',now); const chk=b.querySelector('.dt-check'); if(chk) chk.textContent=now?'✓':'';
+  });
+}
 /* --- PROJETS du domaine (chantiers, entretien) --- */
 function renderProjects(){
   const list=$('ssList'); list.innerHTML='';
@@ -431,7 +463,7 @@ function renderAnimal(id){
   const a=STORE.animals.find(x=>x.id===id); if(!a){ navBack(); return; }
   $('anIc').textContent=SP_ICON[a.species]||'🐾';
   $('anName').textContent=a.name;
-  const rows=[['Espèce',a.species],['Sexe',a.sex],['Race',a.breed],['Âge',a.age]].filter(r=>r[1]);
+  const rows=[['Espèce',a.species],['Sexe',a.sex],['Race',a.breed],['Âge',a.age],['Foin / repas',a.hay!=null?(a.hay+' brouette'+(a.hay>1?'s':'')):'']].filter(r=>r[1]);
   $('anDash').innerHTML=rows.length?rows.map(r=>'<tr><td class="k">'+r[0]+'</td><td class="v">'+esc(''+r[1])+'</td></tr>').join(''):'<tr><td class="v" style="color:var(--mut)">Complète la fiche avec « Modifier ».</td></tr>';
   if(a.regime){ $('anRegime').style.display='block'; $('anRegime').innerHTML='<span class="rl">Régime alimentaire</span>'+esc(a.regime); } else $('anRegime').style.display='none';
   const nl=(a.noteLog||[]).slice().sort((x,y)=>(y.date||'').localeCompare(x.date||''));
@@ -564,13 +596,14 @@ function openAnimalModal(id){
   $('aName').value=editingAnimal?editingAnimal.name:''; $('aSpecies').value=editingAnimal?editingAnimal.species||'Cheval':'Cheval';
   $('aSex').value=editingAnimal?editingAnimal.sex||'':'';
   $('aBreed').value=editingAnimal?editingAnimal.breed||'':''; $('aAge').value=editingAnimal?editingAnimal.age||'':'';
-  $('aRegime').value=editingAnimal?editingAnimal.regime||'':''; $('aNotes').value=editingAnimal?editingAnimal.notes||'':'';
+  $('aRegime').value=editingAnimal?editingAnimal.regime||'':''; $('aHay').value=editingAnimal?(editingAnimal.hay!=null?editingAnimal.hay:1):1; $('aNotes').value=editingAnimal?editingAnimal.notes||'':'';
   $('animalModal').classList.add('open');
 }
 $('aCancel').onclick=()=>$('animalModal').classList.remove('open');
 $('aSave').onclick=()=>{
   const name=$('aName').value.trim(); if(!name){ $('aName').focus(); return; }
-  const data={ name, species:$('aSpecies').value, sex:$('aSex').value, breed:$('aBreed').value.trim(), age:$('aAge').value.trim(), regime:$('aRegime').value.trim(), notes:$('aNotes').value.trim() };
+  const hayN=parseInt($('aHay').value,10);
+  const data={ name, species:$('aSpecies').value, sex:$('aSex').value, breed:$('aBreed').value.trim(), age:$('aAge').value.trim(), regime:$('aRegime').value.trim(), hay:isNaN(hayN)?1:Math.max(0,hayN), notes:$('aNotes').value.trim() };
   if(editingAnimal){ Object.assign(editingAnimal,data); } else { STORE.animals.push({ id:'a_'+Date.now(), ...data, noteLog:[], photos:[], care:[] }); }
   saveStore(); $('animalModal').classList.remove('open');
   if($('scAnimal').classList.contains('active') && currentAnimal) renderAnimal(currentAnimal);

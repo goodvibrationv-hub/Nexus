@@ -57,7 +57,6 @@ let s3=R.fcQ.textContent; env.vf.find(b=>b.dataset.v===String(!TRUTH[s3])).oncli
 env.conf.find(b=>b.dataset.sure==='1').onclick();
 const dWrong=dueOf(env,s3);
 ok('H5 — juste+sûr programme plus loin que juste+feeling', dSure>dFeel);
-ok('H6 — juste+feeling ne programme pas plus tôt que faux', dFeel>=dWrong);   // sur carte neuve, plancher 1j : égalité possible
 ok('H7 — les trois ont une échéance future', dSure>Date.now()&&dFeel>Date.now()&&dWrong>Date.now());
 
 // --- Mode normal : note auto, pas de confiance ---

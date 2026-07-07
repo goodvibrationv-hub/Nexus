@@ -32,9 +32,10 @@ const active=id=>R[id]&&R[id].classList.contains('active');
 const backLbl=()=>R.backLbl.textContent;
 const backShown=()=>R.backBtn.style.display==='flex';
 
-// au chargement : accueil, pas de retour
-ok('N1 — démarre sur l\'accueil', active('scLanding'));
-ok('N2 — pas de bouton retour à l\'accueil', !backShown());
+// au chargement : choix du profil (racine), puis accueil après sélection
+ok('N1 — démarre sur le choix de profil', active('scProfiles'));
+c.activateProfile('mael'); c.goHome();
+ok('N2 — accueil après choix du profil, pas de retour', active('scLanding')&&!backShown());
 ok('N3 — barre du bas mode apprentissage a 4 onglets (Accueil inclus)', /Accueil/.test(R.bottomnav.innerHTML)&&/Explorer/.test(R.bottomnav.innerHTML)&&/Réviser/.test(R.bottomnav.innerHTML)&&/Progrès/.test(R.bottomnav.innerHTML));
 
 // accueil -> domaines

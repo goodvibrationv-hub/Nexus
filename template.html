@@ -352,14 +352,70 @@
   :focus-visible{outline:2px solid var(--forest); outline-offset:2px}
   @media(prefers-reduced-motion:reduce){*{animation:none!important; transition:none!important}}
   @media(min-width:640px){ .domains{display:grid; grid-template-columns:1fr 1fr; gap:14px} .doors{flex-direction:row} }
+
+  /* ---- profils & supervision ---- */
+  .profilepick{display:flex; flex-direction:column; gap:12px; margin-top:8px}
+  .pcard{display:flex; align-items:center; gap:14px; width:100%; text-align:left; background:var(--surf); border:1px solid var(--line); border-radius:16px; padding:16px; cursor:pointer; font:inherit; color:inherit; transition:border-color .15s, transform .1s}
+  .pcard:active{transform:scale(.99)}
+  .pcard .pv{width:46px; height:46px; flex:none; display:flex; align-items:center; justify-content:center; font-size:24px; border-radius:50%; background:var(--forest); color:#fff}
+  .pcard.admin .pv{background:var(--walnut)}
+  .pcard .pmid{flex:1; min-width:0}
+  .pcard .pnm{font-weight:700; font-size:17px; display:flex; align-items:center; gap:8px}
+  .pcard .prole{font-family:'JetBrains Mono',monospace; font-size:9.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--mut); border:1px solid var(--line); border-radius:20px; padding:2px 7px}
+  .pcard .psub{font-size:12.5px; color:var(--mut); margin-top:3px}
+  .pcard .parw{color:var(--mut); font-size:20px}
+  .profilechip{display:inline-flex; align-items:center; gap:8px; background:var(--surf); border:1px solid var(--line); border-radius:20px; padding:6px 12px 6px 6px; margin-bottom:16px; cursor:pointer; font:inherit; color:inherit}
+  .profilechip .pc-av{width:26px; height:26px; display:flex; align-items:center; justify-content:center; font-size:15px; background:var(--forest); color:#fff; border-radius:50%}
+  .profilechip .pc-nm{font-weight:600; font-size:14px}
+  .profilechip .pc-x{font-family:'JetBrains Mono',monospace; font-size:9.5px; letter-spacing:.05em; color:var(--mut); border-left:1px solid var(--line); padding-left:8px}
+  .supervlink{display:block; width:100%; margin-top:18px; background:none; border:1px dashed var(--line); border-radius:14px; padding:13px; cursor:pointer; font:inherit; color:var(--mut); font-size:13.5px}
+  .supervlink:active{background:var(--surf)}
+  .adminGo{margin-top:6px}
+  .adminErr{margin-top:12px; color:#B4453A; font-size:13px}
+  #adminSub{margin-bottom:6px}
+  .ucard{background:var(--surf); border:1px solid var(--line); border-radius:16px; padding:16px; margin-bottom:14px}
+  .ucard .uhead{display:flex; align-items:center; gap:12px; margin-bottom:12px}
+  .ucard .uav{width:40px; height:40px; flex:none; display:flex; align-items:center; justify-content:center; font-size:20px; border-radius:50%; background:var(--forest); color:#fff}
+  .ucard.admin .uav{background:var(--walnut)}
+  .ucard .unm{font-weight:700; font-size:16px; flex:1; min-width:0}
+  .ucard .ulvl{font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:.05em; text-transform:uppercase; color:#fff; background:var(--forest); border-radius:20px; padding:3px 9px}
+  .ucard.admin .ulvl{background:var(--walnut)}
+  .uglob{display:flex; align-items:center; gap:10px; margin-bottom:12px}
+  .uglob .ubig{font-size:26px; font-weight:800; line-height:1}
+  .uglob .ubar{flex:1; height:8px; background:var(--line); border-radius:5px; overflow:hidden}
+  .uglob .ubar i{display:block; height:100%; background:var(--forest); border-radius:5px}
+  .usect{font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:.07em; text-transform:uppercase; color:var(--mut); margin:12px 0 7px}
+  .udoms{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:6px 14px}
+  .udom{display:flex; align-items:center; gap:7px; font-size:12px}
+  .udom .dn{flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:var(--ink)}
+  .udom .db{width:42px; height:6px; background:var(--line); border-radius:4px; overflow:hidden; flex:none}
+  .udom .db i{display:block; height:100%; border-radius:4px}
+  .udom .dp{width:30px; text-align:right; color:var(--mut); font-variant-numeric:tabular-nums; flex:none}
+  .ustats{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px}
+  .ustat{background:var(--paper); border:1px solid var(--line); border-radius:12px; padding:9px 11px}
+  .ustat .sv{font-size:17px; font-weight:700; line-height:1.1}
+  .ustat .sl{font-size:11px; color:var(--mut); margin-top:2px}
+  .ustat.warn .sv{color:#B4453A}
+  .uacts{display:flex; gap:8px; margin-top:12px}
+  .uacts button{flex:1; background:none; border:1px solid var(--line); border-radius:12px; padding:10px; cursor:pointer; font:inherit; font-size:12.5px; color:inherit}
+  .uacts button.danger{color:#B4453A; border-color:rgba(180,69,58,.4)}
+  .uacts button.armed{background:#B4453A; color:#fff; border-color:#B4453A}
 </style>
 </head>
 <body>
 <div class="app">
   <button class="backbtn" id="backBtn" style="display:none"><span>←</span><span class="lbl" id="backLbl">retour</span></button>
 
+  <!-- PROFILS : choix de l'utilisateur -->
+  <section class="screen active" id="scProfiles">
+    <h1 class="title">Qui utilise l'app ?</h1>
+    <p class="intro">Choisis ton profil. Chacun a sa propre progression.</p>
+    <div class="profilepick" id="profileList"></div>
+  </section>
+
   <!-- LANDING : two doors -->
-  <section class="screen active" id="scLanding">
+  <section class="screen" id="scLanding">
+    <button class="profilechip" id="profileChip"><span class="pc-av" id="chipAv">👤</span><span class="pc-nm" id="chipName">Profil</span><span class="pc-x">Changer</span></button>
     <h1 class="title">Bienvenue</h1>
     <p class="intro">Que veux-tu faire aujourd'hui ?</p>
     <div class="doors">
@@ -374,6 +430,7 @@
         <span class="go">Ouvrir le domaine →</span>
       </button>
     </div>
+    <button class="supervlink" id="doorAdmin" style="display:none">🔐 Supervision &amp; comptes</button>
   </section>
 
   <!-- LEARNING : domain list -->
@@ -548,6 +605,22 @@
     <button class="addbtn" id="anPhotoAdd">📷 Ajouter une photo</button>
     <input type="file" id="anPhotoInput" accept="image/*" style="display:none">
     <div class="photogrid" id="anPhotos"></div>
+  </section>
+
+  <!-- SUPERVISION (admin) -->
+  <section class="screen" id="scAdmin">
+    <div id="adminGate">
+      <h1 class="title">Supervision</h1>
+      <p class="intro">Espace réservé. Saisis le code d'accès pour suivre l'utilisation et gérer les comptes.</p>
+      <div class="field"><label>Code d'accès</label><input id="adminCode" type="password" placeholder="••••••••" autocomplete="off"></div>
+      <button class="save adminGo" id="adminEnter">Entrer</button>
+      <div class="adminErr" id="adminErr" style="display:none">Code incorrect.</div>
+    </div>
+    <div id="adminBoard" style="display:none">
+      <h1 class="title">Supervision</h1>
+      <p class="intro" id="adminSub"></p>
+      <div id="adminCards"></div>
+    </div>
   </section>
 </div>
 

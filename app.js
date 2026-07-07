@@ -20,14 +20,53 @@ function loadStore(){
       if(d.animals) STORE.animals=d.animals; if(d.orders) STORE.orders=d.orders; if(d.stock) STORE.stock=d.stock; if(d.contacts) STORE.contacts=d.contacts;
       if(d.ecuriesNote!==undefined) STORE.ecuriesNote=d.ecuriesNote; if(d.seedFreyche) STORE.seedFreyche=d.seedFreyche;
       if(d.projects) STORE.projects=d.projects; if(d.seedProjects) STORE.seedProjects=d.seedProjects;
-      if(d.daily) STORE.daily=d.daily; }
+      if(d.daily) STORE.daily=d.daily;
+      if(d.profiles){ STORE.profiles=d.profiles; STORE.currentProfile=d.currentProfile||'mael'; if(d.seedProfiles) STORE.seedProfiles=d.seedProfiles; } }
   }catch(e){ /* mémoire seule */ }
   Object.keys(D.SKILLS).forEach(k=>{ if(!STORE.mastered[k]) STORE.mastered[k]=[]; });
 }
 function saveStore(){ try{ localStorage.setItem('nexus_stable', JSON.stringify(STORE)); }catch(e){} }
 loadStore();
-const mastered={}; Object.keys(D.SKILLS).forEach(k=>mastered[k]=new Set(STORE.mastered[k]||[]));
+const mastered={}; Object.keys(D.SKILLS).forEach(k=>mastered[k]=new Set());
 function persistMastered(){ Object.keys(mastered).forEach(k=>STORE.mastered[k]=[...mastered[k]]); saveStore(); }
+
+/* ====== profils (multi-utilisateur local + supervision) ======
+   Chaque profil possède SA progression d'apprentissage (mastered + srs + hardMode)
+   et des stats d'usage. Le Domaine du Freyche (chevaux, tâches, projets…) reste commun.
+   STORE.mastered / STORE.srs / STORE.hardMode pointent toujours sur le profil actif :
+   persistMastered() et reviewCard() écrivent donc directement dans le bon profil. */
+const ADMIN_CODE='Lavieaufreyche';
+let adminUnlocked=false;                          // déverrouillage de session, jamais persisté
+function todayStr(){ return new Date().toISOString().slice(0,10); }
+function newStats(){ return { createdAt:Date.now(), lastSeen:0, reviews:0, sessions:0, days:[] }; }
+function initProfiles(){
+  if(!STORE.profiles){
+    STORE.profiles={
+      mael:  { name:'Maël',   role:'admin', mastered:STORE.mastered||{}, srs:STORE.srs||{}, hardMode:!!STORE.hardMode, stats:newStats() },
+      alizee:{ name:'Alizée', role:'user',  mastered:{}, srs:{}, hardMode:false, stats:newStats() },
+      lali:  { name:'Lali',   role:'user',  mastered:{}, srs:{}, hardMode:false, stats:newStats() }
+    };
+    STORE.currentProfile='mael'; STORE.seedProfiles=true;
+  }
+  Object.values(STORE.profiles).forEach(p=>{
+    if(!p.mastered) p.mastered={}; if(!p.srs) p.srs={}; if(!p.stats) p.stats=newStats();
+    if(!Array.isArray(p.stats.days)) p.stats.days=[];
+    Object.keys(D.SKILLS).forEach(k=>{ if(!p.mastered[k]) p.mastered[k]=[]; });
+  });
+  if(!STORE.currentProfile || !STORE.profiles[STORE.currentProfile]) STORE.currentProfile='mael';
+}
+function curProfile(){ return STORE.profiles[STORE.currentProfile]; }
+function bumpSeen(){ const p=curProfile(); if(!p) return; p.stats.lastSeen=Date.now(); const t=todayStr(); if(!p.stats.days.includes(t)) p.stats.days.push(t); }
+function activateProfile(id){
+  if(!STORE.profiles[id]) id='mael';
+  STORE.currentProfile=id; adminUnlocked=false;
+  const p=STORE.profiles[id];
+  STORE.mastered=p.mastered; STORE.srs=p.srs; STORE.hardMode=!!p.hardMode;   // partage par référence
+  Object.keys(D.SKILLS).forEach(k=>{ mastered[k].clear(); (p.mastered[k]||[]).forEach(x=>mastered[k].add(x)); });
+  bumpSeen(); saveStore();
+}
+initProfiles();
+activateProfile(STORE.currentProfile);
 
 function pct(k){return Math.round(mastered[k].size/D.SKILLS[k].nodes.length*100);}
 function totalPct(){let m=0,t=0;for(const k in D.SKILLS){m+=mastered[k].size;t+=D.SKILLS[k].nodes.length;}return Math.round(m/t*100);}
@@ -36,9 +75,10 @@ function totalPct(){let m=0,t=0;for(const k in D.SKILLS){m+=mastered[k].size;t+=
 let current=null,currentNode=null,currentSkillK=null,mode='landing';
 function show(screen,{accent='#3F5E4E',nav=''}={}){
   document.documentElement.style.setProperty('--forest',accent);
-  ['scLanding','scHome','scDetail','scCourse','scTest','scProgress','scStable','scGestion','scStableSection','scAnimal','scRevise'].forEach(s=>$(s).classList.remove('active'));
+  ['scProfiles','scLanding','scHome','scDetail','scCourse','scTest','scProgress','scStable','scGestion','scStableSection','scAnimal','scRevise','scAdmin'].forEach(s=>$(s).classList.remove('active'));
   $(screen).classList.add('active');
   buildNav(nav);
+  const bn=$('bottomnav'); if(bn) bn.style.display=(screen==='scProfiles'||screen==='scAdmin')?'none':'';
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
@@ -118,10 +158,124 @@ function navGo(g){
 }
 
 /* ====== landing ====== */
-function goLanding(){ mode='landing'; show('scLanding',{accent:'#3F5E4E',nav:'landing'}); }
+const PROFILE_AV={ mael:'🧭', alizee:'🌸', lali:'🦋' };
+function profileAvatar(id){ return PROFILE_AV[id]||'👤'; }
+function goLanding(){ mode='landing';
+  const p=curProfile();
+  if($('chipName')) $('chipName').textContent=p?p.name:'Profil';
+  if($('chipAv')) $('chipAv').textContent=profileAvatar(STORE.currentProfile);
+  if($('doorAdmin')) $('doorAdmin').style.display=(p&&p.role==='admin')?'block':'none';
+  show('scLanding',{accent:'#3F5E4E',nav:'landing'});
+}
 function goHome(){ goRoot(goLanding,'accueil'); }
 $('doorLearn').onclick=()=>go(rDomains,'domaines');
 $('doorStable').onclick=()=>navGo('stable');
+if($('profileChip')) $('profileChip').onclick=()=>goProfiles();
+if($('doorAdmin')) $('doorAdmin').onclick=()=>openAdmin();
+
+/* ====== choix de profil (écran racine) ====== */
+function goProfiles(){ mode='landing'; goRoot(renderProfiles,'profils'); }
+function renderProfiles(){
+  const g=$('profileList'); if(!g) return; g.innerHTML='';
+  Object.entries(STORE.profiles).forEach(([id,p])=>{
+    const b=document.createElement('button'); b.className='pcard'+(p.role==='admin'?' admin':'');
+    const gp=globalPct(p);
+    b.innerHTML='<span class="pv">'+profileAvatar(id)+'</span>'+
+      '<span class="pmid"><span class="pnm">'+esc(p.name)+(p.role==='admin'?' <span class="prole">admin</span>':'')+'</span>'+
+      '<span class="psub">'+gp+'% de progression'+(p.stats&&p.stats.lastSeen?' · vu '+relDate(p.stats.lastSeen):'')+'</span></span>'+
+      '<span class="parw">→</span>';
+    b.onclick=()=>{ activateProfile(id); goHome(); };
+    g.appendChild(b);
+  });
+  show('scProfiles',{accent:'#3F5E4E',nav:''});
+}
+function globalPct(p){ let m=0,t=0; for(const k in D.SKILLS){ m+=(p.mastered[k]||[]).length; t+=D.SKILLS[k].nodes.length; } return t?Math.round(m/t*100):0; }
+function relDate(ts){ if(!ts) return 'jamais'; const d=Math.floor((Date.now()-ts)/86400000);
+  if(d<=0) return "aujourd'hui"; if(d===1) return 'hier'; if(d<7) return 'il y a '+d+' j'; if(d<30) return 'il y a '+Math.floor(d/7)+' sem'; return 'il y a '+Math.floor(d/30)+' mois'; }
+
+/* ====== supervision (admin, protégée par code) ====== */
+function openAdmin(){ go(renderAdmin,'supervision'); }
+function renderAdmin(){
+  const unlocked=adminUnlocked;
+  $('adminGate').style.display=unlocked?'none':'block';
+  $('adminBoard').style.display=unlocked?'block':'none';
+  if(!unlocked){
+    if($('adminCode')) $('adminCode').value='';
+    if($('adminErr')) $('adminErr').style.display='none';
+  } else { renderAdminBoard(); }
+  show('scAdmin',{accent:'#8A5A3C',nav:''});
+}
+if($('adminEnter')) $('adminEnter').onclick=()=>{
+  const v=($('adminCode').value||'').trim();
+  if(v===ADMIN_CODE){ adminUnlocked=true; renderAdmin(); }
+  else { $('adminErr').style.display='block'; }
+};
+if($('adminCode')) $('adminCode').onkeydown=(e)=>{ if(e&&e.key==='Enter') $('adminEnter').onclick(); };
+
+/* stats d'un profil (lecture seule ; réutilise LEVELS/NEXUS_CARDS) */
+function profileStats(p){
+  const now=Date.now(), nDom=Object.keys(D.SKILLS).length;
+  let masteredN=0, totalN=0, dDone=0; const domPct={};
+  for(const [k,s] of Object.entries(D.SKILLS)){
+    const size=(p.mastered[k]||[]).length; masteredN+=size; totalN+=s.nodes.length;
+    if(size===s.nodes.length) dDone++; domPct[k]=Math.round(size/s.nodes.length*100);
+  }
+  let solide=0, fragile=0, retard=0, vue=0, jamais=0;
+  const srs=p.srs||{};
+  for(const c of window.NEXUS_CARDS){ const st=srs[c.id];
+    if(!st){ jamais++; continue; } vue++;
+    if(st.s>=21) solide++; if(st.s<10) fragile++; if(st.due<=now) retard++;
+  }
+  const prop=totalN?masteredN/totalN:0; let li=0; for(let i=0;i<LEVELS.length;i++){ if(prop>=LEVELS[i][0]) li=i; }
+  const weakest=Object.entries(domPct).filter(([k])=>(p.mastered[k]||[]).length<D.SKILLS[k].nodes.length).sort((a,b)=>a[1]-b[1])[0];
+  return { level:LEVELS[li][1], glob:Math.round(prop*100), masteredN, totalN, dDone, nDom, domPct, solide, fragile, retard, vue, jamais, weakest, stats:p.stats||newStats() };
+}
+function renderAdminBoard(){
+  const users=Object.entries(STORE.profiles);
+  $('adminSub').textContent=users.length+' profils · progression, révisions et lacunes.';
+  const wrap=$('adminCards'); wrap.innerHTML='';
+  users.forEach(([id,p])=>{
+    const st=profileStats(p); const S=st.stats;
+    const card=document.createElement('div'); card.className='ucard'+(p.role==='admin'?' admin':'');
+    const doms=Object.entries(st.domPct).sort((a,b)=>b[1]-a[1])
+      .map(([k,v])=>'<div class="udom"><span class="dn">'+esc(D.SKILLS[k].name)+'</span><span class="db"><i style="width:'+v+'%;background:'+D.SKILLS[k].color+'"></i></span><span class="dp">'+v+'%</span></div>').join('');
+    const stat=(v,l,warn)=>'<div class="ustat'+(warn?' warn':'')+'"><div class="sv">'+v+'</div><div class="sl">'+l+'</div></div>';
+    const weak=st.weakest?('« '+D.SKILLS[st.weakest[0]].name+' » ('+st.weakest[1]+'%)'):'—';
+    card.innerHTML=
+      '<div class="uhead"><span class="uav">'+profileAvatar(id)+'</span><span class="unm">'+esc(p.name)+'</span><span class="ulvl">'+st.level+'</span></div>'+
+      '<div class="uglob"><span class="ubig">'+st.glob+'%</span><span class="ubar"><i style="width:'+st.glob+'%"></i></span></div>'+
+      '<div class="usect">Progression par domaine</div><div class="udoms">'+doms+'</div>'+
+      '<div class="usect">Activité de révision</div><div class="ustats">'+
+        stat((S.reviews||0),'révisions faites')+stat((S.sessions||0),'séries lancées')+
+        stat((S.days?S.days.length:0),'jours actifs')+stat(relDate(S.lastSeen),'dernière activité')+
+      '</div>'+
+      '<div class="usect">Lacunes</div><div class="ustats">'+
+        stat(st.totalN-st.masteredN,'nœuds à débloquer',st.totalN-st.masteredN>0)+
+        stat(st.fragile,'fiches fragiles',st.fragile>0)+
+        stat(st.retard,'fiches en retard',st.retard>0)+
+        stat(weak,'domaine le plus faible')+
+      '</div>'+
+      '<div class="uacts"><button data-rename="'+id+'">Renommer</button><button class="danger" data-reset="'+id+'">Réinitialiser la progression</button></div>';
+    wrap.appendChild(card);
+  });
+  wrap.querySelectorAll('[data-rename]').forEach(b=>b.onclick=()=>{
+    const id=b.dataset.rename, p=STORE.profiles[id];
+    const nv=(typeof prompt==='function')?prompt('Nouveau nom du profil',p.name):null;
+    if(renameProfile(id,nv)) renderAdminBoard();
+  });
+  wrap.querySelectorAll('[data-reset]').forEach(b=>b.onclick=()=>{
+    const id=b.dataset.reset;
+    if(b.classList.contains('armed')){ resetProfile(id); renderAdminBoard(); return; }
+    b.classList.add('armed'); b.textContent='Confirmer ? (toucher à nouveau)';
+    setTimeout(()=>{ if(b&&b.classList.contains('armed')){ b.classList.remove('armed'); b.textContent='Réinitialiser la progression'; } },4000);
+  });
+}
+function renameProfile(id,name){ const p=STORE.profiles[id]; if(p&&name&&String(name).trim()){ p.name=String(name).trim(); saveStore(); return true; } return false; }
+function resetProfile(id){ const p=STORE.profiles[id]; if(!p) return;
+  Object.keys(D.SKILLS).forEach(k=>{ p.mastered[k]=[]; }); p.srs={}; p.stats=newStats();
+  if(id===STORE.currentProfile){ Object.keys(mastered).forEach(k=>mastered[k].clear()); STORE.srs=p.srs; STORE.mastered=p.mastered; }
+  saveStore();
+}
 
 /* ====== learning ====== */
 function renderHome(){
@@ -692,7 +846,7 @@ function reviewCard(id,g){
     st.s=(g===1)?fsrsLapseS(st.d,st.s,r):fsrsGainS(st.d,st.s,r,g);
     st.due=now+Math.max(1,Math.round(fsrsInterval(st.s)))*DAY; st.reps=(st.reps||0)+1;
   }
-  STORE.srs[id]=st; saveStore();
+  STORE.srs[id]=st; const p=curProfile(); if(p){ p.stats.reviews=(p.stats.reviews||0)+1; bumpSeen(); } saveStore();
 }
 function isDue(id){ const st=cardState(id); return !st || st.due<=Date.now(); }
 function dueCards(skill){ return window.NEXUS_CARDS.filter(c=>(!skill||c.skill===skill)&&isDue(c.id)); }
@@ -721,7 +875,7 @@ function renderRevise(){
   $('startRevise').textContent=due.length?'Commencer la révision ('+due.length+')':'Tout est à jour ✓';
   $('startRevise').disabled=!due.length; $('startRevise').style.opacity=due.length?'1':'.5';
   ['modeEclair','modePioche','modeSafety'].forEach(id=>{ const b=$(id); if(b){ b.disabled=!due.length; b.style.opacity=due.length?'1':'.45'; } });
-  if($('hardToggle')){ $('hardToggle').checked=!!STORE.hardMode; $('hardToggle').onchange=()=>{ STORE.hardMode=$('hardToggle').checked; saveStore(); }; }
+  if($('hardToggle')){ $('hardToggle').checked=!!STORE.hardMode; $('hardToggle').onchange=()=>{ STORE.hardMode=$('hardToggle').checked; const p=curProfile(); if(p) p.hardMode=STORE.hardMode; saveStore(); }; }
   const list=$('reviseList'); list.innerHTML='';
   Object.entries(D.SKILLS).forEach(([k,s])=>{
     const total=window.NEXUS_CARDS.filter(c=>c.skill===k).length;
@@ -736,6 +890,7 @@ function renderRevise(){
 let revQueue=[], revIndex=0, revStats=0, revRevealed=false;
 function startQueue(cards){
   if(!cards||!cards.length) return;
+  const p=curProfile(); if(p){ p.stats.sessions=(p.stats.sessions||0)+1; bumpSeen(); saveStore(); }
   revQueue=cards; revIndex=0; revStats=0;
   $('reviseHome').style.display='none'; $('reviseSession').style.display='block';
   $('revDone').style.display='none'; $('flashcard').style.display='flex'; showCard();
@@ -893,4 +1048,4 @@ if($('modeEclair')) $('modeEclair').onclick=()=>{ startQueue(interleave(dueCards
 if($('modePioche')) $('modePioche').onclick=()=>{ startQueue(seededShuffle(dueCards(null), daySeed()).slice(0,12)); };
 if($('modeSafety')) $('modeSafety').onclick=()=>{ startQueue(interleave(dueCards(null).filter(c=>SAFETY_NODES.has(c.node)))); };
 
-goHome();
+goProfiles();

@@ -37,6 +37,21 @@
   #scLanding h1.title{font-size:26px; margin-bottom:6px}
   #scLanding .intro{font-size:14px; margin-bottom:20px}
   .doors{display:flex; flex-direction:column; gap:12px; margin-top:4px}
+  /* ---- accueil : grille de tuiles carrées ---- */
+  .homegrid{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; margin-top:8px}
+  .htile{position:relative; aspect-ratio:1/1; display:flex; flex-direction:column; justify-content:flex-end; gap:2px; text-align:left; cursor:pointer; border:1px solid var(--line2); border-radius:16px; padding:16px; background:var(--surf); color:inherit; font:inherit; overflow:hidden; transition:transform .12s, box-shadow .15s, border-color .15s}
+  .htile:active{transform:scale(.98)}
+  .htile:hover{box-shadow:0 14px 32px -18px rgba(42,37,32,.5); border-color:var(--dc)}
+  .htile::before{content:"";position:absolute;left:0;top:0;right:0;height:5px;background:var(--dc,var(--line2))}
+  .htile .ti{font-size:34px; line-height:1; margin-bottom:auto}
+  .htile h2{font-family:'Fraunces',serif; font-size:18px; font-weight:600; line-height:1.15}
+  .htile .ts{font-family:'JetBrains Mono',monospace; font-size:9.5px; letter-spacing:.05em; text-transform:uppercase; color:var(--mut)}
+  .htile.learn{--dc:var(--forest)}
+  .htile.stable{--dc:var(--walnut)}
+  .htile.wood{--dc:#7C5A34}
+  .htile.soon{--dc:var(--line2); cursor:default; opacity:.6}
+  .htile.soon:hover{box-shadow:none; border-color:var(--line2)}
+  .htile.soon .ti{filter:grayscale(1); opacity:.6}
   .door{position:relative; width:100%; text-align:left; cursor:pointer; border:1px solid var(--line2); border-radius:14px; padding:20px 22px; background:var(--surf); color:inherit; font:inherit; transition:transform .15s, box-shadow .15s, border-color .15s; overflow:hidden}
   .door:active{transform:scale(.99)}
   .door:hover{box-shadow:0 14px 32px -18px rgba(42,37,32,.55); border-color:var(--dc)}
@@ -415,6 +430,81 @@
   .uacts button{flex:1; background:none; border:1px solid var(--line); border-radius:12px; padding:10px; cursor:pointer; font:inherit; font-size:12.5px; color:inherit}
   .uacts button.danger{color:#B4453A; border-color:rgba(180,69,58,.4)}
   .uacts button.armed{background:#B4453A; color:#fff; border-color:#B4453A}
+
+  /* ---- Projet Bois ---- */
+  .woodtiles{display:flex; flex-direction:column; gap:10px; margin-top:6px}
+  .woodtile{display:flex; align-items:center; gap:13px; width:100%; text-align:left; cursor:pointer; font:inherit; color:inherit; background:var(--surf); border:1px solid var(--line2); border-radius:13px; padding:14px 15px; transition:border-color .12s, transform .08s}
+  .woodtile:active{transform:scale(.99)}
+  .woodtile .wt-ic{font-size:24px; flex:none; width:30px; text-align:center}
+  .woodtile .wt-mid{flex:1; min-width:0; display:flex; flex-direction:column; gap:2px}
+  .woodtile .wt-t{font-family:'Fraunces',serif; font-size:16px; font-weight:600}
+  .woodtile .wt-s{font-family:'JetBrains Mono',monospace; font-size:9.5px; letter-spacing:.04em; text-transform:uppercase; color:var(--mut)}
+  .woodtile .chev{color:var(--mut); font-size:18px; flex:none}
+  .wstep{font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:.06em; text-transform:uppercase; color:#7C5A34; margin:2px 0 10px}
+  .wnav{display:flex; justify-content:space-between; align-items:center; gap:10px; margin-top:16px}
+  .wnav .save{margin:0}
+  .wnav .miniBtn{margin:0}
+  .woodq{display:flex; flex-direction:column; gap:12px}
+  .wq-t{font-size:13px; font-weight:600; margin-bottom:6px}
+  .wq-opts{display:flex; flex-wrap:wrap; gap:6px}
+  .wopt{font:inherit; font-size:12.5px; cursor:pointer; background:var(--surf); border:1px solid var(--line2); color:var(--ink); border-radius:20px; padding:6px 11px; transition:.12s}
+  .wopt.on{background:#7C5A34; border-color:#7C5A34; color:#fff}
+  .wres{margin-top:16px; border-top:1px solid var(--line); padding-top:12px}
+  .wres-h{font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:.06em; text-transform:uppercase; color:var(--mut); margin-bottom:8px}
+  .wcand{display:flex; align-items:center; gap:12px; width:100%; text-align:left; cursor:pointer; font:inherit; color:inherit; background:var(--surf); border:1px solid var(--line2); border-radius:12px; padding:10px 13px; margin-bottom:7px}
+  .wcand.top{border-color:#7C5A34; box-shadow:0 0 0 1px #7C5A34 inset}
+  .wc-main{flex:1; min-width:0; display:flex; flex-direction:column; gap:1px}
+  .wc-n{font-family:'Fraunces',serif; font-size:16px; font-weight:600}
+  .wc-m{font-family:'JetBrains Mono',monospace; font-size:9.5px; text-transform:uppercase; color:var(--mut)}
+  .wc-conf{display:flex; align-items:center; gap:7px; flex:none}
+  .wc-bar{width:52px; height:7px; background:var(--line); border-radius:5px; overflow:hidden}
+  .wc-bar i{display:block; height:100%; background:#7C5A34; border-radius:5px}
+  .wc-conf b{font-size:13px; font-variant-numeric:tabular-nums; width:34px; text-align:right}
+  .wpick{background:var(--paper2); border-radius:10px; padding:8px 12px; font-size:13px; margin-bottom:12px}
+  .wpick-x{color:#7C5A34; cursor:pointer; text-decoration:underline}
+  .efiche{background:var(--surf); border:1px solid var(--line2); border-radius:14px; padding:15px; margin-bottom:4px}
+  .ef-h{display:flex; align-items:baseline; gap:10px; margin-bottom:10px}
+  .ef-n{font-family:'Fraunces',serif; font-size:20px; font-weight:600}
+  .ef-t{font-family:'JetBrains Mono',monospace; font-size:10px; text-transform:uppercase; color:var(--mut)}
+  .ef-row{display:flex; justify-content:space-between; font-size:13.5px; padding:5px 0; border-top:1px solid var(--line)}
+  .ef-note{font-size:13px; color:var(--mut); line-height:1.5; margin:10px 0 8px}
+  .ef-uses{display:flex; flex-wrap:wrap; gap:6px}
+  .wtag{font-family:'JetBrains Mono',monospace; font-size:10px; color:#7C5A34; background:rgba(124,90,52,.1); border-radius:20px; padding:3px 9px}
+  .woodlist{display:flex; flex-direction:column; gap:8px}
+  .logrow{display:flex; align-items:center; gap:12px; background:var(--surf); border:1px solid var(--line2); border-radius:12px; padding:9px 11px}
+  .lg-ph{width:44px; height:44px; flex:none; border-radius:9px; overflow:hidden; background:var(--paper2); display:flex; align-items:center; justify-content:center; font-size:22px}
+  .lg-ph img{width:100%; height:100%; object-fit:cover}
+  .lg-mid{flex:1; min-width:0; display:flex; flex-direction:column; gap:2px}
+  .lg-n{font-family:'Fraunces',serif; font-size:15px; font-weight:600}
+  .lg-m{font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--mut)}
+  .lg-del{background:none; border:none; color:var(--mut); font-size:22px; cursor:pointer; flex:none; line-height:1; padding:0 2px}
+  .projlist{display:flex; flex-direction:column; gap:8px; margin-bottom:6px}
+  .projrow{display:flex; align-items:center; gap:12px; background:var(--surf); border:1px solid var(--line2); border-radius:12px; padding:10px 12px}
+  .projrow.ok{border-color:rgba(63,94,78,.5)}
+  .pr-ic{font-size:22px; flex:none; width:28px; text-align:center}
+  .pr-mid{flex:1; min-width:0; display:flex; flex-direction:column; gap:2px}
+  .pr-n{font-family:'Fraunces',serif; font-size:15px; font-weight:600}
+  .pr-m{font-size:12px; color:var(--mut); line-height:1.35}
+  .pr-badge{font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700; color:var(--forest); flex:none}
+  .wm-help{font-size:13px; color:var(--mut); line-height:1.5; margin-bottom:10px}
+  .wm-seg{display:flex; gap:6px; margin:4px 0 10px}
+  .wm-segb{flex:1; font:inherit; font-size:11.5px; cursor:pointer; background:var(--surf); border:1px solid var(--line2); color:var(--ink); border-radius:9px; padding:8px 4px; transition:.12s}
+  .wm-segb.on{background:#7C5A34; border-color:#7C5A34; color:#fff}
+  .wm-imgwrap{position:relative; border-radius:12px; overflow:hidden; border:1px solid var(--line2); line-height:0}
+  .wm-imgwrap.tap{cursor:crosshair; touch-action:manipulation}
+  .wm-imgwrap.sm{max-width:180px}
+  .wm-imgwrap img{width:100%; display:block}
+  .wm-dots{position:absolute; inset:0; pointer-events:none}
+  .wm-dot{position:absolute; width:12px; height:12px; margin:-6px 0 0 -6px; border-radius:50%; border:2px solid #fff; box-shadow:0 0 0 1px rgba(0,0,0,.4)}
+  .wm-line{position:absolute; height:2px; transform-origin:0 50%; opacity:.85}
+  .wm-dot.dref,.wm-line.dref{background:#C99A3F} .wm-dot.dref{background:#C99A3F}
+  .wm-dot.dlen,.wm-line.dlen{background:#3F5E4E}
+  .wm-dot.ddiam,.wm-line.ddiam{background:#A4572F}
+  .wm-out{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; margin-top:12px}
+  .wm-out .ustat{text-align:center}
+  .wm-manualwrap{margin-top:12px; font-size:13px}
+  .wm-manualwrap summary{cursor:pointer; color:#7C5A34; font-family:'JetBrains Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:.05em}
+  .wm-manual{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px}
 </style>
 </head>
 <body>
@@ -432,18 +522,11 @@
   <section class="screen" id="scLanding">
     <button class="profilechip" id="profileChip"><span class="pc-av" id="chipAv">👤</span><span class="pc-nm" id="chipName">Profil</span><span class="pc-x">Changer</span></button>
     <h1 class="title">Bienvenue</h1>
-    <p class="intro">Que veux-tu faire aujourd'hui ?</p>
-    <div class="doors">
-      <button class="door learn" id="doorLearn">
-        <span class="di">❦</span><h2>Apprendre</h2>
-        <p>Des savoir-faire de la main et de la nature, du premier geste à la maîtrise.</p>
-        <span class="go">Explorer les domaines →</span>
-      </button>
-      <button class="door stable" id="doorStable">
-        <span class="di">🐴</span><h2>Domaine du Freyche</h2>
-        <p>Tes chevaux, leurs soins et le planning, au même endroit. Sauvegardé sur ton appareil.</p>
-        <span class="go">Ouvrir le domaine →</span>
-      </button>
+    <div class="homegrid">
+      <button class="htile learn" id="doorLearn"><span class="ti">❦</span><h2>Apprendre</h2><span class="ts">Savoir-faire</span></button>
+      <button class="htile stable" id="doorStable"><span class="ti">🐴</span><h2>Domaine du Freyche</h2><span class="ts">Animaux &amp; planning</span></button>
+      <button class="htile soon" id="doorSoon" disabled><span class="ti">✦</span><h2>Bientôt</h2><span class="ts">À venir</span></button>
+      <button class="htile wood" id="doorWood"><span class="ti">🪵</span><h2>Projet Bois</h2><span class="ts">Grumes &amp; stock</span></button>
     </div>
     <button class="supervlink" id="doorAdmin" style="display:none">🔐 Supervision &amp; comptes</button>
   </section>
@@ -637,6 +720,18 @@
       <div id="adminCards"></div>
     </div>
   </section>
+
+  <!-- PROJET BOIS -->
+  <section class="screen" id="scWood">
+    <h1 class="title">Projet Bois</h1>
+    <p class="intro" id="woodSummary"></p>
+    <div class="woodtiles" id="woodTiles"></div>
+  </section>
+  <section class="screen" id="scWoodFlow">
+    <h1 class="title" id="wfTitle"></h1>
+    <div id="wfBody"></div>
+  </section>
+  <input type="file" id="woodPhotoInput" accept="image/*" capture="environment" style="display:none">
 </div>
 
 <!-- modals -->

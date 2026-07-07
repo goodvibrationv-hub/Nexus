@@ -21,7 +21,8 @@ function loadStore(){
       if(d.ecuriesNote!==undefined) STORE.ecuriesNote=d.ecuriesNote; if(d.seedFreyche) STORE.seedFreyche=d.seedFreyche;
       if(d.projects) STORE.projects=d.projects; if(d.seedProjects) STORE.seedProjects=d.seedProjects;
       if(d.daily) STORE.daily=d.daily;
-      if(d.profiles){ STORE.profiles=d.profiles; STORE.currentProfile=d.currentProfile||'mael'; if(d.seedProfiles) STORE.seedProfiles=d.seedProfiles; } }
+      if(d.profiles){ STORE.profiles=d.profiles; STORE.currentProfile=d.currentProfile||'mael'; if(d.seedProfiles) STORE.seedProfiles=d.seedProfiles; }
+      if(d.woodStock) STORE.woodStock=d.woodStock; }
   }catch(e){ /* mémoire seule */ }
   Object.keys(D.SKILLS).forEach(k=>{ if(!STORE.mastered[k]) STORE.mastered[k]=[]; });
 }
@@ -75,7 +76,7 @@ function totalPct(){let m=0,t=0;for(const k in D.SKILLS){m+=mastered[k].size;t+=
 let current=null,currentNode=null,currentSkillK=null,mode='landing';
 function show(screen,{accent='#3F5E4E',nav=''}={}){
   document.documentElement.style.setProperty('--forest',accent);
-  ['scProfiles','scLanding','scHome','scDetail','scCourse','scTest','scProgress','scStable','scGestion','scStableSection','scAnimal','scRevise','scAdmin'].forEach(s=>$(s).classList.remove('active'));
+  ['scProfiles','scLanding','scHome','scDetail','scCourse','scTest','scProgress','scStable','scGestion','scStableSection','scAnimal','scRevise','scAdmin','scWood','scWoodFlow'].forEach(s=>$(s).classList.remove('active'));
   $(screen).classList.add('active');
   buildNav(nav);
   const bn=$('bottomnav'); if(bn) bn.style.display=(screen==='scProfiles'||screen==='scAdmin')?'none':'';
@@ -123,7 +124,12 @@ function navBtn(active, key, icon, label){
 }
 function buildNav(active){
   const nav=$('bottomnav');
-  if(mode==='stable'){
+  if(mode==='wood'){
+    document.body.classList.add('stable-mode');
+    nav.innerHTML=
+      navBtn(active,'landing',NAV_IC.home,'Accueil')+
+      navBtn(active,'wood',NAV_IC.stable,'Projet Bois');
+  } else if(mode==='stable'){
     document.body.classList.add('stable-mode');
     nav.innerHTML=
       navBtn(active,'landing',NAV_IC.home,'Accueil')+
@@ -155,6 +161,7 @@ function navGo(g){
   else if(g==='progress') go(rProgress,'progrès');
   else if(g==='revise') go(rRevise,'révision');
   else if(g==='stable') go(rStable,'domaine');
+  else if(g==='wood') go(rWood,'projet bois');
 }
 
 /* ====== landing ====== */
@@ -170,6 +177,7 @@ function goLanding(){ mode='landing';
 function goHome(){ goRoot(goLanding,'accueil'); }
 $('doorLearn').onclick=()=>go(rDomains,'domaines');
 $('doorStable').onclick=()=>navGo('stable');
+if($('doorWood')) $('doorWood').onclick=()=>navGo('wood');
 if($('profileChip')) $('profileChip').onclick=()=>goProfiles();
 if($('doorAdmin')) $('doorAdmin').onclick=()=>openAdmin();
 
@@ -1058,5 +1066,326 @@ $('startRevise').onclick=()=>{ if(dueCards(null).length) startSession(null); };
 if($('modeEclair')) $('modeEclair').onclick=()=>{ startQueue(interleave(dueCards(null)).slice(0,7)); };
 if($('modePioche')) $('modePioche').onclick=()=>{ startQueue(seededShuffle(dueCards(null), daySeed()).slice(0,12)); };
 if($('modeSafety')) $('modeSafety').onclick=()=>{ startQueue(interleave(dueCards(null).filter(c=>SAFETY_NODES.has(c.node)))); };
+
+/* ============================================================
+   PROJET BOIS — grumes : photo, identification (mini-IA hors-ligne),
+   mesure (photo + repère d'échelle), stock et projets possibles.
+   Tout est local et déterministe : aucune requête réseau.
+   ============================================================ */
+if(!STORE.woodStock) STORE.woodStock=[];
+
+/* base de données d'essences (attributs observables) */
+const WOOD_Q=[
+  {id:'type', q:'Feuilles ou aiguilles ?', o:[['feuillu','Feuilles larges (feuillu)'],['resineux','Aiguilles / écailles (résineux)']]},
+  {id:'leaf', q:'Forme des feuilles / aiguilles', o:[['simple','Feuille simple, entière'],['dentee','Feuille dentée'],['lobee','Feuille lobée (découpée)'],['composee','Feuille composée (folioles)'],['aig_faisceau','Aiguilles groupées par 2-5'],['aig_isolees','Aiguilles courtes, isolées, piquantes'],['aig_plates','Aiguilles plates et douces'],['aig_rosette','Aiguilles en touffes, tombent l’hiver'],['ecailles','Écailles (type cyprès)']]},
+  {id:'fruit', q:'Fruit / graine observé', o:[['gland','Gland'],['faine','Faîne (triangulaire)'],['samare','Graine ailée (samare)'],['chataigne','Châtaigne (bogue piquante)'],['noix','Noix'],['charnu','Petit fruit charnu (cerise…)'],['cone','Cône / pomme de pin'],['gousse','Gousse (type haricot)'],['aucun','Aucun / je ne sais pas']]},
+  {id:'bark', q:'Écorce', o:[['lisse','Lisse, grise'],['crevassee','Crevassée, sillons'],['ecailleuse','Écailleuse (plaques)'],['blanche','Blanche, papier'],['orangee','Orangée en haut, écailleuse'],['cannelee','Lisse et cannelée (musclée)']]},
+  {id:'color', q:'Couleur du bois coupé', o:[['blanc','Très clair, blanc'],['blond','Clair, blond'],['brun','Brun'],['brun_rouge','Brun rougeâtre'],['brun_fonce','Brun foncé'],['jaune_vert','Jaune-verdâtre']]},
+  {id:'hard', q:'Dureté (ongle / entame)', o:[['tendre','Tendre (se raye vite)'],['mi_dur','Mi-dur'],['dur','Dur'],['tres_dur','Très dur']]}
+];
+const HARD_LBL={tendre:'tendre',mi_dur:'mi-dur',dur:'dur',tres_dur:'très dur'};
+const USE_LBL={charpente:'Charpente',planche:'Planches',meuble:'Meuble',piquet:'Piquets',bardage:'Bardage',terrasse:'Terrasse',manche:'Manches',chauffage:'Chauffage',caisse:'Caisserie'};
+const ESSENCES=[
+  {k:'chene',n:'Chêne',t:'Feuillu',hard:'dur',dens:0.72,ext:true,uses:['charpente','planche','meuble','piquet','bardage','chauffage'],
+   feat:{type:['feuillu'],leaf:['lobee'],fruit:['gland'],bark:['crevassee'],color:['brun','blond'],hard:['dur','tres_dur']},
+   note:'Bois dur, solide et durable. Charpente, parquet, tonnellerie, meuble.'},
+  {k:'hetre',n:'Hêtre',t:'Feuillu',hard:'dur',dens:0.68,ext:false,uses:['meuble','planche','chauffage'],
+   feat:{type:['feuillu'],leaf:['simple','dentee'],fruit:['faine'],bark:['lisse'],color:['blond','blanc'],hard:['dur']},
+   note:'Dur et homogène, mais craint l’humidité. Meuble, contreplaqué, tournage.'},
+  {k:'frene',n:'Frêne',t:'Feuillu',hard:'dur',dens:0.69,ext:false,uses:['manche','meuble','planche'],
+   feat:{type:['feuillu'],leaf:['composee'],fruit:['samare'],bark:['crevassee','lisse'],color:['blond','blanc'],hard:['dur']},
+   note:'Dur et souple à la fois. Manches d’outils, meuble, articles de sport.'},
+  {k:'chataignier',n:'Châtaignier',t:'Feuillu',hard:'mi_dur',dens:0.58,ext:true,uses:['piquet','charpente','bardage','meuble'],
+   feat:{type:['feuillu'],leaf:['dentee'],fruit:['chataigne'],bark:['crevassee'],color:['blond','brun'],hard:['mi_dur','dur']},
+   note:'Naturellement durable (tannins). Piquets, charpente légère, bardage.'},
+  {k:'charme',n:'Charme',t:'Feuillu',hard:'tres_dur',dens:0.75,ext:false,uses:['manche','chauffage'],
+   feat:{type:['feuillu'],leaf:['dentee'],fruit:['samare'],bark:['cannelee','lisse'],color:['blanc','blond'],hard:['tres_dur']},
+   note:'Très dur et dense. Pièces qui frottent, manches, excellent bois de chauffage.'},
+  {k:'bouleau',n:'Bouleau',t:'Feuillu',hard:'mi_dur',dens:0.61,ext:false,uses:['planche','meuble'],
+   feat:{type:['feuillu'],leaf:['dentee','simple'],fruit:['samare'],bark:['blanche'],color:['blanc','blond'],hard:['mi_dur']},
+   note:'Écorce blanche typique. Contreplaqué, déco, tournage.'},
+  {k:'noyer',n:'Noyer',t:'Feuillu',hard:'dur',dens:0.65,ext:false,uses:['meuble'],
+   feat:{type:['feuillu'],leaf:['composee'],fruit:['noix'],bark:['crevassee'],color:['brun_fonce','brun'],hard:['dur']},
+   note:'Bois noble brun foncé. Ébénisterie, meuble de luxe, placage.'},
+  {k:'merisier',n:'Merisier',t:'Feuillu',hard:'mi_dur',dens:0.60,ext:false,uses:['meuble'],
+   feat:{type:['feuillu'],leaf:['dentee'],fruit:['charnu'],bark:['lisse'],color:['brun_rouge'],hard:['mi_dur']},
+   note:'Brun rosé chaleureux. Ébénisterie, meuble, placage.'},
+  {k:'robinier',n:'Robinier (faux-acacia)',t:'Feuillu',hard:'tres_dur',dens:0.77,ext:true,uses:['piquet','terrasse','charpente','manche'],
+   feat:{type:['feuillu'],leaf:['composee'],fruit:['gousse'],bark:['crevassee'],color:['jaune_vert'],hard:['tres_dur']},
+   note:'Extrêmement durable sans traitement. Piquets, terrasse, structures extérieures.'},
+  {k:'peuplier',n:'Peuplier',t:'Feuillu',hard:'tendre',dens:0.45,ext:false,uses:['planche','caisse'],
+   feat:{type:['feuillu'],leaf:['simple'],fruit:['aucun'],bark:['lisse','crevassee'],color:['blanc'],hard:['tendre']},
+   note:'Léger et tendre. Cagettes, contreplaqué, palettes.'},
+  {k:'pin',n:'Pin sylvestre',t:'Résineux',hard:'mi_dur',dens:0.52,ext:false,uses:['charpente','planche','bardage'],
+   feat:{type:['resineux'],leaf:['aig_faisceau'],fruit:['cone'],bark:['orangee','ecailleuse'],color:['blond'],hard:['mi_dur']},
+   note:'Résineux polyvalent. Charpente, menuiserie, lambris.'},
+  {k:'epicea',n:'Épicéa',t:'Résineux',hard:'tendre',dens:0.45,ext:false,uses:['charpente','planche'],
+   feat:{type:['resineux'],leaf:['aig_isolees'],fruit:['cone'],bark:['ecailleuse'],color:['blanc','blond'],hard:['tendre']},
+   note:'Léger et clair. Charpente, lambris, caisserie, lutherie.'},
+  {k:'sapin',n:'Sapin',t:'Résineux',hard:'tendre',dens:0.45,ext:false,uses:['charpente','planche'],
+   feat:{type:['resineux'],leaf:['aig_plates'],fruit:['cone'],bark:['lisse'],color:['blanc'],hard:['tendre']},
+   note:'Proche de l’épicéa, aiguilles plates. Charpente, menuiserie.'},
+  {k:'douglas',n:'Douglas',t:'Résineux',hard:'mi_dur',dens:0.53,ext:true,uses:['charpente','bardage','terrasse'],
+   feat:{type:['resineux'],leaf:['aig_plates','aig_isolees'],fruit:['cone'],bark:['crevassee'],color:['brun_rouge','blond'],hard:['mi_dur']},
+   note:'Résineux durable au cœur. Charpente, bardage et ossature extérieurs.'},
+  {k:'meleze',n:'Mélèze',t:'Résineux',hard:'mi_dur',dens:0.55,ext:true,uses:['bardage','terrasse','charpente'],
+   feat:{type:['resineux'],leaf:['aig_rosette'],fruit:['cone'],bark:['crevassee'],color:['brun_rouge'],hard:['mi_dur','dur']},
+   note:'Aiguilles caduques, cœur durable. Bardage, terrasse, extérieur.'}
+];
+function essenceByKey(k){ return ESSENCES.find(e=>e.k===k); }
+/* « mini-IA » : score pondéré par indice observé → classement + confiance */
+function identifyEssence(ans){
+  const results=ESSENCES.map(e=>{
+    let score=0, answered=0;
+    for(const q in ans){ const v=ans[q]; if(v==null||v==='') continue; answered++;
+      const acc=e.feat[q]; if(!acc) continue;               // pas de contrainte connue → neutre
+      if(acc.indexOf(v)>=0) score+=2; else score-=1.2;       // accord / désaccord
+    }
+    const conf=(answered&&score>0)?Math.max(0,Math.min(100,Math.round(100*score/(2*answered)))):0;
+    return {e,score,conf,answered};
+  });
+  results.sort((a,b)=> b.score-a.score || a.e.n.localeCompare(b.e.n));
+  return results;
+}
+/* volume d'une grume ≈ cylindre (Ø médian) */
+function logVolume(lenCm,diamCm){ const r=(diamCm/2)/100, l=lenCm/100; return (lenCm>0&&diamCm>0)?Math.PI*r*r*l:0; }
+/* mesure par repère d'échelle (points en % de l'image) */
+function ptDistPx(a,b,rw,rh){ return Math.hypot((a.xPct-b.xPct)/100*rw,(a.yPct-b.yPct)/100*rh); }
+function scaleRealCm(segPts, refPts, refCm, rw, rh){
+  if(segPts.length<2||refPts.length<2||!refCm) return 0;
+  const refPx=ptDistPx(refPts[0],refPts[1],rw,rh); if(refPx<=0) return 0;
+  const segPx=ptDistPx(segPts[0],segPts[1],rw,rh);
+  return Math.round(segPx*refCm/refPx);
+}
+function measureResults(d){
+  const m=d.m||{}; const rw=m.rw||1, rh=m.rh||1;
+  let lenCm = (d.mLenManual!=null&&d.mLenManual!=='') ? parseFloat(d.mLenManual) : scaleRealCm(m.len||[], m.ref||[], m.refCm, rw, rh);
+  let diamCm= (d.mDiamManual!=null&&d.mDiamManual!=='') ? parseFloat(d.mDiamManual) : scaleRealCm(m.diam||[], m.ref||[], m.refCm, rw, rh);
+  lenCm=lenCm||0; diamCm=diamCm||0;
+  return { lenCm:Math.round(lenCm), diamCm:Math.round(diamCm), vol:logVolume(lenCm,diamCm) };
+}
+/* photo → base64 redimensionné (réutilise le pipeline canvas) */
+function readPhoto(file, cb){
+  const reader=new FileReader();
+  reader.onload=ev=>{ const img=new Image();
+    img.onload=()=>{ let w=img.width,h=img.height; const max=1100; if(w>max||h>max){ const r=Math.min(max/w,max/h); w=Math.round(w*r); h=Math.round(h*r); }
+      const cv=document.createElement('canvas'); cv.width=w; cv.height=h; cv.getContext('2d').drawImage(img,0,0,w,h);
+      let data; try{ data=cv.toDataURL('image/jpeg',0.72); }catch(err){ alert('Image illisible.'); return; } cb(data); };
+    img.onerror=()=>alert('Format d’image non supporté (essaie une photo JPG/PNG).');
+    img.src=ev.target.result; };
+  reader.readAsDataURL(file);
+}
+let woodPhotoCb=null;
+if($('woodPhotoInput')) $('woodPhotoInput').onchange=e=>{ const f=e.target.files&&e.target.files[0]; if(f&&woodPhotoCb) readPhoto(f, woodPhotoCb); e.target.value=''; };
+function grabPhoto(cb){ woodPhotoCb=cb; $('woodPhotoInput').click(); }
+
+/* ---- hub ---- */
+function woodStats(){ const s=STORE.woodStock||[]; return { count:s.length, vol:s.reduce((a,l)=>a+(l.volumeM3||0),0) }; }
+function rWood(){ mode='wood'; renderWoodHub(); show('scWood',{accent:'#7C5A34',nav:'wood'}); }
+function renderWoodHub(){
+  const st=woodStats();
+  $('woodSummary').textContent = st.count ? (st.count+' grume'+(st.count>1?'s':'')+' · '+st.vol.toFixed(2)+' m³ en stock') : 'Inventorie tes grumes : photo, essence, dimensions, stock.';
+  const tiles=[
+    {v:'new', ic:'➕', t:'Nouvelle grume', s:'Photo → essence → mesure'},
+    {v:'identify', ic:'🌳', t:'Identifier une essence', s:'Guide + mini-IA'},
+    {v:'stock', ic:'📦', t:'Stock', s:st.count+' grume'+(st.count>1?'s':'')},
+    {v:'projects', ic:'🏗️', t:'Projets possibles', s:'Selon ton stock'}
+  ];
+  $('woodTiles').innerHTML=tiles.map(t=>'<button class="woodtile" data-wv="'+t.v+'"><span class="wt-ic">'+t.ic+'</span><span class="wt-mid"><span class="wt-t">'+t.t+'</span><span class="wt-s">'+esc(t.s)+'</span></span><span class="chev">›</span></button>').join('');
+  $('woodTiles').querySelectorAll('[data-wv]').forEach(b=>b.onclick=()=>{ const v=b.dataset.wv; if(v==='new') startWoodNew(); else openWoodView(v); });
+}
+const WOOD_VIEW_LABEL={identify:'identifier',stock:'stock',projects:'projets'};
+function openWoodView(view){ go(()=>renderWoodFlow(view), WOOD_VIEW_LABEL[view]||'bois'); }
+function renderWoodFlow(view){
+  mode='wood';
+  if(view==='stock'){ $('wfTitle').textContent='Stock de grumes'; renderWoodStock(); }
+  else if(view==='projects'){ $('wfTitle').textContent='Projets possibles'; renderWoodProjects(); }
+  else if(view==='identify'){ $('wfTitle').textContent='Identifier une essence'; renderWoodIdentify(); }
+  show('scWoodFlow',{accent:'#7C5A34',nav:'wood'});
+}
+
+/* ---- identification (guide + mini-IA), réutilisable ---- */
+function renderIdentifyUI(host, ans, onPick){
+  const res=identifyEssence(ans);
+  const answered=Object.values(ans).filter(v=>v!=null&&v!=='').length;
+  let html='<div class="woodq">';
+  WOOD_Q.forEach(q=>{ html+='<div class="wq"><div class="wq-t">'+q.q+'</div><div class="wq-opts">';
+    q.o.forEach(([v,label])=>{ const on=ans[q.id]===v; html+='<button class="wopt'+(on?' on':'')+'" data-q="'+q.id+'" data-v="'+v+'">'+esc(label)+'</button>'; });
+    html+='</div></div>'; });
+  html+='</div>';
+  html+='<div class="wres"><div class="wres-h">Proposition de la mini-IA'+(answered?' · '+answered+' indice'+(answered>1?'s':''):'')+'</div>';
+  if(!answered){ html+='<div class="empty">Réponds à quelques questions : les essences probables s’affichent ici.</div>'; }
+  else { res.slice(0,3).forEach((r,i)=>{ html+='<button class="wcand'+(i===0&&r.conf>0?' top':'')+'" data-pick="'+r.e.k+'"><span class="wc-main"><span class="wc-n">'+esc(r.e.n)+'</span><span class="wc-m">'+r.e.t+' · '+HARD_LBL[r.e.hard]+'</span></span><span class="wc-conf"><span class="wc-bar"><i style="width:'+r.conf+'%"></i></span><b>'+r.conf+'%</b></span></button>'; }); }
+  html+='</div>';
+  host.innerHTML=html;
+  host.querySelectorAll('[data-q]').forEach(b=>b.onclick=()=>{ const q=b.dataset.q; ans[q]=(ans[q]===b.dataset.v)?'':b.dataset.v; renderIdentifyUI(host,ans,onPick); });
+  host.querySelectorAll('[data-pick]').forEach(b=>b.onclick=()=>onPick(b.dataset.pick));
+}
+function essenceFicheHTML(e){
+  const uses=e.uses.map(u=>'<span class="wtag">'+(USE_LBL[u]||u)+'</span>').join('');
+  return '<div class="efiche"><div class="ef-h"><span class="ef-n">'+esc(e.n)+'</span><span class="ef-t">'+e.t+'</span></div>'+
+    '<div class="ef-row"><span>Dureté</span><b>'+HARD_LBL[e.hard]+'</b></div>'+
+    '<div class="ef-row"><span>Densité indicative</span><b>~'+e.dens.toFixed(2)+'</b></div>'+
+    '<div class="ef-row"><span>Extérieur sans traitement</span><b>'+(e.ext?'oui':'non')+'</b></div>'+
+    '<div class="ef-note">'+esc(e.note)+'</div><div class="ef-uses">'+uses+'</div></div>';
+}
+let woodIdAns={};
+function renderWoodIdentify(){
+  const b=$('wfBody');
+  b.innerHTML='<div id="wid"></div>';
+  renderIdentifyUI($('wid'), woodIdAns, (k)=>{
+    const e=essenceByKey(k);
+    b.innerHTML='<div class="wstep">Fiche essence</div>'+essenceFicheHTML(e)+'<div class="wnav"><button class="miniBtn" id="widBack">← Revenir au guide</button></div>';
+    $('widBack').onclick=()=>renderWoodIdentify();
+  });
+}
+
+/* ---- stock ---- */
+function renderWoodStock(){
+  const b=$('wfBody'); const s=STORE.woodStock||[];
+  if(!s.length){ b.innerHTML='<div class="empty">Aucune grume en stock. Ajoute-en une depuis « Nouvelle grume ».</div>'; return; }
+  const st=woodStats();
+  let html='<div class="ec-head">'+st.count+' grume'+(st.count>1?'s':'')+' · '+st.vol.toFixed(2)+' m³</div><div class="woodlist">';
+  s.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||'')).forEach(l=>{
+    const e=essenceByKey(l.speciesKey);
+    html+='<div class="logrow"><span class="lg-ph">'+(l.photo?'<img src="'+l.photo+'" alt="">':'🪵')+'</span>'+
+      '<span class="lg-mid"><span class="lg-n">'+esc(l.speciesName||(e?e.n:'Grume'))+'</span>'+
+      '<span class="lg-m">'+(l.lengthCm?l.lengthCm+' cm × Ø'+l.diamCm+' cm':'dimensions —')+' · '+(l.volumeM3?l.volumeM3.toFixed(3)+' m³':'—')+'</span></span>'+
+      '<button class="lg-del" data-del="'+l.id+'">×</button></div>';
+  });
+  html+='</div>';
+  b.innerHTML=html;
+  b.querySelectorAll('[data-del]').forEach(x=>x.onclick=()=>{ STORE.woodStock=STORE.woodStock.filter(l=>l.id!==x.dataset.del); saveStore(); renderWoodStock(); });
+}
+
+/* ---- projets possibles (règles essence + dimensions + durabilité) ---- */
+const WOOD_PROJECTS=[
+  {k:'charpente',n:'Charpente / poutres',ic:'🏠',use:'charpente',minLen:200,minDiam:25,ext:false,desc:'Grumes droites et fortes pour poutres et pannes.'},
+  {k:'ossature',n:'Ossature / abri',ic:'🛖',use:'charpente',minLen:150,minDiam:15,ext:false,desc:'Montants et solives d’un abri ou d’une extension.'},
+  {k:'bardage',n:'Bardage extérieur',ic:'🧱',use:'bardage',minLen:150,minDiam:20,ext:true,desc:'Planches de façade — essence durable requise.'},
+  {k:'terrasse',n:'Terrasse / platelage',ic:'🪵',use:'terrasse',minLen:100,minDiam:18,ext:true,desc:'Lames de terrasse en essence durable.'},
+  {k:'piquet',n:'Piquets de clôture',ic:'🚧',use:'piquet',minLen:120,minDiam:8,ext:true,desc:'Piquets — essence naturellement durable.'},
+  {k:'planche',n:'Planches / menuiserie',ic:'🪚',use:'planche',minLen:100,minDiam:22,ext:false,desc:'Débit en planches pour menuiserie intérieure.'},
+  {k:'meuble',n:'Meuble / ébénisterie',ic:'🪑',use:'meuble',minLen:60,minDiam:25,ext:false,desc:'Belles billes pour plateaux et meubles.'},
+  {k:'manche',n:'Manches d’outils',ic:'🔨',use:'manche',minLen:40,minDiam:8,ext:false,desc:'Bois dur et souple pour manches.'},
+  {k:'chauffage',n:'Bois de chauffage',ic:'🔥',use:'chauffage',minLen:0,minDiam:0,ext:false,desc:'Feuillus denses — surtout charme, hêtre, chêne.'}
+];
+function woodProjectFit(){
+  const stock=STORE.woodStock||[];
+  return WOOD_PROJECTS.map(p=>{
+    let hasSpecies=false, tooSmall=false;
+    const fit=stock.filter(l=>{ const e=essenceByKey(l.speciesKey); if(!e) return false;
+      if(e.uses.indexOf(p.use)<0) return false; if(p.ext&&!e.ext) return false;
+      hasSpecies=true;
+      if((l.lengthCm||0)<p.minLen||(l.diamCm||0)<p.minDiam){ tooSmall=true; return false; }
+      return true; });
+    const vol=fit.reduce((a,l)=>a+(l.volumeM3||0),0);
+    const species=[...new Set(fit.map(l=>{const e=essenceByKey(l.speciesKey);return e?e.n:'';}).filter(Boolean))];
+    let hint=''; if(!fit.length){ hint = !hasSpecies ? 'Aucune essence adaptée en stock.' : (tooSmall?'Grumes présentes mais trop petites.':'—'); }
+    return {p,count:fit.length,vol,species,ok:fit.length>0,hint};
+  });
+}
+function renderWoodProjects(){
+  const b=$('wfBody'); const rows=woodProjectFit();
+  if(!(STORE.woodStock||[]).length){ b.innerHTML='<div class="empty">Ajoute des grumes au stock pour voir les projets réalisables.</div>'; return; }
+  const ok=rows.filter(r=>r.ok), no=rows.filter(r=>!r.ok);
+  let html='';
+  html+='<div class="ec-head">Réalisable maintenant</div>';
+  html+= ok.length ? '<div class="projlist">'+ok.map(r=>'<div class="projrow ok"><span class="pr-ic">'+r.p.ic+'</span><span class="pr-mid"><span class="pr-n">'+esc(r.p.n)+'</span><span class="pr-m">'+r.count+' grume'+(r.count>1?'s':'')+' · '+r.vol.toFixed(3)+' m³ · '+esc(r.species.join(', '))+'</span></span><span class="pr-badge">✓</span></div>').join('')+'</div>' : '<div class="empty">Rien de réalisable pour l’instant — il te faut des grumes adaptées.</div>';
+  html+='<div class="ec-head">À compléter</div><div class="projlist">'+no.map(r=>'<div class="projrow"><span class="pr-ic">'+r.p.ic+'</span><span class="pr-mid"><span class="pr-n">'+esc(r.p.n)+'</span><span class="pr-m">'+esc(r.hint||r.p.desc)+'</span></span></div>').join('')+'</div>';
+  b.innerHTML=html;
+}
+
+/* ---- nouvelle grume : assistant photo → essence → mesure → stock ---- */
+let woodDraft=null;
+function startWoodNew(){ woodDraft={step:1, photo:'', ans:{}, speciesKey:'', speciesName:'', m:null, mLenManual:'', mDiamManual:''}; go(renderWoodNew,'nouvelle grume'); }
+function renderWoodNew(){ mode='wood'; $('wfTitle').textContent='Nouvelle grume'; drawWoodStep(); show('scWoodFlow',{accent:'#7C5A34',nav:'wood'}); }
+function drawWoodStep(){
+  const d=woodDraft, b=$('wfBody'); if(!d) return;
+  if(d.step===1){
+    b.innerHTML='<div class="wstep">Étape 1 / 4 · Photo</div>'+
+      (d.photo?'<div class="wm-imgwrap"><img src="'+d.photo+'" alt=""></div>':'<div class="empty">Prends la grume en photo (avec un mètre ou une planche posée dessus, utile pour la mesure).</div>')+
+      '<button class="addbtn" id="wnPhoto">📷 '+(d.photo?'Reprendre la photo':'Prendre la grume en photo')+'</button>'+
+      '<div class="wnav"><span></span><button class="save" id="wnNext">'+(d.photo?'Continuer →':'Passer cette étape →')+'</button></div>';
+    $('wnPhoto').onclick=()=>grabPhoto(data=>{ d.photo=data; drawWoodStep(); });
+    $('wnNext').onclick=()=>{ d.step=2; drawWoodStep(); };
+  } else if(d.step===2){
+    b.innerHTML='<div class="wstep">Étape 2 / 4 · Essence</div>'+
+      (d.speciesKey?'<div class="wpick">Choisie : <b>'+esc(d.speciesName)+'</b> — <span class="wpick-x" id="wnClear">changer</span></div>':'')+
+      '<div id="wid"></div><div class="wnav"><button class="miniBtn" id="wnBack">← Photo</button><button class="save" id="wnNext"'+(d.speciesKey?'':' disabled style="opacity:.5"')+'>Mesurer →</button></div>';
+    renderIdentifyUI($('wid'), d.ans, (k)=>{ const e=essenceByKey(k); d.speciesKey=k; d.speciesName=e.n; drawWoodStep(); });
+    if($('wnClear')) $('wnClear').onclick=()=>{ d.speciesKey=''; d.speciesName=''; drawWoodStep(); };
+    $('wnBack').onclick=()=>{ d.step=1; drawWoodStep(); };
+    if(d.speciesKey) $('wnNext').onclick=()=>{ d.step=3; drawWoodStep(); };
+  } else if(d.step===3){
+    drawMeasureStep();
+  } else if(d.step===4){
+    const r=measureResults(d);
+    b.innerHTML='<div class="wstep">Étape 4 / 4 · Récapitulatif</div>'+
+      (d.photo?'<div class="wm-imgwrap sm"><img src="'+d.photo+'" alt=""></div>':'')+
+      '<div class="efiche"><div class="ef-h"><span class="ef-n">'+esc(d.speciesName||'Grume')+'</span></div>'+
+      '<div class="ef-row"><span>Longueur</span><b>'+(r.lenCm||'—')+' cm</b></div>'+
+      '<div class="ef-row"><span>Diamètre</span><b>'+(r.diamCm||'—')+' cm</b></div>'+
+      '<div class="ef-row"><span>Volume</span><b>'+(r.vol?r.vol.toFixed(3):'—')+' m³</b></div></div>'+
+      '<div class="wnav"><button class="miniBtn" id="wnBack">← Mesure</button><button class="save" id="wnSave">Enregistrer dans le stock</button></div>';
+    $('wnBack').onclick=()=>{ d.step=3; drawWoodStep(); };
+    $('wnSave').onclick=()=>saveWoodLog();
+  }
+}
+function drawMeasureStep(){
+  const d=woodDraft, b=$('wfBody');
+  d.m=d.m||{stage:'ref', ref:[], len:[], diam:[], refCm:100, rw:1, rh:1};
+  if(!d.photo){
+    b.innerHTML='<div class="wstep">Étape 3 / 4 · Mesure</div><div class="empty">Il faut une photo (avec un repère de longueur connue) pour mesurer, ou saisis les dimensions à la main.</div>'+
+      '<button class="addbtn" id="wmPhoto">📷 Photo de mesure</button>'+manualBlock(d)+
+      '<div class="wnav"><button class="miniBtn" id="wnBack">← Essence</button><button class="save" id="wmNext">Valider la mesure →</button></div>';
+    $('wmPhoto').onclick=()=>grabPhoto(data=>{ d.photo=data; drawWoodStep(); });
+    bindManual(d); $('wnBack').onclick=()=>{ d.step=2; drawWoodStep(); }; $('wmNext').onclick=()=>{ d.step=4; drawWoodStep(); };
+    return;
+  }
+  const seg={ref:'Repère',len:'Longueur',diam:'Diamètre'};
+  let html='<div class="wstep">Étape 3 / 4 · Mesure</div>';
+  html+='<p class="wm-help">Renseigne la longueur du repère, puis pointe sur la photo : les 2 bouts du <b>repère</b>, la <b>longueur</b> et le <b>diamètre</b> de la grume.</p>';
+  html+='<div class="field"><label>Longueur réelle du repère (cm)</label><input id="wmRef" type="number" min="1" value="'+d.m.refCm+'"></div>';
+  html+='<div class="wm-seg">'+['ref','len','diam'].map(s=>'<button class="wm-segb'+(d.m.stage===s?' on':'')+'" data-seg="'+s+'">'+seg[s]+' '+(d.m[s].length===2?'✓':d.m[s].length+'/2')+'</button>').join('')+'</div>';
+  html+='<div class="wm-imgwrap tap" id="wmImg"><img src="'+d.photo+'" alt=""><div class="wm-dots" id="wmDots"></div></div>';
+  const r=measureResults(d);
+  html+='<div class="wm-out"><div class="ustat"><div class="sv">'+(r.lenCm||'—')+(r.lenCm?' cm':'')+'</div><div class="sl">longueur</div></div>'+
+    '<div class="ustat"><div class="sv">'+(r.diamCm||'—')+(r.diamCm?' cm':'')+'</div><div class="sl">diamètre</div></div>'+
+    '<div class="ustat"><div class="sv">'+(r.vol?r.vol.toFixed(3)+' m³':'—')+'</div><div class="sl">volume</div></div></div>';
+  html+='<details class="wm-manualwrap"><summary>Saisie manuelle (sans photo)</summary>'+manualBlock(d)+'</details>';
+  html+='<div class="wnav"><button class="miniBtn" id="wnBack">← Essence</button><button class="save" id="wmNext">Valider la mesure →</button></div>';
+  b.innerHTML=html;
+  drawDots(d);
+  $('wmRef').oninput=e=>{ d.m.refCm=parseFloat(e.target.value)||0; updateMeasureOut(d); };
+  b.querySelectorAll('[data-seg]').forEach(x=>x.onclick=()=>{ d.m.stage=x.dataset.seg; d.m[d.m.stage]=[]; drawMeasureStep(); });
+  const img=$('wmImg');
+  img.onclick=(e)=>{ const el=img.querySelector('img'); const rect=el.getBoundingClientRect();
+    if(!rect.width||!rect.height) return;
+    d.m.rw=rect.width; d.m.rh=rect.height;
+    const p={ xPct:Math.max(0,Math.min(100,(e.clientX-rect.left)/rect.width*100)), yPct:Math.max(0,Math.min(100,(e.clientY-rect.top)/rect.height*100)) };
+    const arr=d.m[d.m.stage]; if(arr.length>=2) arr.length=0; arr.push(p);
+    if(arr.length===2){ const order=['ref','len','diam']; const i=order.indexOf(d.m.stage); if(i<2&&d.m[order[i+1]].length<2) d.m.stage=order[i+1]; }
+    drawMeasureStep();
+  };
+  bindManual(d);
+  $('wnBack').onclick=()=>{ d.step=2; drawWoodStep(); };
+  $('wmNext').onclick=()=>{ const r2=measureResults(d); d.mLenFinal=r2.lenCm; d.mDiamFinal=r2.diamCm; d.step=4; drawWoodStep(); };
+}
+function manualBlock(d){ return '<div class="wm-manual"><div class="field"><label>Longueur (cm)</label><input id="wmLen" type="number" min="0" value="'+(d.mLenManual||'')+'"></div><div class="field"><label>Diamètre (cm)</label><input id="wmDiam" type="number" min="0" value="'+(d.mDiamManual||'')+'"></div></div>'; }
+function bindManual(d){ if($('wmLen')) $('wmLen').oninput=e=>{ d.mLenManual=e.target.value; updateMeasureOut(d); }; if($('wmDiam')) $('wmDiam').oninput=e=>{ d.mDiamManual=e.target.value; updateMeasureOut(d); }; }
+function updateMeasureOut(d){ const r=measureResults(d); const out=document.querySelectorAll('.wm-out .sv'); if(out.length===3){ out[0].textContent=r.lenCm?r.lenCm+' cm':'—'; out[1].textContent=r.diamCm?r.diamCm+' cm':'—'; out[2].textContent=r.vol?r.vol.toFixed(3)+' m³':'—'; } }
+function drawDots(d){ const host=$('wmDots'); if(!host) return; const cls={ref:'dref',len:'dlen',diam:'ddiam'};
+  let h=''; ['ref','len','diam'].forEach(s=>{ (d.m[s]||[]).forEach(p=>{ h+='<span class="wm-dot '+cls[s]+'" style="left:'+p.xPct+'%;top:'+p.yPct+'%"></span>'; });
+    if((d.m[s]||[]).length===2){ const a=d.m[s][0],b2=d.m[s][1]; h+='<span class="wm-line '+cls[s]+'" style="left:'+a.xPct+'%;top:'+a.yPct+'%;width:'+Math.hypot((b2.xPct-a.xPct),(b2.yPct-a.yPct))+'%;transform:rotate('+Math.atan2((b2.yPct-a.yPct),(b2.xPct-a.xPct))+'rad)"></span>'; } });
+  host.innerHTML=h;
+}
+function saveWoodLog(){
+  const d=woodDraft; const r=measureResults(d);
+  const log={ id:'log_'+Date.now(), date:new Date().toISOString().slice(0,10), speciesKey:d.speciesKey, speciesName:d.speciesName, lengthCm:r.lenCm, diamCm:r.diamCm, volumeM3:+r.vol.toFixed(3), photo:d.photo||'' };
+  STORE.woodStock.push(log);
+  if(!saveStoreOk()){ STORE.woodStock.pop(); alert('Stockage plein — grume non enregistrée. Supprime des photos/grumes.'); return; }
+  woodDraft=null; goRoot(rWood,'projet bois');
+}
 
 goProfiles();

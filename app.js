@@ -1293,18 +1293,93 @@ function woodProjectFit(){
     const vol=fit.reduce((a,l)=>a+(l.volumeM3||0),0);
     const species=[...new Set(fit.map(l=>{const e=essenceByKey(l.speciesKey);return e?e.n:'';}).filter(Boolean))];
     let hint=''; if(!fit.length){ hint = !hasSpecies ? 'Aucune essence adaptée en stock.' : (tooSmall?'Grumes présentes mais trop petites.':'—'); }
-    return {p,count:fit.length,vol,species,ok:fit.length>0,hint};
+    return {p,count:fit.length,vol,species,ok:fit.length>0,hint,logs:fit};
   });
 }
 function renderWoodProjects(){
   const b=$('wfBody'); const rows=woodProjectFit();
   if(!(STORE.woodStock||[]).length){ b.innerHTML='<div class="empty">Ajoute des grumes au stock pour voir les projets réalisables.</div>'; return; }
   const ok=rows.filter(r=>r.ok), no=rows.filter(r=>!r.ok);
-  let html='';
-  html+='<div class="ec-head">Réalisable maintenant</div>';
-  html+= ok.length ? '<div class="projlist">'+ok.map(r=>'<div class="projrow ok"><span class="pr-ic">'+r.p.ic+'</span><span class="pr-mid"><span class="pr-n">'+esc(r.p.n)+'</span><span class="pr-m">'+r.count+' grume'+(r.count>1?'s':'')+' · '+r.vol.toFixed(3)+' m³ · '+esc(r.species.join(', '))+'</span></span><span class="pr-badge">✓</span></div>').join('')+'</div>' : '<div class="empty">Rien de réalisable pour l’instant — il te faut des grumes adaptées.</div>';
-  html+='<div class="ec-head">À compléter</div><div class="projlist">'+no.map(r=>'<div class="projrow"><span class="pr-ic">'+r.p.ic+'</span><span class="pr-mid"><span class="pr-n">'+esc(r.p.n)+'</span><span class="pr-m">'+esc(r.hint||r.p.desc)+'</span></span></div>').join('')+'</div>';
+  const okRow=r=>'<button class="projrow ok" data-proj="'+r.p.k+'"><span class="pr-ic">'+r.p.ic+'</span><span class="pr-mid"><span class="pr-n">'+esc(r.p.n)+'</span><span class="pr-m">'+r.count+' grume'+(r.count>1?'s':'')+' · '+r.vol.toFixed(3)+' m³ · '+esc(r.species.join(', '))+'</span></span><span class="pr-go">Dossier ›</span></button>';
+  const noRow=r=>'<button class="projrow" data-proj="'+r.p.k+'"><span class="pr-ic">'+r.p.ic+'</span><span class="pr-mid"><span class="pr-n">'+esc(r.p.n)+'</span><span class="pr-m">'+esc(r.hint||r.p.desc)+'</span></span><span class="pr-go">Voir ›</span></button>';
+  let html='<div class="ec-head">Réalisable maintenant</div>';
+  html+= ok.length ? '<div class="projlist">'+ok.map(okRow).join('')+'</div>' : '<div class="empty">Rien de réalisable pour l’instant — il te faut des grumes adaptées.</div>';
+  html+='<div class="ec-head">À compléter</div><div class="projlist">'+no.map(noRow).join('')+'</div>';
   b.innerHTML=html;
+  b.querySelectorAll('[data-proj]').forEach(x=>x.onclick=()=>openWoodProjectDoc(x.dataset.proj));
+}
+/* ---- dossier projet : pièce visée, plan de coupe, rendement, guide ---- */
+const DEBIT_LBL={plots:'Sciage en plots (planches parallèles)',equarri:'Équarrissage (poutre carrée)',avive:'Avivé / délignage (sections)',fendage:'Fendage radial (à la masse)',buche:'Tronçonnage + fendage'};
+const WOOD_DOC={
+  charpente:{intro:'Transformer une grosse grume droite en poutre porteuse à section carrée.',piece:'Poutre équarrie',section:'12×12 à 20×20 cm',long:'2 à 4 m',essences:'Chêne, douglas, mélèze, épicéa',debit:'equarri',y:{type:'equarri',params:{s:12},unit:'poutre'},
+    guide:['Caler la grume, repérer la face la plus droite.','Tracer un carré centré sur le cœur, côté ≈ Ø × 0,7.','Retirer les 4 dosses (arrondis) à la tronçonneuse ou scie mobile.','Dresser les faces au trait, vérifier l’équerre et l’aplomb.','Chanfreiner les arêtes pour limiter les fentes.'],
+    outils:['Tronçonneuse ou scie mobile','Cordeau + équerre','Coins & masse'],sechage:'≈ 1 an/cm à l’air, sous abri ventilé. Une fente à cœur est normale.',securite:'EPI anti-coupure complet, grume calée, gare au rebond en bout de barre.',astuce:'Cœur bien centré = poutre qui travaille symétrique et reste droite.'},
+  ossature:{intro:'Débiter une grume en montants et chevrons pour une ossature ou un abri.',piece:'Montant / chevron',section:'6×8 à 8×10 cm',long:'2 à 3 m',essences:'Douglas, épicéa, pin, châtaignier',debit:'avive',y:{type:'avive',params:{w:8,h:8},unit:'montant'},
+    guide:['Équarrir d’abord la grume (voir Charpente).','Tracer une trame de sections sur le bout.','Refendre en planches épaisses, puis déligner en montants.','Contrôler la section à chaque pièce.'],
+    outils:['Tronçonneuse + guide de délignage','Scie circulaire de charpente','Réglet'],sechage:'6 mois à 1 an sous abri, empilé sur liteaux et cerclé pour rester droit.',securite:'Serre-joints, appuis stables, lame adaptée à l’épaisseur.',astuce:'Numérote les pièces d’un même abri : tu retrouves l’ordre au montage.'},
+  bardage:{intro:'Scier des planches minces pour habiller une façade.',piece:'Planche / clin',section:'ép. 18–22 mm, larg. ≈ Ø',long:'selon grume',essences:'Douglas, mélèze, châtaignier, chêne (durables)',debit:'plots',y:{type:'plots',params:{t:20},unit:'planche'},
+    guide:['Dérouler la grume en plots (sciage de fil en fil).','Refendre les plots en planches de 18–22 mm.','Déligner des rives parallèles.','Poser ventilé, avec un jour de dilatation.'],
+    outils:['Scierie mobile ou tronçonneuse + cadre','Rabot','Serre-joints'],sechage:'Viser ≈ 18 % d’humidité. Lame d’air derrière le bardage obligatoire.',securite:'Planche mince = projections : poussée régulière, mains éloignées.',astuce:'Pose en clin (recouvrement) ou couvre-joint pour l’étanchéité pluie.'},
+  terrasse:{intro:'Débiter des lames épaisses pour un platelage extérieur.',piece:'Lame de terrasse',section:'ép. 22–27 mm, larg. 12–14 cm',long:'selon grume',essences:'Douglas, mélèze, robinier, châtaignier (durables)',debit:'plots',y:{type:'plots',params:{t:24},unit:'lame'},
+    guide:['Scier en plots épais.','Déligner des lames de 12–14 cm, 22–27 mm.','Casser les arêtes, pré-percer les fixations.','Poser sur lambourdes, pente 1–2 %, jour de 5 mm.'],
+    outils:['Scierie mobile','Rabot / ponceuse','Perceuse + fraise'],sechage:'Séchage partiel toléré (extérieur), mais pré-percer contre les fentes.',securite:'Bois lourd et humide : gestes de levage, gants.',astuce:'Cœur (dosse) vers le bas : la lame tuile moins vers le haut.'},
+  piquet:{intro:'Refendre une grume durable en piquets de clôture.',piece:'Piquet fendu',section:'≈ 8–10 cm, pointe',long:'1,5 à 2 m',essences:'Robinier, châtaignier, chêne (cœur durable)',debit:'fendage',y:{type:'fendage',params:{d:8},unit:'piquet'},
+    guide:['Tronçonner à longueur (1,5–2 m).','Fendre radialement à la masse et aux coins.','Refendre chaque quartier jusqu’à ≈ 8 cm.','Tailler une pointe, retirer l’aubier.'],
+    outils:['Masse + coins (ou merlin)','Tronçonneuse','Serpe / plane'],sechage:'Robinier/châtaignier utilisables verts. Garde le cœur, l’aubier pourrit.',securite:'Coins qui sautent : lunettes obligatoires, mains hors de la fente.',astuce:'Brûler légèrement le pied enterré prolonge la tenue en terre.'},
+  planche:{intro:'Débiter une bille en planches de menuiserie.',piece:'Planche',section:'ép. 27 mm, larg. ≈ Ø',long:'selon grume',essences:'Chêne, hêtre, frêne, pin, épicéa',debit:'plots',y:{type:'plots',params:{t:27},unit:'planche'},
+    guide:['Débit sur dosse (rapide) ou sur quartier (stable).','Scier en planches régulières de 27 mm.','Déligner les flaches, marquer l’ordre des planches.','Empiler sur liteaux dès la sortie de scie.'],
+    outils:['Scierie mobile / chevalet','Rabot-dégau (finition)','Liteaux de séchage'],sechage:'≈ 1 an/cm à l’air : 27 mm ≈ 2–3 ans, puis finition intérieure.',securite:'Poussée régulière, écarteur derrière la lame contre le pincement.',astuce:'Le débit « sur quartier » (mailles) bouge le moins : idéal meuble.'},
+  meuble:{intro:'Sortir de beaux plateaux épais d’une bille noble.',piece:'Plateau',section:'ép. 40–54 mm, larg. max',long:'selon usage',essences:'Noyer, merisier, chêne, frêne, hêtre',debit:'plots',y:{type:'plots',params:{t:45},unit:'plateau'},
+    guide:['Repérer la plus belle face (fil, ronce).','Débit en plots épais (40–54 mm), garder l’ordre (livre ouvert).','Laisser sécher « en plot ».','Dresser seulement au moment de l’usinage.'],
+    outils:['Scierie mobile','Dégauchisseuse / raboteuse','Humidimètre'],sechage:'Long : ≈ 1 an/cm + finition en atelier chauffé. Patience = stabilité.',securite:'Charges lourdes ; usiner un bois bien sec, protections.',astuce:'Garde les plateaux consécutifs : assortiment parfait pour un plateau de table.'},
+  manche:{intro:'Fendre du bois dur pour des ébauches de manches d’outils.',piece:'Ébauche de manche',section:'≈ 4×4 cm',long:'30 à 90 cm',essences:'Frêne, charme, robinier, cormier',debit:'fendage',y:{type:'fendage',params:{d:4},unit:'ébauche'},
+    guide:['Tronçonner à longueur.','Fendre (pas scier) pour suivre le fil : le manche ne casse pas.','Dégrossir au plane / à la hachette.','Finir à la râpe, sécher avant ponçage fin.'],
+    outils:['Coins / merlin','Plane (draw knife)','Râpe & cale à poncer'],sechage:'Fendu vert, séchage 6–12 mois. Un manche reste légèrement souple.',securite:'Plane vers l’extérieur, pièce serrée à l’étau/valet.',astuce:'Tronçon au fil droit, sans nœud : 90 % de la solidité.'},
+  chauffage:{intro:'Tronçonner et fendre en bûches calibrées, prêtes à sécher.',piece:'Bûche',section:'Ø ≈ 8–12 cm',long:'25, 33 ou 50 cm',essences:'Charme, hêtre, chêne, robinier (feuillus denses)',debit:'buche',y:{type:'buche',params:{len:33},unit:'bûche'},
+    guide:['Tronçonner en rondins à la longueur du foyer (25/33/50 cm).','Fendre en quartiers de 8–12 cm.','Empiler à l’abri de la pluie, faces au vent.','Attendre le séchage avant de brûler.'],
+    outils:['Tronçonneuse','Fendeuse ou merlin','Abri / palette de stockage'],sechage:'≥ 18–24 mois pour < 20 % d’humidité. Bois vert = peu de chaleur + encrassement.',securite:'Chevalet stable ; jamais tenir le rondin à la main.',astuce:'1 stère de charme ≈ 1 800–2 000 kWh : les feuillus denses chauffent le plus.'}
+};
+function debitYield(type,params,l){ const D=l.diamCm||0, L=l.lengthCm||0, side=D*0.707;
+  if(type==='plots') return Math.max(0,Math.floor(D*10*0.8/params.t));
+  if(type==='equarri') return side>=params.s?1:0;
+  if(type==='avive') return Math.max(0,Math.floor(side/params.w)*Math.floor(side/params.h));
+  if(type==='fendage') return Math.max(1,Math.floor((D/params.d)*(D/params.d)*0.55));
+  if(type==='buche'){ const rounds=Math.max(1,Math.floor(L/params.len)); return rounds*Math.max(1,Math.round((D/12)*(D/12))); }
+  return 0;
+}
+function debitSVG(type){ const c='#7C5A34', bg='#EFE6D6', ln='#3F5E4E';
+  let inner='';
+  if(type==='plots'){ for(let y=18;y<=102;y+=13) inner+='<line x1="12" y1="'+y+'" x2="108" y2="'+y+'" stroke="'+ln+'" stroke-width="1.6"/>'; }
+  else if(type==='equarri'){ inner='<rect x="22" y="22" width="76" height="76" fill="none" stroke="'+ln+'" stroke-width="2.4"/>'; }
+  else if(type==='avive'){ for(let i=0;i<=3;i++){ const p=22+i*25.3; inner+='<line x1="'+p.toFixed(1)+'" y1="22" x2="'+p.toFixed(1)+'" y2="98" stroke="'+ln+'" stroke-width="1.5"/><line x1="22" y1="'+p.toFixed(1)+'" x2="98" y2="'+p.toFixed(1)+'" stroke="'+ln+'" stroke-width="1.5"/>'; } }
+  else if(type==='fendage'){ for(let a=0;a<180;a+=45){ const r=a*Math.PI/180,dx=54*Math.cos(r),dy=54*Math.sin(r); inner+='<line x1="'+(60-dx).toFixed(1)+'" y1="'+(60-dy).toFixed(1)+'" x2="'+(60+dx).toFixed(1)+'" y2="'+(60+dy).toFixed(1)+'" stroke="'+ln+'" stroke-width="1.6"/>'; } }
+  else if(type==='buche'){ inner='<line x1="60" y1="8" x2="60" y2="112" stroke="'+ln+'" stroke-width="1.6"/><line x1="8" y1="60" x2="112" y2="60" stroke="'+ln+'" stroke-width="1.6"/>'; }
+  return '<svg class="debitsvg" viewBox="0 0 120 120" width="118" height="118" aria-hidden="true"><circle cx="60" cy="60" r="54" fill="'+bg+'" stroke="'+c+'" stroke-width="2.6"/>'+inner+'<circle cx="60" cy="60" r="3.2" fill="'+c+'"/></svg>';
+}
+function openWoodProjectDoc(k){ go(()=>renderWoodProjectDoc(k),'dossier'); }
+function renderWoodProjectDoc(k){
+  mode='wood'; const p=WOOD_PROJECTS.find(x=>x.k===k), doc=WOOD_DOC[k], row=woodProjectFit().find(r=>r.p.k===k);
+  $('wfTitle').textContent=p.n;
+  const sec=(t,body)=>'<div class="doc-sec"><div class="doc-h">'+t+'</div>'+body+'</div>';
+  const li=arr=>'<ol class="doc-ol">'+arr.map(s=>'<li>'+esc(s)+'</li>').join('')+'</ol>';
+  const tags=arr=>'<div class="ef-uses">'+arr.map(o=>'<span class="wtag">'+esc(o)+'</span>').join('')+'</div>';
+  let pieces=0; (row.logs||[]).forEach(l=>{ pieces+=debitYield(doc.y.type,doc.y.params,l); });
+  const yieldBox = row.ok
+    ? '<div class="doc-yield"><span class="dy-n">≈ '+pieces+' '+doc.y.unit+(pieces>1?'s':'')+'</span><span class="dy-s">estimé depuis '+row.count+' grume'+(row.count>1?'s':'')+' adaptée'+(row.count>1?'s':'')+' ('+esc(row.species.join(', '))+')</span></div>'
+    : '<div class="doc-yield warn"><span class="dy-n">Pas encore réalisable</span><span class="dy-s">'+esc(row.hint||'—')+'</span></div>';
+  let html='<div class="doc-top"><span class="doc-ic">'+p.ic+'</span><div><div class="doc-intro">'+esc(doc.intro)+'</div></div></div>';
+  html+=sec('La pièce visée','<div class="efiche"><div class="ef-row"><span>Pièce</span><b>'+esc(doc.piece)+'</b></div><div class="ef-row"><span>Section / calibre</span><b>'+esc(doc.section)+'</b></div><div class="ef-row"><span>Longueur</span><b>'+esc(doc.long)+'</b></div><div class="ef-row"><span>Essences conseillées</span><b>'+esc(doc.essences)+'</b></div></div>');
+  html+=sec('Plan de coupe','<div class="debitwrap">'+debitSVG(doc.debit)+'<div class="debit-cap"><b>'+esc(DEBIT_LBL[doc.debit])+'</b><span>Coupe transversale de la grume (● = cœur).</span></div></div>');
+  html+=sec('Rendement estimé — ton stock', yieldBox);
+  html+=sec('Guide de découpe', li(doc.guide));
+  html+=sec('Outils', tags(doc.outils));
+  html+=sec('Séchage','<div class="doc-p">'+esc(doc.sechage)+'</div>');
+  html+=sec('Sécurité','<div class="doc-p">'+esc(doc.securite)+'</div>');
+  html+=sec('Astuce','<div class="doc-p astuce">💡 '+esc(doc.astuce)+'</div>');
+  html+='<div class="wnav"><button class="miniBtn" id="docBack">← Projets</button></div>';
+  $('wfBody').innerHTML=html;
+  $('docBack').onclick=()=>doBack();
+  show('scWoodFlow',{accent:'#7C5A34',nav:'wood'});
 }
 
 /* ---- nouvelle grume : assistant photo → essence → mesure → stock ---- */

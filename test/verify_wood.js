@@ -71,6 +71,18 @@ ok('W17 — liste stock affiche l\'essence et le volume', /Chêne/.test(env2.reg
 c2.renderWoodFlow('projects');
 ok('W18 — écran projets affiche « Réalisable » + « À compléter »', /Réalisable maintenant/.test(env2.reg.wfBody.innerHTML) && /compléter/.test(env2.reg.wfBody.innerHTML));
 
+// ---- dossier projet : rendement (débit) + rendu ----
+ok('WD1 — débit plots (planche 27mm, Ø34 → ~10)', c2.debitYield('plots',{t:27},{diamCm:34,lengthCm:300})===10);
+ok('WD2 — débit équarri : gros oui, petit non', c2.debitYield('equarri',{s:12},{diamCm:38})===1 && c2.debitYield('equarri',{s:12},{diamCm:10})===0);
+ok('WD3 — débit fendage (piquet Ø26 ≥ 4)', c2.debitYield('fendage',{d:8},{diamCm:26})>=4);
+ok('WD4 — débit bûche (Ø38 L300 > 0)', c2.debitYield('buche',{len:33},{diamCm:38,lengthCm:300})>0);
+c2.renderWoodProjectDoc('charpente');
+const doc=env2.reg.wfBody.innerHTML;
+ok('WD5 — dossier : plan de coupe + guide + rendement + séchage', /Plan de coupe/.test(doc)&&/Guide de découpe/.test(doc)&&/Rendement/.test(doc)&&/debitsvg/.test(doc)&&/Séchage/.test(doc));
+ok('WD6 — dossier réalisable : estimation de pièces', /≈ \d+ poutre/.test(doc));
+c2.renderWoodProjectDoc('terrasse');
+ok('WD7 — dossier non réalisable : « Pas encore réalisable »', /Pas encore réalisable/.test(env2.reg.wfBody.innerHTML));
+
 // ---- jeu d'essai : 20 grumes → projets ----
 c.loadWoodDemo();
 ok('W19 — jeu d’essai charge 20 grumes', c.woodStats().count===20);

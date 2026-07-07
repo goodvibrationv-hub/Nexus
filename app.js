@@ -146,7 +146,7 @@ function rStable(){ mode='stable';
   const today=new Date().toISOString().slice(0,10); const dd=(STORE.daily&&STORE.daily.date===today)?STORE.daily.done:{};
   let tot=0,dn=0; (STORE.animals||[]).forEach(a=>{ const t=feedTimes(a); if(t.matin){tot++; if(dd['m_'+a.id])dn++;} if(t.soir){tot++; if(dd['s_'+a.id])dn++;} });
   $('optTasksCount').textContent = tot ? ((tot-dn)+' repas à faire — matin 9h, soir 19h.') : 'Repas des chevaux — matin & soir.';
-  const na=(STORE.animals||[]).length; $('optEcuriesCount').textContent=na?(na+(na>1?' animaux':' animal')+' · soins et santé.'):'Ajoute tes chevaux et leurs soins.';
+  const na=(STORE.animals||[]).length; $('optEcuriesCount').textContent=na?(na+(na>1?' animaux':' animal')+' · soins et santé.'):'Ajoute tes animaux et leurs soins.';
   show('scStable',{accent:'#8A5A3C',nav:'stable'});
 }
 function navGo(g){
@@ -540,7 +540,7 @@ $('optGestion').onclick=openGestion;
 $('optTasks').onclick=()=>{ mode='stable'; openStableSection('daily'); };
 $('optEcuries').onclick=()=>{ mode='stable'; openStableSection('ecuries'); };
 const SECTION_TITLES={ecuries:'Écuries',daily:'Tâches quotidiennes',projects:'Projets',animals:'Animaux',care:'Soins / santé',orders:'Commandes de grain',planning:'Planning',stock:'Stock / matériel',contacts:'Contacts'};
-const SECTION_ADD={ecuries:'+ Ajouter un cheval',daily:'',projects:'+ Ajouter un projet',animals:'+ Ajouter un animal',care:'+ Ajouter un soin',orders:'+ Ajouter une commande',planning:'+ Ajouter une tâche',stock:'+ Ajouter un article',contacts:'+ Ajouter un contact'};
+const SECTION_ADD={ecuries:'+ Ajouter un animal',daily:'',projects:'+ Ajouter un projet',animals:'+ Ajouter un animal',care:'+ Ajouter un soin',orders:'+ Ajouter une commande',planning:'+ Ajouter une tâche',stock:'+ Ajouter un article',contacts:'+ Ajouter un contact'};
 let currentSection=null;
 function openStableSection(key){ go(()=>{
   currentSection=key; mode='stable';
@@ -594,21 +594,32 @@ function renderProjects(){
   });
 }
 /* --- ÉCURIES : chevaux + leurs soins réunis --- */
+/* Vue d'ensemble de TOUS les animaux : lignes compactes (esp./sexe/âge + régime
+   en un coup d'œil, pastilles soins/photos) + compteur, pensé pour tenir sans défiler. */
 function renderEcuries(){
   const list=$('ssList');
-  list.innerHTML = STORE.ecuriesNote ? '<div class="ecuries-banner"><span class="bl">Rappel alimentation</span>'+esc(STORE.ecuriesNote)+'</div>' : '';
-  if(!STORE.animals.length){ list.innerHTML += '<div class="empty">Aucun cheval pour l\'instant. Ajoute-en un.</div>'; return; }
-  STORE.animals.forEach(a=>{
-    const card=document.createElement('button'); card.className='horsecard';
-    card.style.cssText='display:block;width:100%;text-align:left;cursor:pointer;font:inherit';
+  const na=STORE.animals.length;
+  const byName=STORE.animals.slice().sort((a,b)=>(a.name||'').localeCompare(b.name||'','fr'));
+  let html = STORE.ecuriesNote ? '<div class="ecuries-banner sm"><span class="bl">Rappel</span>'+esc(STORE.ecuriesNote)+'</div>' : '';
+  html += '<div class="ec-head">'+na+(na>1?' animaux':' animal')+'</div>';
+  if(!na){ list.innerHTML = html + '<div class="empty">Aucun animal pour l\'instant. Ajoute-en un.</div>'; return; }
+  html += '<div class="animallist">';
+  byName.forEach(a=>{
     const meta=[esc(a.species),a.sex?esc(a.sex):'',esc(a.breed),a.age?esc(''+a.age):''].filter(Boolean).join(' · ');
     const np=(a.photos||[]).length, ns=(a.care||[]).length;
-    card.innerHTML='<div class="hc-top"><span class="hi">'+(SP_ICON[a.species]||'🐾')+'</span><div style="flex:1"><h4>'+esc(a.name)+'</h4><div class="hmeta">'+meta+'</div></div><span class="chev">›</span></div>'+
-      (a.regime?'<div style="border-top:1px solid var(--line);margin-top:8px;padding-top:8px;font-size:13px;line-height:1.5"><b>Régime :</b> '+esc(a.regime)+'</div>':'')+
-      ((np||ns)?'<div class="hmeta" style="margin-top:6px">'+[ns?ns+' soin'+(ns>1?'s':''):'',np?np+' photo'+(np>1?'s':''):''].filter(Boolean).join(' · ')+'</div>':'');
-    card.onclick=()=>openAnimal(a.id);
-    list.appendChild(card);
+    const badges=[ns?('<span class="ec-badge">🩺 '+ns+'</span>'):'', np?('<span class="ec-badge">📷 '+np+'</span>'):''].filter(Boolean).join('');
+    html += '<button class="animalrow" data-an="'+a.id+'">'+
+      '<span class="ar-ic">'+(SP_ICON[a.species]||'🐾')+'</span>'+
+      '<span class="ar-mid"><span class="ar-name">'+esc(a.name)+'</span>'+
+        (meta?'<span class="ar-meta">'+meta+'</span>':'')+
+        (a.regime?'<span class="ar-reg">'+esc(a.regime)+'</span>':'')+
+      '</span>'+
+      (badges?'<span class="ar-badges">'+badges+'</span>':'')+
+      '<span class="chev">›</span></button>';
   });
+  html += '</div>';
+  list.innerHTML=html;
+  list.querySelectorAll('[data-an]').forEach(b=>b.onclick=()=>openAnimal(b.dataset.an));
 }
 /* --- FICHE ANIMAL : tableau de bord + notes + soins + photos --- */
 let currentAnimal=null;

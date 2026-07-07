@@ -40,8 +40,9 @@ ok('S5 — champs fiche initialisés', store().animals.every(a=>a.sex!==undefine
 // --- liste Écuries ---
 c.navGo('stable'); c.openStableSection('ecuries');
 ok('E1 — bannière alimentation affichée', /ecuries-banner/.test(R.ssList.innerHTML));
-ok('E2 — 7 fiches chevaux', R.ssList.children.length===7);
-ok('E3 — fiche montre le régime', /Régime/.test(R.ssList.children[0].innerHTML));
+ok('E2 — 7 lignes animaux (vue d\'ensemble)', (R.ssList.innerHTML.match(/class="animalrow"/g)||[]).length===7);
+ok('E3 — chaque ligne montre le régime', /ar-reg/.test(R.ssList.innerHTML)&&/orge/.test(R.ssList.innerHTML));
+ok('E4 — compteur « 7 animaux » en tête', /7 animaux/.test(R.ssList.innerHTML));
 
 // --- ouvrir une fiche ---
 const tina=store().animals.find(a=>a.name==='TINA').id;

@@ -221,6 +221,21 @@
   .horsecard .ec-nocare{margin-top:10px; border-top:1px solid var(--line); padding-top:8px; font-size:12px; color:var(--mut); font-style:italic}
   .ecuries-banner{background:var(--forest); color:var(--surf); border-radius:10px; padding:10px 13px; font-size:12.5px; line-height:1.4; margin-bottom:14px}
   .ecuries-banner .bl{display:block; font-family:'JetBrains Mono',monospace; font-size:10px; opacity:.85; margin-bottom:2px}
+  .ecuries-banner.sm{padding:7px 12px; font-size:11.5px; line-height:1.3; margin-bottom:7px}
+  /* vue d'ensemble « tous les animaux » : lignes compactes, pensées pour tenir sans défiler */
+  #scStableSection .addbtn{margin-bottom:10px}
+  .ec-head{font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:.06em; text-transform:uppercase; color:var(--mut); margin:2px 0 6px}
+  .animallist{display:flex; flex-direction:column; gap:6px}
+  .animalrow{display:flex; align-items:center; gap:11px; width:100%; text-align:left; cursor:pointer; font:inherit; color:inherit; background:var(--surf); border:1px solid var(--line2); border-radius:11px; padding:7px 12px; transition:border-color .12s, transform .08s}
+  .animalrow:active{transform:scale(.995)}
+  .ar-ic{font-size:21px; flex:none; width:25px; text-align:center}
+  .ar-mid{flex:1; min-width:0; display:flex; flex-direction:column; gap:1px}
+  .ar-name{font-family:'Fraunces',serif; font-size:15px; font-weight:600; line-height:1.15; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .ar-meta{font-family:'JetBrains Mono',monospace; font-size:9px; color:var(--mut); text-transform:uppercase; letter-spacing:.04em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .ar-reg{font-size:11.5px; color:var(--mut); line-height:1.25; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .ar-badges{display:flex; gap:5px; flex:none}
+  .ec-badge{font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--mut); background:var(--paper2); border-radius:20px; padding:2px 7px; white-space:nowrap}
+  .animalrow .chev{color:var(--mut); font-size:18px; flex:none}
   .animalhead{display:flex; align-items:center; gap:12px; margin-bottom:8px}
   .animalhead .ah-ic{font-size:34px; line-height:1}
   .animalhead h1{margin:0}
@@ -559,7 +574,7 @@
     <div class="doors">
       <button class="door stable" id="optEcuries">
         <span class="di">🐴</span><h2>Écuries</h2>
-        <p id="optEcuriesCount">Tes chevaux et leurs soins.</p>
+        <p id="optEcuriesCount">Tous tes animaux et leurs soins.</p>
         <span class="go">Ouvrir les écuries →</span>
       </button>
       <button class="door stable" id="optTasks">

@@ -71,5 +71,18 @@ ok('W17 — liste stock affiche l\'essence et le volume', /Chêne/.test(env2.reg
 c2.renderWoodFlow('projects');
 ok('W18 — écran projets affiche « Réalisable » + « À compléter »', /Réalisable maintenant/.test(env2.reg.wfBody.innerHTML) && /compléter/.test(env2.reg.wfBody.innerHTML));
 
+// ---- jeu d'essai : 20 grumes → projets ----
+c.loadWoodDemo();
+ok('W19 — jeu d’essai charge 20 grumes', c.woodStats().count===20);
+const dfit=c.woodProjectFit();
+ok('W20 — au moins 6 catégories réalisables', dfit.filter(r=>r.ok).length>=6);
+ok('W21 — charpente réalisable (grosses grumes)', dfit.find(r=>r.p.k==='charpente').ok);
+ok('W22 — piquets réalisables (essences durables)', dfit.find(r=>r.p.k==='piquet').ok);
+ok('W23 — bardage réalisable (durables ≥ Ø20)', dfit.find(r=>r.p.k==='bardage').ok);
+c.loadWoodDemo();
+ok('W24 — rechargement idempotent (pas de doublon)', c.woodStats().count===20);
+c.clearWoodStock();
+ok('W25 — vider le stock remet à zéro', c.woodStats().count===0);
+
 console.log('\n=== Bilan verif Projet Bois :', pass, 'réussis,', fail, 'échoués ===');
 process.exit(fail?1:0);

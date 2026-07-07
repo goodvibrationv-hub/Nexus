@@ -37,6 +37,21 @@
   #scLanding h1.title{font-size:26px; margin-bottom:6px}
   #scLanding .intro{font-size:14px; margin-bottom:20px}
   .doors{display:flex; flex-direction:column; gap:12px; margin-top:4px}
+  /* ---- accueil : grille de tuiles carrées ---- */
+  .homegrid{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; margin-top:8px}
+  .htile{position:relative; aspect-ratio:1/1; display:flex; flex-direction:column; justify-content:flex-end; gap:2px; text-align:left; cursor:pointer; border:1px solid var(--line2); border-radius:16px; padding:16px; background:var(--surf); color:inherit; font:inherit; overflow:hidden; transition:transform .12s, box-shadow .15s, border-color .15s}
+  .htile:active{transform:scale(.98)}
+  .htile:hover{box-shadow:0 14px 32px -18px rgba(42,37,32,.5); border-color:var(--dc)}
+  .htile::before{content:"";position:absolute;left:0;top:0;right:0;height:5px;background:var(--dc,var(--line2))}
+  .htile .ti{font-size:34px; line-height:1; margin-bottom:auto}
+  .htile h2{font-family:'Fraunces',serif; font-size:18px; font-weight:600; line-height:1.15}
+  .htile .ts{font-family:'JetBrains Mono',monospace; font-size:9.5px; letter-spacing:.05em; text-transform:uppercase; color:var(--mut)}
+  .htile.learn{--dc:var(--forest)}
+  .htile.stable{--dc:var(--walnut)}
+  .htile.wood{--dc:#7C5A34}
+  .htile.soon{--dc:var(--line2); cursor:default; opacity:.6}
+  .htile.soon:hover{box-shadow:none; border-color:var(--line2)}
+  .htile.soon .ti{filter:grayscale(1); opacity:.6}
   .door{position:relative; width:100%; text-align:left; cursor:pointer; border:1px solid var(--line2); border-radius:14px; padding:20px 22px; background:var(--surf); color:inherit; font:inherit; transition:transform .15s, box-shadow .15s, border-color .15s; overflow:hidden}
   .door:active{transform:scale(.99)}
   .door:hover{box-shadow:0 14px 32px -18px rgba(42,37,32,.55); border-color:var(--dc)}
@@ -221,6 +236,21 @@
   .horsecard .ec-nocare{margin-top:10px; border-top:1px solid var(--line); padding-top:8px; font-size:12px; color:var(--mut); font-style:italic}
   .ecuries-banner{background:var(--forest); color:var(--surf); border-radius:10px; padding:10px 13px; font-size:12.5px; line-height:1.4; margin-bottom:14px}
   .ecuries-banner .bl{display:block; font-family:'JetBrains Mono',monospace; font-size:10px; opacity:.85; margin-bottom:2px}
+  .ecuries-banner.sm{padding:7px 12px; font-size:11.5px; line-height:1.3; margin-bottom:7px}
+  /* vue d'ensemble « tous les animaux » : lignes compactes, pensées pour tenir sans défiler */
+  #scStableSection .addbtn{margin-bottom:10px}
+  .ec-head{font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:.06em; text-transform:uppercase; color:var(--mut); margin:2px 0 6px}
+  .animallist{display:flex; flex-direction:column; gap:6px}
+  .animalrow{display:flex; align-items:center; gap:11px; width:100%; text-align:left; cursor:pointer; font:inherit; color:inherit; background:var(--surf); border:1px solid var(--line2); border-radius:11px; padding:7px 12px; transition:border-color .12s, transform .08s}
+  .animalrow:active{transform:scale(.995)}
+  .ar-ic{font-size:21px; flex:none; width:25px; text-align:center}
+  .ar-mid{flex:1; min-width:0; display:flex; flex-direction:column; gap:1px}
+  .ar-name{font-family:'Fraunces',serif; font-size:15px; font-weight:600; line-height:1.15; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .ar-meta{font-family:'JetBrains Mono',monospace; font-size:9px; color:var(--mut); text-transform:uppercase; letter-spacing:.04em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .ar-reg{font-size:11.5px; color:var(--mut); line-height:1.25; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .ar-badges{display:flex; gap:5px; flex:none}
+  .ec-badge{font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--mut); background:var(--paper2); border-radius:20px; padding:2px 7px; white-space:nowrap}
+  .animalrow .chev{color:var(--mut); font-size:18px; flex:none}
   .animalhead{display:flex; align-items:center; gap:12px; margin-bottom:8px}
   .animalhead .ah-ic{font-size:34px; line-height:1}
   .animalhead h1{margin:0}
@@ -241,6 +271,20 @@
   .photogrid .ph{position:relative; border-radius:10px; overflow:hidden; background:var(--paper2); aspect-ratio:1}
   .photogrid .ph img{width:100%; height:100%; object-fit:cover; display:block}
   .photogrid .ph .rm{position:absolute; top:4px; right:4px; width:22px; height:22px; border-radius:50%; border:none; background:rgba(42,37,32,.72); color:#fff; font-size:13px; line-height:1; cursor:pointer; display:flex; align-items:center; justify-content:center}
+  .daily-sec{margin-bottom:22px}
+  .daily-h{font-family:'Fraunces',serif; font-size:18px; font-weight:600; margin:0 0 11px; display:flex; align-items:baseline; gap:9px}
+  .daily-h .daily-t{font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--terra); font-weight:400}
+  .dailytask{display:flex; align-items:center; gap:12px; width:100%; text-align:left; font:inherit; cursor:pointer; border:1px solid var(--line2); border-radius:12px; padding:12px 14px; margin-bottom:9px; background:var(--surf); color:var(--ink); transition:background .25s, border-color .25s, transform .1s}
+  .dailytask:active{transform:scale(.98)}
+  .dailytask .dt-check{width:27px; height:27px; flex:none; border-radius:50%; border:2px solid var(--line2); display:flex; align-items:center; justify-content:center; font-size:15px; color:transparent; transition:background .25s, border-color .25s}
+  .dailytask .dt-body{display:flex; flex-direction:column; min-width:0}
+  .dailytask .dt-name{font-family:'Fraunces',serif; font-size:15.5px; font-weight:600; line-height:1.2}
+  .dailytask .dt-detail{font-size:12.5px; color:var(--mut); line-height:1.4; margin-top:1px}
+  .dailytask.done{background:#E7F0E6; border-color:var(--sage)}
+  .dailytask.done .dt-check{background:var(--sage); border-color:var(--sage); color:#fff; animation:pop .32s ease}
+  .dailytask.done .dt-name{color:var(--forest)}
+  .dailytask.done .dt-detail{text-decoration:line-through; opacity:.7}
+  @keyframes pop{0%{transform:scale(.55)} 55%{transform:scale(1.18)} 100%{transform:scale(1)}}
   .horsecard .hactions{display:flex; gap:8px; margin-top:12px}
   .miniBtn{flex:1; padding:8px; border-radius:6px; border:1px solid var(--line2); background:transparent; color:var(--mut); font:inherit; font-size:11px; font-family:'JetBrains Mono',monospace; cursor:pointer; transition:.15s}
   .miniBtn:hover{color:var(--walnut); border-color:var(--walnut)}
@@ -338,28 +382,153 @@
   :focus-visible{outline:2px solid var(--forest); outline-offset:2px}
   @media(prefers-reduced-motion:reduce){*{animation:none!important; transition:none!important}}
   @media(min-width:640px){ .domains{display:grid; grid-template-columns:1fr 1fr; gap:14px} .doors{flex-direction:row} }
+
+  /* ---- profils & supervision ---- */
+  .profilepick{display:flex; flex-direction:column; gap:12px; margin-top:8px}
+  .pcard{display:flex; align-items:center; gap:14px; width:100%; text-align:left; background:var(--surf); border:1px solid var(--line); border-radius:16px; padding:16px; cursor:pointer; font:inherit; color:inherit; transition:border-color .15s, transform .1s}
+  .pcard:active{transform:scale(.99)}
+  .pcard .pv{width:46px; height:46px; flex:none; display:flex; align-items:center; justify-content:center; font-size:24px; border-radius:50%; background:var(--forest); color:#fff}
+  .pcard.admin .pv{background:var(--walnut)}
+  .pcard .pmid{flex:1; min-width:0}
+  .pcard .pnm{font-weight:700; font-size:17px; display:flex; align-items:center; gap:8px}
+  .pcard .prole{font-family:'JetBrains Mono',monospace; font-size:9.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--mut); border:1px solid var(--line); border-radius:20px; padding:2px 7px}
+  .pcard .psub{font-size:12.5px; color:var(--mut); margin-top:3px}
+  .pcard .parw{color:var(--mut); font-size:20px}
+  .profilechip{display:inline-flex; align-items:center; gap:8px; background:var(--surf); border:1px solid var(--line); border-radius:20px; padding:6px 12px 6px 6px; margin-bottom:16px; cursor:pointer; font:inherit; color:inherit}
+  .profilechip .pc-av{width:26px; height:26px; display:flex; align-items:center; justify-content:center; font-size:15px; background:var(--forest); color:#fff; border-radius:50%}
+  .profilechip .pc-nm{font-weight:600; font-size:14px}
+  .profilechip .pc-x{font-family:'JetBrains Mono',monospace; font-size:9.5px; letter-spacing:.05em; color:var(--mut); border-left:1px solid var(--line); padding-left:8px}
+  .supervlink{display:block; width:100%; margin-top:18px; background:none; border:1px dashed var(--line); border-radius:14px; padding:13px; cursor:pointer; font:inherit; color:var(--mut); font-size:13.5px}
+  .supervlink:active{background:var(--surf)}
+  .adminGo{margin-top:6px}
+  .adminErr{margin-top:12px; color:#B4453A; font-size:13px}
+  #adminSub{margin-bottom:6px}
+  .ucard{background:var(--surf); border:1px solid var(--line); border-radius:16px; padding:16px; margin-bottom:14px}
+  .ucard .uhead{display:flex; align-items:center; gap:12px; margin-bottom:12px}
+  .ucard .uav{width:40px; height:40px; flex:none; display:flex; align-items:center; justify-content:center; font-size:20px; border-radius:50%; background:var(--forest); color:#fff}
+  .ucard.admin .uav{background:var(--walnut)}
+  .ucard .unm{font-weight:700; font-size:16px; flex:1; min-width:0}
+  .ucard .ulvl{font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:.05em; text-transform:uppercase; color:#fff; background:var(--forest); border-radius:20px; padding:3px 9px}
+  .ucard.admin .ulvl{background:var(--walnut)}
+  .uglob{display:flex; align-items:center; gap:10px; margin-bottom:12px}
+  .uglob .ubig{font-size:26px; font-weight:800; line-height:1}
+  .uglob .ubar{flex:1; height:8px; background:var(--line); border-radius:5px; overflow:hidden}
+  .uglob .ubar i{display:block; height:100%; background:var(--forest); border-radius:5px}
+  .usect{font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:.07em; text-transform:uppercase; color:var(--mut); margin:12px 0 7px}
+  .udoms{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:6px 14px}
+  .udom{display:flex; align-items:center; gap:7px; font-size:12px}
+  .udom .dn{flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:var(--ink)}
+  .udom .db{width:42px; height:6px; background:var(--line); border-radius:4px; overflow:hidden; flex:none}
+  .udom .db i{display:block; height:100%; border-radius:4px}
+  .udom .dp{width:30px; text-align:right; color:var(--mut); font-variant-numeric:tabular-nums; flex:none}
+  .ustats{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px}
+  .ustat{background:var(--paper); border:1px solid var(--line); border-radius:12px; padding:9px 11px}
+  .ustat .sv{font-size:17px; font-weight:700; line-height:1.1}
+  .ustat .sl{font-size:11px; color:var(--mut); margin-top:2px}
+  .ustat.warn .sv{color:#B4453A}
+  .uacts{display:flex; gap:8px; margin-top:12px}
+  .uacts button{flex:1; background:none; border:1px solid var(--line); border-radius:12px; padding:10px; cursor:pointer; font:inherit; font-size:12.5px; color:inherit}
+  .uacts button.danger{color:#B4453A; border-color:rgba(180,69,58,.4)}
+  .uacts button.armed{background:#B4453A; color:#fff; border-color:#B4453A}
+
+  /* ---- Projet Bois ---- */
+  .woodtiles{display:flex; flex-direction:column; gap:10px; margin-top:6px}
+  .woodtile{display:flex; align-items:center; gap:13px; width:100%; text-align:left; cursor:pointer; font:inherit; color:inherit; background:var(--surf); border:1px solid var(--line2); border-radius:13px; padding:14px 15px; transition:border-color .12s, transform .08s}
+  .woodtile:active{transform:scale(.99)}
+  .woodtile .wt-ic{font-size:24px; flex:none; width:30px; text-align:center}
+  .woodtile .wt-mid{flex:1; min-width:0; display:flex; flex-direction:column; gap:2px}
+  .woodtile .wt-t{font-family:'Fraunces',serif; font-size:16px; font-weight:600}
+  .woodtile .wt-s{font-family:'JetBrains Mono',monospace; font-size:9.5px; letter-spacing:.04em; text-transform:uppercase; color:var(--mut)}
+  .woodtile .chev{color:var(--mut); font-size:18px; flex:none}
+  .wstep{font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:.06em; text-transform:uppercase; color:#7C5A34; margin:2px 0 10px}
+  .wnav{display:flex; justify-content:space-between; align-items:center; gap:10px; margin-top:16px}
+  .wnav .save{margin:0}
+  .wnav .miniBtn{margin:0}
+  .woodq{display:flex; flex-direction:column; gap:12px}
+  .wq-t{font-size:13px; font-weight:600; margin-bottom:6px}
+  .wq-opts{display:flex; flex-wrap:wrap; gap:6px}
+  .wopt{font:inherit; font-size:12.5px; cursor:pointer; background:var(--surf); border:1px solid var(--line2); color:var(--ink); border-radius:20px; padding:6px 11px; transition:.12s}
+  .wopt.on{background:#7C5A34; border-color:#7C5A34; color:#fff}
+  .wres{margin-top:16px; border-top:1px solid var(--line); padding-top:12px}
+  .wres-h{font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:.06em; text-transform:uppercase; color:var(--mut); margin-bottom:8px}
+  .wcand{display:flex; align-items:center; gap:12px; width:100%; text-align:left; cursor:pointer; font:inherit; color:inherit; background:var(--surf); border:1px solid var(--line2); border-radius:12px; padding:10px 13px; margin-bottom:7px}
+  .wcand.top{border-color:#7C5A34; box-shadow:0 0 0 1px #7C5A34 inset}
+  .wc-main{flex:1; min-width:0; display:flex; flex-direction:column; gap:1px}
+  .wc-n{font-family:'Fraunces',serif; font-size:16px; font-weight:600}
+  .wc-m{font-family:'JetBrains Mono',monospace; font-size:9.5px; text-transform:uppercase; color:var(--mut)}
+  .wc-conf{display:flex; align-items:center; gap:7px; flex:none}
+  .wc-bar{width:52px; height:7px; background:var(--line); border-radius:5px; overflow:hidden}
+  .wc-bar i{display:block; height:100%; background:#7C5A34; border-radius:5px}
+  .wc-conf b{font-size:13px; font-variant-numeric:tabular-nums; width:34px; text-align:right}
+  .wpick{background:var(--paper2); border-radius:10px; padding:8px 12px; font-size:13px; margin-bottom:12px}
+  .wpick-x{color:#7C5A34; cursor:pointer; text-decoration:underline}
+  .efiche{background:var(--surf); border:1px solid var(--line2); border-radius:14px; padding:15px; margin-bottom:4px}
+  .ef-h{display:flex; align-items:baseline; gap:10px; margin-bottom:10px}
+  .ef-n{font-family:'Fraunces',serif; font-size:20px; font-weight:600}
+  .ef-t{font-family:'JetBrains Mono',monospace; font-size:10px; text-transform:uppercase; color:var(--mut)}
+  .ef-row{display:flex; justify-content:space-between; font-size:13.5px; padding:5px 0; border-top:1px solid var(--line)}
+  .ef-note{font-size:13px; color:var(--mut); line-height:1.5; margin:10px 0 8px}
+  .ef-uses{display:flex; flex-wrap:wrap; gap:6px}
+  .wtag{font-family:'JetBrains Mono',monospace; font-size:10px; color:#7C5A34; background:rgba(124,90,52,.1); border-radius:20px; padding:3px 9px}
+  .woodlist{display:flex; flex-direction:column; gap:8px}
+  .logrow{display:flex; align-items:center; gap:12px; background:var(--surf); border:1px solid var(--line2); border-radius:12px; padding:9px 11px}
+  .lg-ph{width:44px; height:44px; flex:none; border-radius:9px; overflow:hidden; background:var(--paper2); display:flex; align-items:center; justify-content:center; font-size:22px}
+  .lg-ph img{width:100%; height:100%; object-fit:cover}
+  .lg-mid{flex:1; min-width:0; display:flex; flex-direction:column; gap:2px}
+  .lg-n{font-family:'Fraunces',serif; font-size:15px; font-weight:600}
+  .lg-m{font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--mut)}
+  .lg-del{background:none; border:none; color:var(--mut); font-size:22px; cursor:pointer; flex:none; line-height:1; padding:0 2px}
+  .projlist{display:flex; flex-direction:column; gap:8px; margin-bottom:6px}
+  .projrow{display:flex; align-items:center; gap:12px; background:var(--surf); border:1px solid var(--line2); border-radius:12px; padding:10px 12px}
+  .projrow.ok{border-color:rgba(63,94,78,.5)}
+  .pr-ic{font-size:22px; flex:none; width:28px; text-align:center}
+  .pr-mid{flex:1; min-width:0; display:flex; flex-direction:column; gap:2px}
+  .pr-n{font-family:'Fraunces',serif; font-size:15px; font-weight:600}
+  .pr-m{font-size:12px; color:var(--mut); line-height:1.35}
+  .pr-badge{font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700; color:var(--forest); flex:none}
+  .wm-help{font-size:13px; color:var(--mut); line-height:1.5; margin-bottom:10px}
+  .wm-seg{display:flex; gap:6px; margin:4px 0 10px}
+  .wm-segb{flex:1; font:inherit; font-size:11.5px; cursor:pointer; background:var(--surf); border:1px solid var(--line2); color:var(--ink); border-radius:9px; padding:8px 4px; transition:.12s}
+  .wm-segb.on{background:#7C5A34; border-color:#7C5A34; color:#fff}
+  .wm-imgwrap{position:relative; border-radius:12px; overflow:hidden; border:1px solid var(--line2); line-height:0}
+  .wm-imgwrap.tap{cursor:crosshair; touch-action:manipulation}
+  .wm-imgwrap.sm{max-width:180px}
+  .wm-imgwrap img{width:100%; display:block}
+  .wm-dots{position:absolute; inset:0; pointer-events:none}
+  .wm-dot{position:absolute; width:12px; height:12px; margin:-6px 0 0 -6px; border-radius:50%; border:2px solid #fff; box-shadow:0 0 0 1px rgba(0,0,0,.4)}
+  .wm-line{position:absolute; height:2px; transform-origin:0 50%; opacity:.85}
+  .wm-dot.dref,.wm-line.dref{background:#C99A3F} .wm-dot.dref{background:#C99A3F}
+  .wm-dot.dlen,.wm-line.dlen{background:#3F5E4E}
+  .wm-dot.ddiam,.wm-line.ddiam{background:#A4572F}
+  .wm-out{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; margin-top:12px}
+  .wm-out .ustat{text-align:center}
+  .wm-manualwrap{margin-top:12px; font-size:13px}
+  .wm-manualwrap summary{cursor:pointer; color:#7C5A34; font-family:'JetBrains Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:.05em}
+  .wm-manual{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px}
 </style>
 </head>
 <body>
 <div class="app">
   <button class="backbtn" id="backBtn" style="display:none"><span>←</span><span class="lbl" id="backLbl">retour</span></button>
 
+  <!-- PROFILS : choix de l'utilisateur -->
+  <section class="screen active" id="scProfiles">
+    <h1 class="title">Qui utilise l'app ?</h1>
+    <p class="intro">Choisis ton profil. Chacun a sa propre progression.</p>
+    <div class="profilepick" id="profileList"></div>
+  </section>
+
   <!-- LANDING : two doors -->
-  <section class="screen active" id="scLanding">
+  <section class="screen" id="scLanding">
+    <button class="profilechip" id="profileChip"><span class="pc-av" id="chipAv">👤</span><span class="pc-nm" id="chipName">Profil</span><span class="pc-x">Changer</span></button>
     <h1 class="title">Bienvenue</h1>
-    <p class="intro">Que veux-tu faire aujourd'hui ?</p>
-    <div class="doors">
-      <button class="door learn" id="doorLearn">
-        <span class="di">❦</span><h2>Apprendre</h2>
-        <p>Des savoir-faire de la main et de la nature, du premier geste à la maîtrise.</p>
-        <span class="go">Explorer les domaines →</span>
-      </button>
-      <button class="door stable" id="doorStable">
-        <span class="di">🐴</span><h2>Domaine du Freyche</h2>
-        <p>Tes chevaux, leurs soins et le planning, au même endroit. Sauvegardé sur ton appareil.</p>
-        <span class="go">Ouvrir le domaine →</span>
-      </button>
+    <div class="homegrid">
+      <button class="htile learn" id="doorLearn"><span class="ti">❦</span><h2>Apprendre</h2><span class="ts">Savoir-faire</span></button>
+      <button class="htile stable" id="doorStable"><span class="ti">🐴</span><h2>Domaine du Freyche</h2><span class="ts">Animaux &amp; planning</span></button>
+      <button class="htile soon" id="doorSoon" disabled><span class="ti">✦</span><h2>Bientôt</h2><span class="ts">À venir</span></button>
+      <button class="htile wood" id="doorWood"><span class="ti">🪵</span><h2>Projet Bois</h2><span class="ts">Grumes &amp; stock</span></button>
     </div>
+    <button class="supervlink" id="doorAdmin" style="display:none">🔐 Supervision &amp; comptes</button>
   </section>
 
   <!-- LEARNING : domain list -->
@@ -488,13 +657,13 @@
     <div class="doors">
       <button class="door stable" id="optEcuries">
         <span class="di">🐴</span><h2>Écuries</h2>
-        <p id="optEcuriesCount">Tes chevaux et leurs soins.</p>
+        <p id="optEcuriesCount">Tous tes animaux et leurs soins.</p>
         <span class="go">Ouvrir les écuries →</span>
       </button>
       <button class="door stable" id="optTasks">
-        <span class="di">🗓️</span><h2>Liste des tâches</h2>
-        <p id="optTasksCount">Voir et ajouter les tâches du jour.</p>
-        <span class="go">Ouvrir les tâches →</span>
+        <span class="di">🗓️</span><h2>Tâches quotidiennes</h2>
+        <p id="optTasksCount">Repas des chevaux — matin 9h, soir 19h.</p>
+        <span class="go">Ouvrir les repas →</span>
       </button>
       <button class="door learn" id="optGestion" style="--dc:var(--walnut)">
         <span class="di">📋</span><h2>Gestion</h2>
@@ -535,6 +704,34 @@
     <input type="file" id="anPhotoInput" accept="image/*" style="display:none">
     <div class="photogrid" id="anPhotos"></div>
   </section>
+
+  <!-- SUPERVISION (admin) -->
+  <section class="screen" id="scAdmin">
+    <div id="adminGate">
+      <h1 class="title">Supervision</h1>
+      <p class="intro">Espace réservé. Saisis le code d'accès pour suivre l'utilisation et gérer les comptes.</p>
+      <div class="field"><label>Code d'accès</label><input id="adminCode" type="password" placeholder="••••••••" autocomplete="off"></div>
+      <button class="save adminGo" id="adminEnter">Entrer</button>
+      <div class="adminErr" id="adminErr" style="display:none">Code incorrect.</div>
+    </div>
+    <div id="adminBoard" style="display:none">
+      <h1 class="title">Supervision</h1>
+      <p class="intro" id="adminSub"></p>
+      <div id="adminCards"></div>
+    </div>
+  </section>
+
+  <!-- PROJET BOIS -->
+  <section class="screen" id="scWood">
+    <h1 class="title">Projet Bois</h1>
+    <p class="intro" id="woodSummary"></p>
+    <div class="woodtiles" id="woodTiles"></div>
+  </section>
+  <section class="screen" id="scWoodFlow">
+    <h1 class="title" id="wfTitle"></h1>
+    <div id="wfBody"></div>
+  </section>
+  <input type="file" id="woodPhotoInput" accept="image/*" capture="environment" style="display:none">
 </div>
 
 <!-- modals -->
@@ -546,6 +743,7 @@
   <div class="field"><label>Race / précision (optionnel)</label><input id="aBreed" placeholder="Selle Français"></div>
   <div class="field"><label>Âge (optionnel)</label><input id="aAge" placeholder="8 ans"></div>
   <div class="field"><label>Régime alimentaire</label><textarea id="aRegime" placeholder="¾ floc, ¾ orge, ⅓ happy…"></textarea></div>
+  <div class="field"><label>Foin (brouettes / repas)</label><input id="aHay" type="number" min="0" step="1" value="1"></div>
   <div class="field"><label>Notes</label><textarea id="aNotes" placeholder="Particularités…"></textarea></div>
   <div class="sheetbtns"><button class="cancel" id="aCancel">Annuler</button><button class="save" id="aSave">Enregistrer</button></div>
 </div></div>
@@ -1736,14 +1934,55 @@ function loadStore(){
     if(raw){ const d=JSON.parse(raw); STORE.horses=d.horses||[]; STORE.tasks=d.tasks||[]; STORE.mastered=d.mastered||{}; STORE.srs=d.srs||{}; STORE.hardMode=d.hardMode||false;
       if(d.animals) STORE.animals=d.animals; if(d.orders) STORE.orders=d.orders; if(d.stock) STORE.stock=d.stock; if(d.contacts) STORE.contacts=d.contacts;
       if(d.ecuriesNote!==undefined) STORE.ecuriesNote=d.ecuriesNote; if(d.seedFreyche) STORE.seedFreyche=d.seedFreyche;
-      if(d.projects) STORE.projects=d.projects; if(d.seedProjects) STORE.seedProjects=d.seedProjects; }
+      if(d.projects) STORE.projects=d.projects; if(d.seedProjects) STORE.seedProjects=d.seedProjects;
+      if(d.daily) STORE.daily=d.daily;
+      if(d.profiles){ STORE.profiles=d.profiles; STORE.currentProfile=d.currentProfile||'mael'; if(d.seedProfiles) STORE.seedProfiles=d.seedProfiles; }
+      if(d.woodStock) STORE.woodStock=d.woodStock; }
   }catch(e){ /* mémoire seule */ }
   Object.keys(D.SKILLS).forEach(k=>{ if(!STORE.mastered[k]) STORE.mastered[k]=[]; });
 }
 function saveStore(){ try{ localStorage.setItem('nexus_stable', JSON.stringify(STORE)); }catch(e){} }
 loadStore();
-const mastered={}; Object.keys(D.SKILLS).forEach(k=>mastered[k]=new Set(STORE.mastered[k]||[]));
+const mastered={}; Object.keys(D.SKILLS).forEach(k=>mastered[k]=new Set());
 function persistMastered(){ Object.keys(mastered).forEach(k=>STORE.mastered[k]=[...mastered[k]]); saveStore(); }
+
+/* ====== profils (multi-utilisateur local + supervision) ======
+   Chaque profil possède SA progression d'apprentissage (mastered + srs + hardMode)
+   et des stats d'usage. Le Domaine du Freyche (chevaux, tâches, projets…) reste commun.
+   STORE.mastered / STORE.srs / STORE.hardMode pointent toujours sur le profil actif :
+   persistMastered() et reviewCard() écrivent donc directement dans le bon profil. */
+const ADMIN_CODE='Lavieaufreyche';
+let adminUnlocked=false;                          // déverrouillage de session, jamais persisté
+function todayStr(){ return new Date().toISOString().slice(0,10); }
+function newStats(){ return { createdAt:Date.now(), lastSeen:0, reviews:0, sessions:0, days:[] }; }
+function initProfiles(){
+  if(!STORE.profiles){
+    STORE.profiles={
+      mael:  { name:'Maël',   role:'admin', mastered:STORE.mastered||{}, srs:STORE.srs||{}, hardMode:!!STORE.hardMode, stats:newStats() },
+      alizee:{ name:'Alizée', role:'user',  mastered:{}, srs:{}, hardMode:false, stats:newStats() },
+      lali:  { name:'Lali',   role:'user',  mastered:{}, srs:{}, hardMode:false, stats:newStats() }
+    };
+    STORE.currentProfile='mael'; STORE.seedProfiles=true;
+  }
+  Object.values(STORE.profiles).forEach(p=>{
+    if(!p.mastered) p.mastered={}; if(!p.srs) p.srs={}; if(!p.stats) p.stats=newStats();
+    if(!Array.isArray(p.stats.days)) p.stats.days=[];
+    Object.keys(D.SKILLS).forEach(k=>{ if(!p.mastered[k]) p.mastered[k]=[]; });
+  });
+  if(!STORE.currentProfile || !STORE.profiles[STORE.currentProfile]) STORE.currentProfile='mael';
+}
+function curProfile(){ return STORE.profiles[STORE.currentProfile]; }
+function bumpSeen(){ const p=curProfile(); if(!p) return; p.stats.lastSeen=Date.now(); const t=todayStr(); if(!p.stats.days.includes(t)) p.stats.days.push(t); }
+function activateProfile(id){
+  if(!STORE.profiles[id]) id='mael';
+  STORE.currentProfile=id; adminUnlocked=false;
+  const p=STORE.profiles[id];
+  STORE.mastered=p.mastered; STORE.srs=p.srs; STORE.hardMode=!!p.hardMode;   // partage par référence
+  Object.keys(D.SKILLS).forEach(k=>{ mastered[k].clear(); (p.mastered[k]||[]).forEach(x=>mastered[k].add(x)); });
+  bumpSeen(); saveStore();
+}
+initProfiles();
+activateProfile(STORE.currentProfile);
 
 function pct(k){return Math.round(mastered[k].size/D.SKILLS[k].nodes.length*100);}
 function totalPct(){let m=0,t=0;for(const k in D.SKILLS){m+=mastered[k].size;t+=D.SKILLS[k].nodes.length;}return Math.round(m/t*100);}
@@ -1752,9 +1991,10 @@ function totalPct(){let m=0,t=0;for(const k in D.SKILLS){m+=mastered[k].size;t+=
 let current=null,currentNode=null,currentSkillK=null,mode='landing';
 function show(screen,{accent='#3F5E4E',nav=''}={}){
   document.documentElement.style.setProperty('--forest',accent);
-  ['scLanding','scHome','scDetail','scCourse','scTest','scProgress','scStable','scGestion','scStableSection','scAnimal','scRevise'].forEach(s=>$(s).classList.remove('active'));
+  ['scProfiles','scLanding','scHome','scDetail','scCourse','scTest','scProgress','scStable','scGestion','scStableSection','scAnimal','scRevise','scAdmin','scWood','scWoodFlow'].forEach(s=>$(s).classList.remove('active'));
   $(screen).classList.add('active');
   buildNav(nav);
+  const bn=$('bottomnav'); if(bn) bn.style.display=(screen==='scProfiles'||screen==='scAdmin')?'none':'';
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
@@ -1799,7 +2039,12 @@ function navBtn(active, key, icon, label){
 }
 function buildNav(active){
   const nav=$('bottomnav');
-  if(mode==='stable'){
+  if(mode==='wood'){
+    document.body.classList.add('stable-mode');
+    nav.innerHTML=
+      navBtn(active,'landing',NAV_IC.home,'Accueil')+
+      navBtn(active,'wood',NAV_IC.stable,'Projet Bois');
+  } else if(mode==='stable'){
     document.body.classList.add('stable-mode');
     nav.innerHTML=
       navBtn(active,'landing',NAV_IC.home,'Accueil')+
@@ -1819,8 +2064,10 @@ function rDomains(){ mode='learn'; renderHome(); show('scHome',{nav:'domains'});
 function rProgress(){ mode='learn'; renderProgress(); show('scProgress',{nav:'progress'}); }
 function rRevise(){ mode='learn'; renderRevise(); show('scRevise',{nav:'revise'}); }
 function rStable(){ mode='stable';
-  const pend=(STORE.tasks||[]).filter(t=>!t.done).length; $('optTasksCount').textContent=pend?(pend+' tâche'+(pend>1?'s':'')+' à faire — voir et ajouter.'):'Voir et ajouter les tâches du jour.';
-  const na=(STORE.animals||[]).length; $('optEcuriesCount').textContent=na?(na+(na>1?' animaux':' animal')+' · soins et santé.'):'Ajoute tes chevaux et leurs soins.';
+  const today=new Date().toISOString().slice(0,10); const dd=(STORE.daily&&STORE.daily.date===today)?STORE.daily.done:{};
+  let tot=0,dn=0; (STORE.animals||[]).forEach(a=>{ const t=feedTimes(a); if(t.matin){tot++; if(dd['m_'+a.id])dn++;} if(t.soir){tot++; if(dd['s_'+a.id])dn++;} });
+  $('optTasksCount').textContent = tot ? ((tot-dn)+' repas à faire — matin 9h, soir 19h.') : 'Repas des chevaux — matin & soir.';
+  const na=(STORE.animals||[]).length; $('optEcuriesCount').textContent=na?(na+(na>1?' animaux':' animal')+' · soins et santé.'):'Ajoute tes animaux et leurs soins.';
   show('scStable',{accent:'#8A5A3C',nav:'stable'});
 }
 function navGo(g){
@@ -1829,13 +2076,129 @@ function navGo(g){
   else if(g==='progress') go(rProgress,'progrès');
   else if(g==='revise') go(rRevise,'révision');
   else if(g==='stable') go(rStable,'domaine');
+  else if(g==='wood') go(rWood,'projet bois');
 }
 
 /* ====== landing ====== */
-function goLanding(){ mode='landing'; show('scLanding',{accent:'#3F5E4E',nav:'landing'}); }
+const PROFILE_AV={ mael:'🧭', alizee:'🌸', lali:'🦋' };
+function profileAvatar(id){ return PROFILE_AV[id]||'👤'; }
+function goLanding(){ mode='landing';
+  const p=curProfile();
+  if($('chipName')) $('chipName').textContent=p?p.name:'Profil';
+  if($('chipAv')) $('chipAv').textContent=profileAvatar(STORE.currentProfile);
+  if($('doorAdmin')) $('doorAdmin').style.display=(p&&p.role==='admin')?'block':'none';
+  show('scLanding',{accent:'#3F5E4E',nav:'landing'});
+}
 function goHome(){ goRoot(goLanding,'accueil'); }
 $('doorLearn').onclick=()=>go(rDomains,'domaines');
 $('doorStable').onclick=()=>navGo('stable');
+if($('doorWood')) $('doorWood').onclick=()=>navGo('wood');
+if($('profileChip')) $('profileChip').onclick=()=>goProfiles();
+if($('doorAdmin')) $('doorAdmin').onclick=()=>openAdmin();
+
+/* ====== choix de profil (écran racine) ====== */
+function goProfiles(){ mode='landing'; goRoot(renderProfiles,'profils'); }
+function renderProfiles(){
+  const g=$('profileList'); if(!g) return; g.innerHTML='';
+  Object.entries(STORE.profiles).forEach(([id,p])=>{
+    const b=document.createElement('button'); b.className='pcard'+(p.role==='admin'?' admin':'');
+    const gp=globalPct(p);
+    b.innerHTML='<span class="pv">'+profileAvatar(id)+'</span>'+
+      '<span class="pmid"><span class="pnm">'+esc(p.name)+(p.role==='admin'?' <span class="prole">admin</span>':'')+'</span>'+
+      '<span class="psub">'+gp+'% de progression'+(p.stats&&p.stats.lastSeen?' · vu '+relDate(p.stats.lastSeen):'')+'</span></span>'+
+      '<span class="parw">→</span>';
+    b.onclick=()=>{ activateProfile(id); goHome(); };
+    g.appendChild(b);
+  });
+  show('scProfiles',{accent:'#3F5E4E',nav:''});
+}
+function globalPct(p){ let m=0,t=0; for(const k in D.SKILLS){ m+=(p.mastered[k]||[]).length; t+=D.SKILLS[k].nodes.length; } return t?Math.round(m/t*100):0; }
+function relDate(ts){ if(!ts) return 'jamais'; const d=Math.floor((Date.now()-ts)/86400000);
+  if(d<=0) return "aujourd'hui"; if(d===1) return 'hier'; if(d<7) return 'il y a '+d+' j'; if(d<30) return 'il y a '+Math.floor(d/7)+' sem'; return 'il y a '+Math.floor(d/30)+' mois'; }
+
+/* ====== supervision (admin, protégée par code) ====== */
+function openAdmin(){ go(renderAdmin,'supervision'); }
+function renderAdmin(){
+  const unlocked=adminUnlocked;
+  $('adminGate').style.display=unlocked?'none':'block';
+  $('adminBoard').style.display=unlocked?'block':'none';
+  if(!unlocked){
+    if($('adminCode')) $('adminCode').value='';
+    if($('adminErr')) $('adminErr').style.display='none';
+  } else { renderAdminBoard(); }
+  show('scAdmin',{accent:'#8A5A3C',nav:''});
+}
+if($('adminEnter')) $('adminEnter').onclick=()=>{
+  const v=($('adminCode').value||'').trim();
+  if(v===ADMIN_CODE){ adminUnlocked=true; renderAdmin(); }
+  else { $('adminErr').style.display='block'; }
+};
+if($('adminCode')) $('adminCode').onkeydown=(e)=>{ if(e&&e.key==='Enter') $('adminEnter').onclick(); };
+
+/* stats d'un profil (lecture seule ; réutilise LEVELS/NEXUS_CARDS) */
+function profileStats(p){
+  const now=Date.now(), nDom=Object.keys(D.SKILLS).length;
+  let masteredN=0, totalN=0, dDone=0; const domPct={};
+  for(const [k,s] of Object.entries(D.SKILLS)){
+    const size=(p.mastered[k]||[]).length; masteredN+=size; totalN+=s.nodes.length;
+    if(size===s.nodes.length) dDone++; domPct[k]=Math.round(size/s.nodes.length*100);
+  }
+  let solide=0, fragile=0, retard=0, vue=0, jamais=0;
+  const srs=p.srs||{};
+  for(const c of window.NEXUS_CARDS){ const st=srs[c.id];
+    if(!st){ jamais++; continue; } vue++;
+    if(st.s>=21) solide++; if(st.s<10) fragile++; if(st.due<=now) retard++;
+  }
+  const prop=totalN?masteredN/totalN:0; let li=0; for(let i=0;i<LEVELS.length;i++){ if(prop>=LEVELS[i][0]) li=i; }
+  const weakest=Object.entries(domPct).filter(([k])=>(p.mastered[k]||[]).length<D.SKILLS[k].nodes.length).sort((a,b)=>a[1]-b[1])[0];
+  return { level:LEVELS[li][1], glob:Math.round(prop*100), masteredN, totalN, dDone, nDom, domPct, solide, fragile, retard, vue, jamais, weakest, stats:p.stats||newStats() };
+}
+function renderAdminBoard(){
+  const users=Object.entries(STORE.profiles);
+  $('adminSub').textContent=users.length+' profils · progression, révisions et lacunes.';
+  const wrap=$('adminCards'); wrap.innerHTML='';
+  users.forEach(([id,p])=>{
+    const st=profileStats(p); const S=st.stats;
+    const card=document.createElement('div'); card.className='ucard'+(p.role==='admin'?' admin':'');
+    const doms=Object.entries(st.domPct).sort((a,b)=>b[1]-a[1])
+      .map(([k,v])=>'<div class="udom"><span class="dn">'+esc(D.SKILLS[k].name)+'</span><span class="db"><i style="width:'+v+'%;background:'+D.SKILLS[k].color+'"></i></span><span class="dp">'+v+'%</span></div>').join('');
+    const stat=(v,l,warn)=>'<div class="ustat'+(warn?' warn':'')+'"><div class="sv">'+v+'</div><div class="sl">'+l+'</div></div>';
+    const weak=st.weakest?('« '+D.SKILLS[st.weakest[0]].name+' » ('+st.weakest[1]+'%)'):'—';
+    card.innerHTML=
+      '<div class="uhead"><span class="uav">'+profileAvatar(id)+'</span><span class="unm">'+esc(p.name)+'</span><span class="ulvl">'+st.level+'</span></div>'+
+      '<div class="uglob"><span class="ubig">'+st.glob+'%</span><span class="ubar"><i style="width:'+st.glob+'%"></i></span></div>'+
+      '<div class="usect">Progression par domaine</div><div class="udoms">'+doms+'</div>'+
+      '<div class="usect">Activité de révision</div><div class="ustats">'+
+        stat((S.reviews||0),'révisions faites')+stat((S.sessions||0),'séries lancées')+
+        stat((S.days?S.days.length:0),'jours actifs')+stat(relDate(S.lastSeen),'dernière activité')+
+      '</div>'+
+      '<div class="usect">Lacunes</div><div class="ustats">'+
+        stat(st.totalN-st.masteredN,'nœuds à débloquer',st.totalN-st.masteredN>0)+
+        stat(st.fragile,'fiches fragiles',st.fragile>0)+
+        stat(st.retard,'fiches en retard',st.retard>0)+
+        stat(weak,'domaine le plus faible')+
+      '</div>'+
+      '<div class="uacts"><button data-rename="'+id+'">Renommer</button><button class="danger" data-reset="'+id+'">Réinitialiser la progression</button></div>';
+    wrap.appendChild(card);
+  });
+  wrap.querySelectorAll('[data-rename]').forEach(b=>b.onclick=()=>{
+    const id=b.dataset.rename, p=STORE.profiles[id];
+    const nv=(typeof prompt==='function')?prompt('Nouveau nom du profil',p.name):null;
+    if(renameProfile(id,nv)) renderAdminBoard();
+  });
+  wrap.querySelectorAll('[data-reset]').forEach(b=>b.onclick=()=>{
+    const id=b.dataset.reset;
+    if(b.classList.contains('armed')){ resetProfile(id); renderAdminBoard(); return; }
+    b.classList.add('armed'); b.textContent='Confirmer ? (toucher à nouveau)';
+    setTimeout(()=>{ if(b&&b.classList.contains('armed')){ b.classList.remove('armed'); b.textContent='Réinitialiser la progression'; } },4000);
+  });
+}
+function renameProfile(id,name){ const p=STORE.profiles[id]; if(p&&name&&String(name).trim()){ p.name=String(name).trim(); saveStore(); return true; } return false; }
+function resetProfile(id){ const p=STORE.profiles[id]; if(!p) return;
+  Object.keys(D.SKILLS).forEach(k=>{ p.mastered[k]=[]; }); p.srs={}; p.stats=newStats();
+  if(id===STORE.currentProfile){ Object.keys(mastered).forEach(k=>mastered[k].clear()); STORE.srs=p.srs; STORE.mastered=p.mastered; }
+  saveStore();
+}
 
 /* ====== learning ====== */
 function renderHome(){
@@ -2062,7 +2425,7 @@ if(!STORE.contacts) STORE.contacts=[];
 if(!STORE.tasks) STORE.tasks=[];
 if(!STORE.projects) STORE.projects=[];
 /* migration : nouveaux champs de fiche animal */
-STORE.animals.forEach(a=>{ if(a.sex===undefined)a.sex=''; if(a.regime===undefined)a.regime=''; if(!Array.isArray(a.noteLog))a.noteLog=[]; if(!Array.isArray(a.photos))a.photos=[]; if(!Array.isArray(a.care))a.care=[]; });
+STORE.animals.forEach(a=>{ if(a.sex===undefined)a.sex=''; if(a.regime===undefined)a.regime=''; if(a.hay===undefined)a.hay=/braddy/i.test(a.name||'')?2:1; if(!Array.isArray(a.noteLog))a.noteLog=[]; if(!Array.isArray(a.photos))a.photos=[]; if(!Array.isArray(a.care))a.care=[]; });
 if(STORE.ecuriesNote===undefined) STORE.ecuriesNote="Toujours humidifier l'orge (à peine humide) · Mouiller le son";
 /* graine unique : chevaux du Freyche avec leur régime */
 if(!STORE.seedFreyche){
@@ -2097,20 +2460,49 @@ function renderStableMenu(){
 }
 function openGestion(){ go(()=>{ mode='stable'; renderStableMenu(); show('scGestion',{accent:'#8A5A3C',nav:'stable'}); }, 'gestion'); }
 $('optGestion').onclick=openGestion;
-$('optTasks').onclick=()=>{ mode='stable'; openStableSection('planning'); };
+$('optTasks').onclick=()=>{ mode='stable'; openStableSection('daily'); };
 $('optEcuries').onclick=()=>{ mode='stable'; openStableSection('ecuries'); };
-const SECTION_TITLES={ecuries:'Écuries',projects:'Projets',animals:'Animaux',care:'Soins / santé',orders:'Commandes de grain',planning:'Planning',stock:'Stock / matériel',contacts:'Contacts'};
-const SECTION_ADD={ecuries:'+ Ajouter un cheval',projects:'+ Ajouter un projet',animals:'+ Ajouter un animal',care:'+ Ajouter un soin',orders:'+ Ajouter une commande',planning:'+ Ajouter une tâche',stock:'+ Ajouter un article',contacts:'+ Ajouter un contact'};
+const SECTION_TITLES={ecuries:'Écuries',daily:'Tâches quotidiennes',projects:'Projets',animals:'Animaux',care:'Soins / santé',orders:'Commandes de grain',planning:'Planning',stock:'Stock / matériel',contacts:'Contacts'};
+const SECTION_ADD={ecuries:'+ Ajouter un animal',daily:'',projects:'+ Ajouter un projet',animals:'+ Ajouter un animal',care:'+ Ajouter un soin',orders:'+ Ajouter une commande',planning:'+ Ajouter une tâche',stock:'+ Ajouter un article',contacts:'+ Ajouter un contact'};
 let currentSection=null;
 function openStableSection(key){ go(()=>{
   currentSection=key; mode='stable';
   $('ssTitle').textContent=SECTION_TITLES[key];
-  $('ssAdd').textContent=SECTION_ADD[key];
-  $('ssAdd').onclick=SECTION_ADD_FN[key];
+  if(SECTION_ADD[key]){ $('ssAdd').style.display=''; $('ssAdd').textContent=SECTION_ADD[key]; $('ssAdd').onclick=SECTION_ADD_FN[key]; }
+  else { $('ssAdd').style.display='none'; }
   renderSection(key);
   show('scStableSection',{accent:'#8A5A3C',nav:'stable'});
 }, SECTION_TITLES[key]); }
-function renderSection(key){ ({ecuries:renderEcuries,projects:renderProjects,animals:renderAnimals,care:renderCare,orders:renderOrders,planning:renderTasks,stock:renderStock,contacts:renderContacts}[key])(); }
+function renderSection(key){ ({ecuries:renderEcuries,daily:renderDaily,projects:renderProjects,animals:renderAnimals,care:renderCare,orders:renderOrders,planning:renderTasks,stock:renderStock,contacts:renderContacts}[key])(); }
+/* --- TÂCHES QUOTIDIENNES : repas des chevaux, matin/soir, d'après le régime --- */
+function feedTimes(a){
+  const r=(a.regime||'').toLowerCase();
+  if(/soir seulement|uniquement le soir|que le soir/.test(r)) return {matin:false,soir:true};
+  if(/le matin|matin seulement|uniquement le matin/.test(r)) return {matin:true,soir:false};
+  return {matin:true,soir:true};
+}
+function dailyState(){
+  const today=new Date().toISOString().slice(0,10);
+  if(!STORE.daily || STORE.daily.date!==today){ STORE.daily={date:today, done:{}}; saveStore(); }  // reset chaque jour
+  return STORE.daily;
+}
+function renderDaily(){
+  const list=$('ssList');
+  const st=dailyState(); const done=st.done;
+  const matin=[], soir=[];
+  STORE.animals.forEach(a=>{ const t=feedTimes(a); if(t.matin) matin.push(a); if(t.soir) soir.push(a); });
+  const task=(a,slot)=>{ const key=slot+'_'+a.id; const hay=(a.hay!=null?a.hay:1); const d=!!done[key];
+    return '<button class="dailytask'+(d?' done':'')+'" data-daily="'+key+'"><span class="dt-check">'+(d?'✓':'')+'</span><span class="dt-body"><span class="dt-name">Nourrir '+esc(a.name)+'</span><span class="dt-detail">'+esc(a.regime||'ration')+' · '+hay+' brouette'+(hay>1?'s':'')+' de foin</span></span></button>'; };
+  const sec=(label,time,animals,slot)=>'<div class="daily-sec"><div class="daily-h">'+label+' <span class="daily-t">'+time+'</span></div>'+(animals.length?animals.map(a=>task(a,slot)).join(''):'<div class="empty">Aucun repas.</div>')+'</div>';
+  let html = STORE.ecuriesNote ? '<div class="ecuries-banner"><span class="bl">Rappel</span>'+esc(STORE.ecuriesNote)+'</div>' : '';
+  html += sec('Matin','9h',matin,'m') + sec('Soir','19h',soir,'s');
+  list.innerHTML=html;
+  /* clic : bascule + animation, sans re-render (l'anim vient de la transition CSS) */
+  list.querySelectorAll('[data-daily]').forEach(b=>b.onclick=()=>{
+    const k=b.dataset.daily; const now=!STORE.daily.done[k]; STORE.daily.done[k]=now; saveStore();
+    b.classList.toggle('done',now); const chk=b.querySelector('.dt-check'); if(chk) chk.textContent=now?'✓':'';
+  });
+}
 /* --- PROJETS du domaine (chantiers, entretien) --- */
 function renderProjects(){
   const list=$('ssList'); list.innerHTML='';
@@ -2125,21 +2517,32 @@ function renderProjects(){
   });
 }
 /* --- ÉCURIES : chevaux + leurs soins réunis --- */
+/* Vue d'ensemble de TOUS les animaux : lignes compactes (esp./sexe/âge + régime
+   en un coup d'œil, pastilles soins/photos) + compteur, pensé pour tenir sans défiler. */
 function renderEcuries(){
   const list=$('ssList');
-  list.innerHTML = STORE.ecuriesNote ? '<div class="ecuries-banner"><span class="bl">Rappel alimentation</span>'+esc(STORE.ecuriesNote)+'</div>' : '';
-  if(!STORE.animals.length){ list.innerHTML += '<div class="empty">Aucun cheval pour l\'instant. Ajoute-en un.</div>'; return; }
-  STORE.animals.forEach(a=>{
-    const card=document.createElement('button'); card.className='horsecard';
-    card.style.cssText='display:block;width:100%;text-align:left;cursor:pointer;font:inherit';
+  const na=STORE.animals.length;
+  const byName=STORE.animals.slice().sort((a,b)=>(a.name||'').localeCompare(b.name||'','fr'));
+  let html = STORE.ecuriesNote ? '<div class="ecuries-banner sm"><span class="bl">Rappel</span>'+esc(STORE.ecuriesNote)+'</div>' : '';
+  html += '<div class="ec-head">'+na+(na>1?' animaux':' animal')+'</div>';
+  if(!na){ list.innerHTML = html + '<div class="empty">Aucun animal pour l\'instant. Ajoute-en un.</div>'; return; }
+  html += '<div class="animallist">';
+  byName.forEach(a=>{
     const meta=[esc(a.species),a.sex?esc(a.sex):'',esc(a.breed),a.age?esc(''+a.age):''].filter(Boolean).join(' · ');
     const np=(a.photos||[]).length, ns=(a.care||[]).length;
-    card.innerHTML='<div class="hc-top"><span class="hi">'+(SP_ICON[a.species]||'🐾')+'</span><div style="flex:1"><h4>'+esc(a.name)+'</h4><div class="hmeta">'+meta+'</div></div><span class="chev">›</span></div>'+
-      (a.regime?'<div style="border-top:1px solid var(--line);margin-top:8px;padding-top:8px;font-size:13px;line-height:1.5"><b>Régime :</b> '+esc(a.regime)+'</div>':'')+
-      ((np||ns)?'<div class="hmeta" style="margin-top:6px">'+[ns?ns+' soin'+(ns>1?'s':''):'',np?np+' photo'+(np>1?'s':''):''].filter(Boolean).join(' · ')+'</div>':'');
-    card.onclick=()=>openAnimal(a.id);
-    list.appendChild(card);
+    const badges=[ns?('<span class="ec-badge">🩺 '+ns+'</span>'):'', np?('<span class="ec-badge">📷 '+np+'</span>'):''].filter(Boolean).join('');
+    html += '<button class="animalrow" data-an="'+a.id+'">'+
+      '<span class="ar-ic">'+(SP_ICON[a.species]||'🐾')+'</span>'+
+      '<span class="ar-mid"><span class="ar-name">'+esc(a.name)+'</span>'+
+        (meta?'<span class="ar-meta">'+meta+'</span>':'')+
+        (a.regime?'<span class="ar-reg">'+esc(a.regime)+'</span>':'')+
+      '</span>'+
+      (badges?'<span class="ar-badges">'+badges+'</span>':'')+
+      '<span class="chev">›</span></button>';
   });
+  html += '</div>';
+  list.innerHTML=html;
+  list.querySelectorAll('[data-an]').forEach(b=>b.onclick=()=>openAnimal(b.dataset.an));
 }
 /* --- FICHE ANIMAL : tableau de bord + notes + soins + photos --- */
 let currentAnimal=null;
@@ -2148,7 +2551,7 @@ function renderAnimal(id){
   const a=STORE.animals.find(x=>x.id===id); if(!a){ navBack(); return; }
   $('anIc').textContent=SP_ICON[a.species]||'🐾';
   $('anName').textContent=a.name;
-  const rows=[['Espèce',a.species],['Sexe',a.sex],['Race',a.breed],['Âge',a.age]].filter(r=>r[1]);
+  const rows=[['Espèce',a.species],['Sexe',a.sex],['Race',a.breed],['Âge',a.age],['Foin / repas',a.hay!=null?(a.hay+' brouette'+(a.hay>1?'s':'')):'']].filter(r=>r[1]);
   $('anDash').innerHTML=rows.length?rows.map(r=>'<tr><td class="k">'+r[0]+'</td><td class="v">'+esc(''+r[1])+'</td></tr>').join(''):'<tr><td class="v" style="color:var(--mut)">Complète la fiche avec « Modifier ».</td></tr>';
   if(a.regime){ $('anRegime').style.display='block'; $('anRegime').innerHTML='<span class="rl">Régime alimentaire</span>'+esc(a.regime); } else $('anRegime').style.display='none';
   const nl=(a.noteLog||[]).slice().sort((x,y)=>(y.date||'').localeCompare(x.date||''));
@@ -2281,13 +2684,14 @@ function openAnimalModal(id){
   $('aName').value=editingAnimal?editingAnimal.name:''; $('aSpecies').value=editingAnimal?editingAnimal.species||'Cheval':'Cheval';
   $('aSex').value=editingAnimal?editingAnimal.sex||'':'';
   $('aBreed').value=editingAnimal?editingAnimal.breed||'':''; $('aAge').value=editingAnimal?editingAnimal.age||'':'';
-  $('aRegime').value=editingAnimal?editingAnimal.regime||'':''; $('aNotes').value=editingAnimal?editingAnimal.notes||'':'';
+  $('aRegime').value=editingAnimal?editingAnimal.regime||'':''; $('aHay').value=editingAnimal?(editingAnimal.hay!=null?editingAnimal.hay:1):1; $('aNotes').value=editingAnimal?editingAnimal.notes||'':'';
   $('animalModal').classList.add('open');
 }
 $('aCancel').onclick=()=>$('animalModal').classList.remove('open');
 $('aSave').onclick=()=>{
   const name=$('aName').value.trim(); if(!name){ $('aName').focus(); return; }
-  const data={ name, species:$('aSpecies').value, sex:$('aSex').value, breed:$('aBreed').value.trim(), age:$('aAge').value.trim(), regime:$('aRegime').value.trim(), notes:$('aNotes').value.trim() };
+  const hayN=parseInt($('aHay').value,10);
+  const data={ name, species:$('aSpecies').value, sex:$('aSex').value, breed:$('aBreed').value.trim(), age:$('aAge').value.trim(), regime:$('aRegime').value.trim(), hay:isNaN(hayN)?1:Math.max(0,hayN), notes:$('aNotes').value.trim() };
   if(editingAnimal){ Object.assign(editingAnimal,data); } else { STORE.animals.push({ id:'a_'+Date.now(), ...data, noteLog:[], photos:[], care:[] }); }
   saveStore(); $('animalModal').classList.remove('open');
   if($('scAnimal').classList.contains('active') && currentAnimal) renderAnimal(currentAnimal);
@@ -2376,7 +2780,7 @@ function reviewCard(id,g){
     st.s=(g===1)?fsrsLapseS(st.d,st.s,r):fsrsGainS(st.d,st.s,r,g);
     st.due=now+Math.max(1,Math.round(fsrsInterval(st.s)))*DAY; st.reps=(st.reps||0)+1;
   }
-  STORE.srs[id]=st; saveStore();
+  STORE.srs[id]=st; const p=curProfile(); if(p){ p.stats.reviews=(p.stats.reviews||0)+1; bumpSeen(); } saveStore();
 }
 function isDue(id){ const st=cardState(id); return !st || st.due<=Date.now(); }
 function dueCards(skill){ return window.NEXUS_CARDS.filter(c=>(!skill||c.skill===skill)&&isDue(c.id)); }
@@ -2405,7 +2809,7 @@ function renderRevise(){
   $('startRevise').textContent=due.length?'Commencer la révision ('+due.length+')':'Tout est à jour ✓';
   $('startRevise').disabled=!due.length; $('startRevise').style.opacity=due.length?'1':'.5';
   ['modeEclair','modePioche','modeSafety'].forEach(id=>{ const b=$(id); if(b){ b.disabled=!due.length; b.style.opacity=due.length?'1':'.45'; } });
-  if($('hardToggle')){ $('hardToggle').checked=!!STORE.hardMode; $('hardToggle').onchange=()=>{ STORE.hardMode=$('hardToggle').checked; saveStore(); }; }
+  if($('hardToggle')){ $('hardToggle').checked=!!STORE.hardMode; $('hardToggle').onchange=()=>{ STORE.hardMode=$('hardToggle').checked; const p=curProfile(); if(p) p.hardMode=STORE.hardMode; saveStore(); }; }
   const list=$('reviseList'); list.innerHTML='';
   Object.entries(D.SKILLS).forEach(([k,s])=>{
     const total=window.NEXUS_CARDS.filter(c=>c.skill===k).length;
@@ -2420,6 +2824,7 @@ function renderRevise(){
 let revQueue=[], revIndex=0, revStats=0, revRevealed=false;
 function startQueue(cards){
   if(!cards||!cards.length) return;
+  const p=curProfile(); if(p){ p.stats.sessions=(p.stats.sessions||0)+1; bumpSeen(); saveStore(); }
   revQueue=cards; revIndex=0; revStats=0;
   $('reviseHome').style.display='none'; $('reviseSession').style.display='block';
   $('revDone').style.display='none'; $('flashcard').style.display='flex'; showCard();
@@ -2577,7 +2982,328 @@ if($('modeEclair')) $('modeEclair').onclick=()=>{ startQueue(interleave(dueCards
 if($('modePioche')) $('modePioche').onclick=()=>{ startQueue(seededShuffle(dueCards(null), daySeed()).slice(0,12)); };
 if($('modeSafety')) $('modeSafety').onclick=()=>{ startQueue(interleave(dueCards(null).filter(c=>SAFETY_NODES.has(c.node)))); };
 
-goHome();
+/* ============================================================
+   PROJET BOIS — grumes : photo, identification (mini-IA hors-ligne),
+   mesure (photo + repère d'échelle), stock et projets possibles.
+   Tout est local et déterministe : aucune requête réseau.
+   ============================================================ */
+if(!STORE.woodStock) STORE.woodStock=[];
+
+/* base de données d'essences (attributs observables) */
+const WOOD_Q=[
+  {id:'type', q:'Feuilles ou aiguilles ?', o:[['feuillu','Feuilles larges (feuillu)'],['resineux','Aiguilles / écailles (résineux)']]},
+  {id:'leaf', q:'Forme des feuilles / aiguilles', o:[['simple','Feuille simple, entière'],['dentee','Feuille dentée'],['lobee','Feuille lobée (découpée)'],['composee','Feuille composée (folioles)'],['aig_faisceau','Aiguilles groupées par 2-5'],['aig_isolees','Aiguilles courtes, isolées, piquantes'],['aig_plates','Aiguilles plates et douces'],['aig_rosette','Aiguilles en touffes, tombent l’hiver'],['ecailles','Écailles (type cyprès)']]},
+  {id:'fruit', q:'Fruit / graine observé', o:[['gland','Gland'],['faine','Faîne (triangulaire)'],['samare','Graine ailée (samare)'],['chataigne','Châtaigne (bogue piquante)'],['noix','Noix'],['charnu','Petit fruit charnu (cerise…)'],['cone','Cône / pomme de pin'],['gousse','Gousse (type haricot)'],['aucun','Aucun / je ne sais pas']]},
+  {id:'bark', q:'Écorce', o:[['lisse','Lisse, grise'],['crevassee','Crevassée, sillons'],['ecailleuse','Écailleuse (plaques)'],['blanche','Blanche, papier'],['orangee','Orangée en haut, écailleuse'],['cannelee','Lisse et cannelée (musclée)']]},
+  {id:'color', q:'Couleur du bois coupé', o:[['blanc','Très clair, blanc'],['blond','Clair, blond'],['brun','Brun'],['brun_rouge','Brun rougeâtre'],['brun_fonce','Brun foncé'],['jaune_vert','Jaune-verdâtre']]},
+  {id:'hard', q:'Dureté (ongle / entame)', o:[['tendre','Tendre (se raye vite)'],['mi_dur','Mi-dur'],['dur','Dur'],['tres_dur','Très dur']]}
+];
+const HARD_LBL={tendre:'tendre',mi_dur:'mi-dur',dur:'dur',tres_dur:'très dur'};
+const USE_LBL={charpente:'Charpente',planche:'Planches',meuble:'Meuble',piquet:'Piquets',bardage:'Bardage',terrasse:'Terrasse',manche:'Manches',chauffage:'Chauffage',caisse:'Caisserie'};
+const ESSENCES=[
+  {k:'chene',n:'Chêne',t:'Feuillu',hard:'dur',dens:0.72,ext:true,uses:['charpente','planche','meuble','piquet','bardage','chauffage'],
+   feat:{type:['feuillu'],leaf:['lobee'],fruit:['gland'],bark:['crevassee'],color:['brun','blond'],hard:['dur','tres_dur']},
+   note:'Bois dur, solide et durable. Charpente, parquet, tonnellerie, meuble.'},
+  {k:'hetre',n:'Hêtre',t:'Feuillu',hard:'dur',dens:0.68,ext:false,uses:['meuble','planche','chauffage'],
+   feat:{type:['feuillu'],leaf:['simple','dentee'],fruit:['faine'],bark:['lisse'],color:['blond','blanc'],hard:['dur']},
+   note:'Dur et homogène, mais craint l’humidité. Meuble, contreplaqué, tournage.'},
+  {k:'frene',n:'Frêne',t:'Feuillu',hard:'dur',dens:0.69,ext:false,uses:['manche','meuble','planche'],
+   feat:{type:['feuillu'],leaf:['composee'],fruit:['samare'],bark:['crevassee','lisse'],color:['blond','blanc'],hard:['dur']},
+   note:'Dur et souple à la fois. Manches d’outils, meuble, articles de sport.'},
+  {k:'chataignier',n:'Châtaignier',t:'Feuillu',hard:'mi_dur',dens:0.58,ext:true,uses:['piquet','charpente','bardage','meuble'],
+   feat:{type:['feuillu'],leaf:['dentee'],fruit:['chataigne'],bark:['crevassee'],color:['blond','brun'],hard:['mi_dur','dur']},
+   note:'Naturellement durable (tannins). Piquets, charpente légère, bardage.'},
+  {k:'charme',n:'Charme',t:'Feuillu',hard:'tres_dur',dens:0.75,ext:false,uses:['manche','chauffage'],
+   feat:{type:['feuillu'],leaf:['dentee'],fruit:['samare'],bark:['cannelee','lisse'],color:['blanc','blond'],hard:['tres_dur']},
+   note:'Très dur et dense. Pièces qui frottent, manches, excellent bois de chauffage.'},
+  {k:'bouleau',n:'Bouleau',t:'Feuillu',hard:'mi_dur',dens:0.61,ext:false,uses:['planche','meuble'],
+   feat:{type:['feuillu'],leaf:['dentee','simple'],fruit:['samare'],bark:['blanche'],color:['blanc','blond'],hard:['mi_dur']},
+   note:'Écorce blanche typique. Contreplaqué, déco, tournage.'},
+  {k:'noyer',n:'Noyer',t:'Feuillu',hard:'dur',dens:0.65,ext:false,uses:['meuble'],
+   feat:{type:['feuillu'],leaf:['composee'],fruit:['noix'],bark:['crevassee'],color:['brun_fonce','brun'],hard:['dur']},
+   note:'Bois noble brun foncé. Ébénisterie, meuble de luxe, placage.'},
+  {k:'merisier',n:'Merisier',t:'Feuillu',hard:'mi_dur',dens:0.60,ext:false,uses:['meuble'],
+   feat:{type:['feuillu'],leaf:['dentee'],fruit:['charnu'],bark:['lisse'],color:['brun_rouge'],hard:['mi_dur']},
+   note:'Brun rosé chaleureux. Ébénisterie, meuble, placage.'},
+  {k:'robinier',n:'Robinier (faux-acacia)',t:'Feuillu',hard:'tres_dur',dens:0.77,ext:true,uses:['piquet','terrasse','charpente','manche'],
+   feat:{type:['feuillu'],leaf:['composee'],fruit:['gousse'],bark:['crevassee'],color:['jaune_vert'],hard:['tres_dur']},
+   note:'Extrêmement durable sans traitement. Piquets, terrasse, structures extérieures.'},
+  {k:'peuplier',n:'Peuplier',t:'Feuillu',hard:'tendre',dens:0.45,ext:false,uses:['planche','caisse'],
+   feat:{type:['feuillu'],leaf:['simple'],fruit:['aucun'],bark:['lisse','crevassee'],color:['blanc'],hard:['tendre']},
+   note:'Léger et tendre. Cagettes, contreplaqué, palettes.'},
+  {k:'pin',n:'Pin sylvestre',t:'Résineux',hard:'mi_dur',dens:0.52,ext:false,uses:['charpente','planche','bardage'],
+   feat:{type:['resineux'],leaf:['aig_faisceau'],fruit:['cone'],bark:['orangee','ecailleuse'],color:['blond'],hard:['mi_dur']},
+   note:'Résineux polyvalent. Charpente, menuiserie, lambris.'},
+  {k:'epicea',n:'Épicéa',t:'Résineux',hard:'tendre',dens:0.45,ext:false,uses:['charpente','planche'],
+   feat:{type:['resineux'],leaf:['aig_isolees'],fruit:['cone'],bark:['ecailleuse'],color:['blanc','blond'],hard:['tendre']},
+   note:'Léger et clair. Charpente, lambris, caisserie, lutherie.'},
+  {k:'sapin',n:'Sapin',t:'Résineux',hard:'tendre',dens:0.45,ext:false,uses:['charpente','planche'],
+   feat:{type:['resineux'],leaf:['aig_plates'],fruit:['cone'],bark:['lisse'],color:['blanc'],hard:['tendre']},
+   note:'Proche de l’épicéa, aiguilles plates. Charpente, menuiserie.'},
+  {k:'douglas',n:'Douglas',t:'Résineux',hard:'mi_dur',dens:0.53,ext:true,uses:['charpente','bardage','terrasse'],
+   feat:{type:['resineux'],leaf:['aig_plates','aig_isolees'],fruit:['cone'],bark:['crevassee'],color:['brun_rouge','blond'],hard:['mi_dur']},
+   note:'Résineux durable au cœur. Charpente, bardage et ossature extérieurs.'},
+  {k:'meleze',n:'Mélèze',t:'Résineux',hard:'mi_dur',dens:0.55,ext:true,uses:['bardage','terrasse','charpente'],
+   feat:{type:['resineux'],leaf:['aig_rosette'],fruit:['cone'],bark:['crevassee'],color:['brun_rouge'],hard:['mi_dur','dur']},
+   note:'Aiguilles caduques, cœur durable. Bardage, terrasse, extérieur.'}
+];
+function essenceByKey(k){ return ESSENCES.find(e=>e.k===k); }
+/* « mini-IA » : score pondéré par indice observé → classement + confiance */
+function identifyEssence(ans){
+  const results=ESSENCES.map(e=>{
+    let score=0, answered=0;
+    for(const q in ans){ const v=ans[q]; if(v==null||v==='') continue; answered++;
+      const acc=e.feat[q]; if(!acc) continue;               // pas de contrainte connue → neutre
+      if(acc.indexOf(v)>=0) score+=2; else score-=1.2;       // accord / désaccord
+    }
+    const conf=(answered&&score>0)?Math.max(0,Math.min(100,Math.round(100*score/(2*answered)))):0;
+    return {e,score,conf,answered};
+  });
+  results.sort((a,b)=> b.score-a.score || a.e.n.localeCompare(b.e.n));
+  return results;
+}
+/* volume d'une grume ≈ cylindre (Ø médian) */
+function logVolume(lenCm,diamCm){ const r=(diamCm/2)/100, l=lenCm/100; return (lenCm>0&&diamCm>0)?Math.PI*r*r*l:0; }
+/* mesure par repère d'échelle (points en % de l'image) */
+function ptDistPx(a,b,rw,rh){ return Math.hypot((a.xPct-b.xPct)/100*rw,(a.yPct-b.yPct)/100*rh); }
+function scaleRealCm(segPts, refPts, refCm, rw, rh){
+  if(segPts.length<2||refPts.length<2||!refCm) return 0;
+  const refPx=ptDistPx(refPts[0],refPts[1],rw,rh); if(refPx<=0) return 0;
+  const segPx=ptDistPx(segPts[0],segPts[1],rw,rh);
+  return Math.round(segPx*refCm/refPx);
+}
+function measureResults(d){
+  const m=d.m||{}; const rw=m.rw||1, rh=m.rh||1;
+  let lenCm = (d.mLenManual!=null&&d.mLenManual!=='') ? parseFloat(d.mLenManual) : scaleRealCm(m.len||[], m.ref||[], m.refCm, rw, rh);
+  let diamCm= (d.mDiamManual!=null&&d.mDiamManual!=='') ? parseFloat(d.mDiamManual) : scaleRealCm(m.diam||[], m.ref||[], m.refCm, rw, rh);
+  lenCm=lenCm||0; diamCm=diamCm||0;
+  return { lenCm:Math.round(lenCm), diamCm:Math.round(diamCm), vol:logVolume(lenCm,diamCm) };
+}
+/* photo → base64 redimensionné (réutilise le pipeline canvas) */
+function readPhoto(file, cb){
+  const reader=new FileReader();
+  reader.onload=ev=>{ const img=new Image();
+    img.onload=()=>{ let w=img.width,h=img.height; const max=1100; if(w>max||h>max){ const r=Math.min(max/w,max/h); w=Math.round(w*r); h=Math.round(h*r); }
+      const cv=document.createElement('canvas'); cv.width=w; cv.height=h; cv.getContext('2d').drawImage(img,0,0,w,h);
+      let data; try{ data=cv.toDataURL('image/jpeg',0.72); }catch(err){ alert('Image illisible.'); return; } cb(data); };
+    img.onerror=()=>alert('Format d’image non supporté (essaie une photo JPG/PNG).');
+    img.src=ev.target.result; };
+  reader.readAsDataURL(file);
+}
+let woodPhotoCb=null;
+if($('woodPhotoInput')) $('woodPhotoInput').onchange=e=>{ const f=e.target.files&&e.target.files[0]; if(f&&woodPhotoCb) readPhoto(f, woodPhotoCb); e.target.value=''; };
+function grabPhoto(cb){ woodPhotoCb=cb; $('woodPhotoInput').click(); }
+
+/* ---- hub ---- */
+function woodStats(){ const s=STORE.woodStock||[]; return { count:s.length, vol:s.reduce((a,l)=>a+(l.volumeM3||0),0) }; }
+function rWood(){ mode='wood'; renderWoodHub(); show('scWood',{accent:'#7C5A34',nav:'wood'}); }
+function renderWoodHub(){
+  const st=woodStats();
+  $('woodSummary').textContent = st.count ? (st.count+' grume'+(st.count>1?'s':'')+' · '+st.vol.toFixed(2)+' m³ en stock') : 'Inventorie tes grumes : photo, essence, dimensions, stock.';
+  const tiles=[
+    {v:'new', ic:'➕', t:'Nouvelle grume', s:'Photo → essence → mesure'},
+    {v:'identify', ic:'🌳', t:'Identifier une essence', s:'Guide + mini-IA'},
+    {v:'stock', ic:'📦', t:'Stock', s:st.count+' grume'+(st.count>1?'s':'')},
+    {v:'projects', ic:'🏗️', t:'Projets possibles', s:'Selon ton stock'}
+  ];
+  $('woodTiles').innerHTML=tiles.map(t=>'<button class="woodtile" data-wv="'+t.v+'"><span class="wt-ic">'+t.ic+'</span><span class="wt-mid"><span class="wt-t">'+t.t+'</span><span class="wt-s">'+esc(t.s)+'</span></span><span class="chev">›</span></button>').join('');
+  $('woodTiles').querySelectorAll('[data-wv]').forEach(b=>b.onclick=()=>{ const v=b.dataset.wv; if(v==='new') startWoodNew(); else openWoodView(v); });
+}
+const WOOD_VIEW_LABEL={identify:'identifier',stock:'stock',projects:'projets'};
+function openWoodView(view){ go(()=>renderWoodFlow(view), WOOD_VIEW_LABEL[view]||'bois'); }
+function renderWoodFlow(view){
+  mode='wood';
+  if(view==='stock'){ $('wfTitle').textContent='Stock de grumes'; renderWoodStock(); }
+  else if(view==='projects'){ $('wfTitle').textContent='Projets possibles'; renderWoodProjects(); }
+  else if(view==='identify'){ $('wfTitle').textContent='Identifier une essence'; renderWoodIdentify(); }
+  show('scWoodFlow',{accent:'#7C5A34',nav:'wood'});
+}
+
+/* ---- identification (guide + mini-IA), réutilisable ---- */
+function renderIdentifyUI(host, ans, onPick){
+  const res=identifyEssence(ans);
+  const answered=Object.values(ans).filter(v=>v!=null&&v!=='').length;
+  let html='<div class="woodq">';
+  WOOD_Q.forEach(q=>{ html+='<div class="wq"><div class="wq-t">'+q.q+'</div><div class="wq-opts">';
+    q.o.forEach(([v,label])=>{ const on=ans[q.id]===v; html+='<button class="wopt'+(on?' on':'')+'" data-q="'+q.id+'" data-v="'+v+'">'+esc(label)+'</button>'; });
+    html+='</div></div>'; });
+  html+='</div>';
+  html+='<div class="wres"><div class="wres-h">Proposition de la mini-IA'+(answered?' · '+answered+' indice'+(answered>1?'s':''):'')+'</div>';
+  if(!answered){ html+='<div class="empty">Réponds à quelques questions : les essences probables s’affichent ici.</div>'; }
+  else { res.slice(0,3).forEach((r,i)=>{ html+='<button class="wcand'+(i===0&&r.conf>0?' top':'')+'" data-pick="'+r.e.k+'"><span class="wc-main"><span class="wc-n">'+esc(r.e.n)+'</span><span class="wc-m">'+r.e.t+' · '+HARD_LBL[r.e.hard]+'</span></span><span class="wc-conf"><span class="wc-bar"><i style="width:'+r.conf+'%"></i></span><b>'+r.conf+'%</b></span></button>'; }); }
+  html+='</div>';
+  host.innerHTML=html;
+  host.querySelectorAll('[data-q]').forEach(b=>b.onclick=()=>{ const q=b.dataset.q; ans[q]=(ans[q]===b.dataset.v)?'':b.dataset.v; renderIdentifyUI(host,ans,onPick); });
+  host.querySelectorAll('[data-pick]').forEach(b=>b.onclick=()=>onPick(b.dataset.pick));
+}
+function essenceFicheHTML(e){
+  const uses=e.uses.map(u=>'<span class="wtag">'+(USE_LBL[u]||u)+'</span>').join('');
+  return '<div class="efiche"><div class="ef-h"><span class="ef-n">'+esc(e.n)+'</span><span class="ef-t">'+e.t+'</span></div>'+
+    '<div class="ef-row"><span>Dureté</span><b>'+HARD_LBL[e.hard]+'</b></div>'+
+    '<div class="ef-row"><span>Densité indicative</span><b>~'+e.dens.toFixed(2)+'</b></div>'+
+    '<div class="ef-row"><span>Extérieur sans traitement</span><b>'+(e.ext?'oui':'non')+'</b></div>'+
+    '<div class="ef-note">'+esc(e.note)+'</div><div class="ef-uses">'+uses+'</div></div>';
+}
+let woodIdAns={};
+function renderWoodIdentify(){
+  const b=$('wfBody');
+  b.innerHTML='<div id="wid"></div>';
+  renderIdentifyUI($('wid'), woodIdAns, (k)=>{
+    const e=essenceByKey(k);
+    b.innerHTML='<div class="wstep">Fiche essence</div>'+essenceFicheHTML(e)+'<div class="wnav"><button class="miniBtn" id="widBack">← Revenir au guide</button></div>';
+    $('widBack').onclick=()=>renderWoodIdentify();
+  });
+}
+
+/* ---- stock ---- */
+function renderWoodStock(){
+  const b=$('wfBody'); const s=STORE.woodStock||[];
+  if(!s.length){ b.innerHTML='<div class="empty">Aucune grume en stock. Ajoute-en une depuis « Nouvelle grume ».</div>'; return; }
+  const st=woodStats();
+  let html='<div class="ec-head">'+st.count+' grume'+(st.count>1?'s':'')+' · '+st.vol.toFixed(2)+' m³</div><div class="woodlist">';
+  s.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||'')).forEach(l=>{
+    const e=essenceByKey(l.speciesKey);
+    html+='<div class="logrow"><span class="lg-ph">'+(l.photo?'<img src="'+l.photo+'" alt="">':'🪵')+'</span>'+
+      '<span class="lg-mid"><span class="lg-n">'+esc(l.speciesName||(e?e.n:'Grume'))+'</span>'+
+      '<span class="lg-m">'+(l.lengthCm?l.lengthCm+' cm × Ø'+l.diamCm+' cm':'dimensions —')+' · '+(l.volumeM3?l.volumeM3.toFixed(3)+' m³':'—')+'</span></span>'+
+      '<button class="lg-del" data-del="'+l.id+'">×</button></div>';
+  });
+  html+='</div>';
+  b.innerHTML=html;
+  b.querySelectorAll('[data-del]').forEach(x=>x.onclick=()=>{ STORE.woodStock=STORE.woodStock.filter(l=>l.id!==x.dataset.del); saveStore(); renderWoodStock(); });
+}
+
+/* ---- projets possibles (règles essence + dimensions + durabilité) ---- */
+const WOOD_PROJECTS=[
+  {k:'charpente',n:'Charpente / poutres',ic:'🏠',use:'charpente',minLen:200,minDiam:25,ext:false,desc:'Grumes droites et fortes pour poutres et pannes.'},
+  {k:'ossature',n:'Ossature / abri',ic:'🛖',use:'charpente',minLen:150,minDiam:15,ext:false,desc:'Montants et solives d’un abri ou d’une extension.'},
+  {k:'bardage',n:'Bardage extérieur',ic:'🧱',use:'bardage',minLen:150,minDiam:20,ext:true,desc:'Planches de façade — essence durable requise.'},
+  {k:'terrasse',n:'Terrasse / platelage',ic:'🪵',use:'terrasse',minLen:100,minDiam:18,ext:true,desc:'Lames de terrasse en essence durable.'},
+  {k:'piquet',n:'Piquets de clôture',ic:'🚧',use:'piquet',minLen:120,minDiam:8,ext:true,desc:'Piquets — essence naturellement durable.'},
+  {k:'planche',n:'Planches / menuiserie',ic:'🪚',use:'planche',minLen:100,minDiam:22,ext:false,desc:'Débit en planches pour menuiserie intérieure.'},
+  {k:'meuble',n:'Meuble / ébénisterie',ic:'🪑',use:'meuble',minLen:60,minDiam:25,ext:false,desc:'Belles billes pour plateaux et meubles.'},
+  {k:'manche',n:'Manches d’outils',ic:'🔨',use:'manche',minLen:40,minDiam:8,ext:false,desc:'Bois dur et souple pour manches.'},
+  {k:'chauffage',n:'Bois de chauffage',ic:'🔥',use:'chauffage',minLen:0,minDiam:0,ext:false,desc:'Feuillus denses — surtout charme, hêtre, chêne.'}
+];
+function woodProjectFit(){
+  const stock=STORE.woodStock||[];
+  return WOOD_PROJECTS.map(p=>{
+    let hasSpecies=false, tooSmall=false;
+    const fit=stock.filter(l=>{ const e=essenceByKey(l.speciesKey); if(!e) return false;
+      if(e.uses.indexOf(p.use)<0) return false; if(p.ext&&!e.ext) return false;
+      hasSpecies=true;
+      if((l.lengthCm||0)<p.minLen||(l.diamCm||0)<p.minDiam){ tooSmall=true; return false; }
+      return true; });
+    const vol=fit.reduce((a,l)=>a+(l.volumeM3||0),0);
+    const species=[...new Set(fit.map(l=>{const e=essenceByKey(l.speciesKey);return e?e.n:'';}).filter(Boolean))];
+    let hint=''; if(!fit.length){ hint = !hasSpecies ? 'Aucune essence adaptée en stock.' : (tooSmall?'Grumes présentes mais trop petites.':'—'); }
+    return {p,count:fit.length,vol,species,ok:fit.length>0,hint};
+  });
+}
+function renderWoodProjects(){
+  const b=$('wfBody'); const rows=woodProjectFit();
+  if(!(STORE.woodStock||[]).length){ b.innerHTML='<div class="empty">Ajoute des grumes au stock pour voir les projets réalisables.</div>'; return; }
+  const ok=rows.filter(r=>r.ok), no=rows.filter(r=>!r.ok);
+  let html='';
+  html+='<div class="ec-head">Réalisable maintenant</div>';
+  html+= ok.length ? '<div class="projlist">'+ok.map(r=>'<div class="projrow ok"><span class="pr-ic">'+r.p.ic+'</span><span class="pr-mid"><span class="pr-n">'+esc(r.p.n)+'</span><span class="pr-m">'+r.count+' grume'+(r.count>1?'s':'')+' · '+r.vol.toFixed(3)+' m³ · '+esc(r.species.join(', '))+'</span></span><span class="pr-badge">✓</span></div>').join('')+'</div>' : '<div class="empty">Rien de réalisable pour l’instant — il te faut des grumes adaptées.</div>';
+  html+='<div class="ec-head">À compléter</div><div class="projlist">'+no.map(r=>'<div class="projrow"><span class="pr-ic">'+r.p.ic+'</span><span class="pr-mid"><span class="pr-n">'+esc(r.p.n)+'</span><span class="pr-m">'+esc(r.hint||r.p.desc)+'</span></span></div>').join('')+'</div>';
+  b.innerHTML=html;
+}
+
+/* ---- nouvelle grume : assistant photo → essence → mesure → stock ---- */
+let woodDraft=null;
+function startWoodNew(){ woodDraft={step:1, photo:'', ans:{}, speciesKey:'', speciesName:'', m:null, mLenManual:'', mDiamManual:''}; go(renderWoodNew,'nouvelle grume'); }
+function renderWoodNew(){ mode='wood'; $('wfTitle').textContent='Nouvelle grume'; drawWoodStep(); show('scWoodFlow',{accent:'#7C5A34',nav:'wood'}); }
+function drawWoodStep(){
+  const d=woodDraft, b=$('wfBody'); if(!d) return;
+  if(d.step===1){
+    b.innerHTML='<div class="wstep">Étape 1 / 4 · Photo</div>'+
+      (d.photo?'<div class="wm-imgwrap"><img src="'+d.photo+'" alt=""></div>':'<div class="empty">Prends la grume en photo (avec un mètre ou une planche posée dessus, utile pour la mesure).</div>')+
+      '<button class="addbtn" id="wnPhoto">📷 '+(d.photo?'Reprendre la photo':'Prendre la grume en photo')+'</button>'+
+      '<div class="wnav"><span></span><button class="save" id="wnNext">'+(d.photo?'Continuer →':'Passer cette étape →')+'</button></div>';
+    $('wnPhoto').onclick=()=>grabPhoto(data=>{ d.photo=data; drawWoodStep(); });
+    $('wnNext').onclick=()=>{ d.step=2; drawWoodStep(); };
+  } else if(d.step===2){
+    b.innerHTML='<div class="wstep">Étape 2 / 4 · Essence</div>'+
+      (d.speciesKey?'<div class="wpick">Choisie : <b>'+esc(d.speciesName)+'</b> — <span class="wpick-x" id="wnClear">changer</span></div>':'')+
+      '<div id="wid"></div><div class="wnav"><button class="miniBtn" id="wnBack">← Photo</button><button class="save" id="wnNext"'+(d.speciesKey?'':' disabled style="opacity:.5"')+'>Mesurer →</button></div>';
+    renderIdentifyUI($('wid'), d.ans, (k)=>{ const e=essenceByKey(k); d.speciesKey=k; d.speciesName=e.n; drawWoodStep(); });
+    if($('wnClear')) $('wnClear').onclick=()=>{ d.speciesKey=''; d.speciesName=''; drawWoodStep(); };
+    $('wnBack').onclick=()=>{ d.step=1; drawWoodStep(); };
+    if(d.speciesKey) $('wnNext').onclick=()=>{ d.step=3; drawWoodStep(); };
+  } else if(d.step===3){
+    drawMeasureStep();
+  } else if(d.step===4){
+    const r=measureResults(d);
+    b.innerHTML='<div class="wstep">Étape 4 / 4 · Récapitulatif</div>'+
+      (d.photo?'<div class="wm-imgwrap sm"><img src="'+d.photo+'" alt=""></div>':'')+
+      '<div class="efiche"><div class="ef-h"><span class="ef-n">'+esc(d.speciesName||'Grume')+'</span></div>'+
+      '<div class="ef-row"><span>Longueur</span><b>'+(r.lenCm||'—')+' cm</b></div>'+
+      '<div class="ef-row"><span>Diamètre</span><b>'+(r.diamCm||'—')+' cm</b></div>'+
+      '<div class="ef-row"><span>Volume</span><b>'+(r.vol?r.vol.toFixed(3):'—')+' m³</b></div></div>'+
+      '<div class="wnav"><button class="miniBtn" id="wnBack">← Mesure</button><button class="save" id="wnSave">Enregistrer dans le stock</button></div>';
+    $('wnBack').onclick=()=>{ d.step=3; drawWoodStep(); };
+    $('wnSave').onclick=()=>saveWoodLog();
+  }
+}
+function drawMeasureStep(){
+  const d=woodDraft, b=$('wfBody');
+  d.m=d.m||{stage:'ref', ref:[], len:[], diam:[], refCm:100, rw:1, rh:1};
+  if(!d.photo){
+    b.innerHTML='<div class="wstep">Étape 3 / 4 · Mesure</div><div class="empty">Il faut une photo (avec un repère de longueur connue) pour mesurer, ou saisis les dimensions à la main.</div>'+
+      '<button class="addbtn" id="wmPhoto">📷 Photo de mesure</button>'+manualBlock(d)+
+      '<div class="wnav"><button class="miniBtn" id="wnBack">← Essence</button><button class="save" id="wmNext">Valider la mesure →</button></div>';
+    $('wmPhoto').onclick=()=>grabPhoto(data=>{ d.photo=data; drawWoodStep(); });
+    bindManual(d); $('wnBack').onclick=()=>{ d.step=2; drawWoodStep(); }; $('wmNext').onclick=()=>{ d.step=4; drawWoodStep(); };
+    return;
+  }
+  const seg={ref:'Repère',len:'Longueur',diam:'Diamètre'};
+  let html='<div class="wstep">Étape 3 / 4 · Mesure</div>';
+  html+='<p class="wm-help">Renseigne la longueur du repère, puis pointe sur la photo : les 2 bouts du <b>repère</b>, la <b>longueur</b> et le <b>diamètre</b> de la grume.</p>';
+  html+='<div class="field"><label>Longueur réelle du repère (cm)</label><input id="wmRef" type="number" min="1" value="'+d.m.refCm+'"></div>';
+  html+='<div class="wm-seg">'+['ref','len','diam'].map(s=>'<button class="wm-segb'+(d.m.stage===s?' on':'')+'" data-seg="'+s+'">'+seg[s]+' '+(d.m[s].length===2?'✓':d.m[s].length+'/2')+'</button>').join('')+'</div>';
+  html+='<div class="wm-imgwrap tap" id="wmImg"><img src="'+d.photo+'" alt=""><div class="wm-dots" id="wmDots"></div></div>';
+  const r=measureResults(d);
+  html+='<div class="wm-out"><div class="ustat"><div class="sv">'+(r.lenCm||'—')+(r.lenCm?' cm':'')+'</div><div class="sl">longueur</div></div>'+
+    '<div class="ustat"><div class="sv">'+(r.diamCm||'—')+(r.diamCm?' cm':'')+'</div><div class="sl">diamètre</div></div>'+
+    '<div class="ustat"><div class="sv">'+(r.vol?r.vol.toFixed(3)+' m³':'—')+'</div><div class="sl">volume</div></div></div>';
+  html+='<details class="wm-manualwrap"><summary>Saisie manuelle (sans photo)</summary>'+manualBlock(d)+'</details>';
+  html+='<div class="wnav"><button class="miniBtn" id="wnBack">← Essence</button><button class="save" id="wmNext">Valider la mesure →</button></div>';
+  b.innerHTML=html;
+  drawDots(d);
+  $('wmRef').oninput=e=>{ d.m.refCm=parseFloat(e.target.value)||0; updateMeasureOut(d); };
+  b.querySelectorAll('[data-seg]').forEach(x=>x.onclick=()=>{ d.m.stage=x.dataset.seg; d.m[d.m.stage]=[]; drawMeasureStep(); });
+  const img=$('wmImg');
+  img.onclick=(e)=>{ const el=img.querySelector('img'); const rect=el.getBoundingClientRect();
+    if(!rect.width||!rect.height) return;
+    d.m.rw=rect.width; d.m.rh=rect.height;
+    const p={ xPct:Math.max(0,Math.min(100,(e.clientX-rect.left)/rect.width*100)), yPct:Math.max(0,Math.min(100,(e.clientY-rect.top)/rect.height*100)) };
+    const arr=d.m[d.m.stage]; if(arr.length>=2) arr.length=0; arr.push(p);
+    if(arr.length===2){ const order=['ref','len','diam']; const i=order.indexOf(d.m.stage); if(i<2&&d.m[order[i+1]].length<2) d.m.stage=order[i+1]; }
+    drawMeasureStep();
+  };
+  bindManual(d);
+  $('wnBack').onclick=()=>{ d.step=2; drawWoodStep(); };
+  $('wmNext').onclick=()=>{ const r2=measureResults(d); d.mLenFinal=r2.lenCm; d.mDiamFinal=r2.diamCm; d.step=4; drawWoodStep(); };
+}
+function manualBlock(d){ return '<div class="wm-manual"><div class="field"><label>Longueur (cm)</label><input id="wmLen" type="number" min="0" value="'+(d.mLenManual||'')+'"></div><div class="field"><label>Diamètre (cm)</label><input id="wmDiam" type="number" min="0" value="'+(d.mDiamManual||'')+'"></div></div>'; }
+function bindManual(d){ if($('wmLen')) $('wmLen').oninput=e=>{ d.mLenManual=e.target.value; updateMeasureOut(d); }; if($('wmDiam')) $('wmDiam').oninput=e=>{ d.mDiamManual=e.target.value; updateMeasureOut(d); }; }
+function updateMeasureOut(d){ const r=measureResults(d); const out=document.querySelectorAll('.wm-out .sv'); if(out.length===3){ out[0].textContent=r.lenCm?r.lenCm+' cm':'—'; out[1].textContent=r.diamCm?r.diamCm+' cm':'—'; out[2].textContent=r.vol?r.vol.toFixed(3)+' m³':'—'; } }
+function drawDots(d){ const host=$('wmDots'); if(!host) return; const cls={ref:'dref',len:'dlen',diam:'ddiam'};
+  let h=''; ['ref','len','diam'].forEach(s=>{ (d.m[s]||[]).forEach(p=>{ h+='<span class="wm-dot '+cls[s]+'" style="left:'+p.xPct+'%;top:'+p.yPct+'%"></span>'; });
+    if((d.m[s]||[]).length===2){ const a=d.m[s][0],b2=d.m[s][1]; h+='<span class="wm-line '+cls[s]+'" style="left:'+a.xPct+'%;top:'+a.yPct+'%;width:'+Math.hypot((b2.xPct-a.xPct),(b2.yPct-a.yPct))+'%;transform:rotate('+Math.atan2((b2.yPct-a.yPct),(b2.xPct-a.xPct))+'rad)"></span>'; } });
+  host.innerHTML=h;
+}
+function saveWoodLog(){
+  const d=woodDraft; const r=measureResults(d);
+  const log={ id:'log_'+Date.now(), date:new Date().toISOString().slice(0,10), speciesKey:d.speciesKey, speciesName:d.speciesName, lengthCm:r.lenCm, diamCm:r.diamCm, volumeM3:+r.vol.toFixed(3), photo:d.photo||'' };
+  STORE.woodStock.push(log);
+  if(!saveStoreOk()){ STORE.woodStock.pop(); alert('Stockage plein — grume non enregistrée. Supprime des photos/grumes.'); return; }
+  woodDraft=null; goRoot(rWood,'projet bois');
+}
+
+goProfiles();
 
 </script>
 </body>

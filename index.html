@@ -505,6 +505,10 @@
   .wm-manualwrap{margin-top:12px; font-size:13px}
   .wm-manualwrap summary{cursor:pointer; color:#7C5A34; font-family:'JetBrains Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:.05em}
   .wm-manual{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px}
+  .wood-demo{display:flex; gap:8px; margin-top:14px}
+  .demolink{flex:1; background:none; border:1px dashed var(--line2); border-radius:11px; padding:11px; cursor:pointer; font:inherit; font-size:12.5px; color:var(--mut)}
+  .demolink:active{background:var(--surf)}
+  .demolink.del{color:#B4453A; border-color:rgba(180,69,58,.4)}
 </style>
 </head>
 <body>
@@ -3106,9 +3110,20 @@ function renderWoodHub(){
     {v:'stock', ic:'📦', t:'Stock', s:st.count+' grume'+(st.count>1?'s':'')},
     {v:'projects', ic:'🏗️', t:'Projets possibles', s:'Selon ton stock'}
   ];
-  $('woodTiles').innerHTML=tiles.map(t=>'<button class="woodtile" data-wv="'+t.v+'"><span class="wt-ic">'+t.ic+'</span><span class="wt-mid"><span class="wt-t">'+t.t+'</span><span class="wt-s">'+esc(t.s)+'</span></span><span class="chev">›</span></button>').join('');
+  let html=tiles.map(t=>'<button class="woodtile" data-wv="'+t.v+'"><span class="wt-ic">'+t.ic+'</span><span class="wt-mid"><span class="wt-t">'+t.t+'</span><span class="wt-s">'+esc(t.s)+'</span></span><span class="chev">›</span></button>').join('');
+  html+='<div class="wood-demo"><button class="demolink" id="woodDemo">🧪 Charger 20 grumes d’exemple</button>'+(st.count?'<button class="demolink del" id="woodClear">Vider le stock</button>':'')+'</div>';
+  $('woodTiles').innerHTML=html;
   $('woodTiles').querySelectorAll('[data-wv]').forEach(b=>b.onclick=()=>{ const v=b.dataset.wv; if(v==='new') startWoodNew(); else openWoodView(v); });
+  if($('woodDemo')) $('woodDemo').onclick=()=>{ loadWoodDemo(); openWoodView('projects'); };
+  if($('woodClear')){ const c=$('woodClear'); c.onclick=()=>{ if(c.dataset.armed!=='1'){ c.dataset.armed='1'; c.textContent='Confirmer ? vider tout le stock'; setTimeout(()=>{ if(c.dataset.armed==='1'){ c.dataset.armed='0'; c.textContent='Vider le stock'; } },4000); return; } clearWoodStock(); renderWoodHub(); }; }
 }
+/* jeu d'essai : 20 grumes d'essences et tailles variées pour explorer les projets */
+function woodDemoLogs(){
+  const spec=[['chene',300,38],['chene',90,12],['douglas',260,30],['douglas',180,22],['epicea',240,26],['epicea',150,16],['pin',220,28],['meleze',200,24],['meleze',120,15],['chataignier',160,16],['chataignier',130,10],['robinier',200,26],['robinier',140,12],['frene',120,18],['frene',90,14],['hetre',140,28],['charme',80,16],['noyer',110,30],['merisier',100,26],['peuplier',300,40]];
+  return spec.map((s,i)=>{ const e=essenceByKey(s[0]); return { id:'log_demo_'+i, date:new Date(Date.now()-i*86400000).toISOString().slice(0,10), speciesKey:s[0], speciesName:e.n, lengthCm:s[1], diamCm:s[2], volumeM3:+logVolume(s[1],s[2]).toFixed(3), photo:'' }; });
+}
+function loadWoodDemo(){ woodDemoLogs().forEach(l=>{ if(!STORE.woodStock.some(x=>x.id===l.id)) STORE.woodStock.push(l); }); saveStore(); }
+function clearWoodStock(){ STORE.woodStock=[]; saveStore(); }
 const WOOD_VIEW_LABEL={identify:'identifier',stock:'stock',projects:'projets'};
 function openWoodView(view){ go(()=>renderWoodFlow(view), WOOD_VIEW_LABEL[view]||'bois'); }
 function renderWoodFlow(view){

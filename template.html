@@ -594,6 +594,37 @@
   .demolink{flex:1; background:none; border:1px dashed var(--line2); border-radius:11px; padding:11px; cursor:pointer; font:inherit; font-size:12.5px; color:var(--mut)}
   .demolink:active{background:var(--surf)}
   .demolink.del{color:#B4453A; border-color:rgba(180,69,58,.4)}
+
+  /* ===== Passe premium globale (finition inspirée 21st.dev, CSS seul) ===== */
+  :root{
+    --elev-1:0 1px 2px rgba(42,37,32,.045), 0 12px 26px -20px rgba(42,37,32,.5);
+    --elev-2:0 2px 6px rgba(42,37,32,.06), 0 22px 44px -24px rgba(42,37,32,.55);
+  }
+  /* profondeur douce au repos sur les surfaces-cartes */
+  .door,.dtile,.domain,.woodtile,.ucard,.efiche,.planwrap,.debitwrap,.storagebox,.doc-yield,.logrow,.animalrow,.horsecard,.kpi,.taskrow,.wcand,.rev-mode,.psel-main{
+    box-shadow:var(--elev-1);
+  }
+  /* retour tactile cohérent (scale, sans décalage de layout) */
+  .door,.dtile,.domain,.woodtile,.step,.animalrow,.psel-main,.rev-mode,.wcand,.wopt,.wm-segb,.pcard,.profilechip,.woodtile{
+    transition:transform .16s cubic-bezier(.2,.75,.3,1), box-shadow .2s, border-color .18s;
+  }
+  .door:active,.dtile:active,.domain:active,.woodtile:active,.step:active,.animalrow:active,.psel-main:active,.rev-mode:active,.pcard:active,.wcand:active{ transform:scale(.98); }
+  .door:hover,.dtile:hover,.domain:hover,.woodtile:hover{ box-shadow:var(--elev-2); }
+  /* icônes en pastille sur les hubs (Domaine, Projet Bois) */
+  .door .di{ width:48px; height:48px; display:flex; align-items:center; justify-content:center; font-size:26px; margin-bottom:12px; border-radius:14px; background:var(--paper2); box-shadow:inset 0 0 0 1px rgba(42,37,32,.05) }
+  .door.learn .di{ background:rgba(63,94,78,.1) }
+  .door.stable .di{ background:rgba(138,90,60,.11) }
+  .woodtile .wt-ic{ width:44px; height:44px; border-radius:12px; background:rgba(124,90,52,.1); box-shadow:inset 0 0 0 1px rgba(42,37,32,.05) }
+  /* boutons : primaire avec profondeur + retour tactile */
+  .save{ box-shadow:0 1px 2px rgba(42,37,32,.08), 0 10px 22px -14px rgba(63,94,78,.65); transition:transform .14s, box-shadow .18s, filter .15s }
+  .save:active{ transform:translateY(1px) scale(.995); filter:brightness(.97) }
+  .addbtn,.miniBtn{ transition:transform .14s, border-color .15s, background .15s }
+  .addbtn:active,.miniBtn:active{ transform:scale(.99) }
+  /* modales : feuille plus profonde + fond légèrement flouté */
+  .modal{ backdrop-filter:blur(3px); -webkit-backdrop-filter:blur(3px) }
+  .sheet{ box-shadow:0 -10px 44px rgba(42,37,32,.3) }
+  /* barre du bas : légère élévation */
+  #bottomnav{ box-shadow:0 -1px 0 var(--line), 0 -12px 24px -20px rgba(42,37,32,.35) }
 </style>
 </head>
 <body>

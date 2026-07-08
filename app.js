@@ -22,11 +22,13 @@ function loadStore(){
       if(d.projects) STORE.projects=d.projects; if(d.seedProjects) STORE.seedProjects=d.seedProjects;
       if(d.daily) STORE.daily=d.daily;
       if(d.profiles){ STORE.profiles=d.profiles; STORE.currentProfile=d.currentProfile||'mael'; if(d.seedProfiles) STORE.seedProfiles=d.seedProfiles; }
-      if(d.woodStock) STORE.woodStock=d.woodStock; }
+      if(d.woodStock) STORE.woodStock=d.woodStock; if(d.woodPlan) STORE.woodPlan=d.woodPlan; }
   }catch(e){ /* mémoire seule */ }
   Object.keys(D.SKILLS).forEach(k=>{ if(!STORE.mastered[k]) STORE.mastered[k]=[]; });
 }
-function saveStore(){ try{ localStorage.setItem('nexus_stable', JSON.stringify(STORE)); }catch(e){} }
+let _saveWarned=false;
+function saveStore(){ try{ localStorage.setItem('nexus_stable', JSON.stringify(STORE)); _saveWarned=false; return true; }
+  catch(e){ if(!_saveWarned){ _saveWarned=true; try{ alert('⚠️ Mémoire de l’appareil pleine : ta dernière saisie n’a pas pu être enregistrée (elle sera perdue au rechargement).\n\nLibère de la place : supprime des photos (fiches animaux ou grumes), puis réessaie.'); }catch(_){} } return false; } }
 loadStore();
 const mastered={}; Object.keys(D.SKILLS).forEach(k=>mastered[k]=new Set());
 function persistMastered(){ Object.keys(mastered).forEach(k=>STORE.mastered[k]=[...mastered[k]]); saveStore(); }
@@ -1073,6 +1075,9 @@ if($('modeSafety')) $('modeSafety').onclick=()=>{ startQueue(interleave(dueCards
    Tout est local et déterministe : aucune requête réseau.
    ============================================================ */
 if(!STORE.woodStock) STORE.woodStock=[];
+if(!STORE.woodPlan||!Array.isArray(STORE.woodPlan.selected)) STORE.woodPlan={selected:[]};
+const ESS_COLOR={chene:'#8A5A3C',hetre:'#C99A3F',frene:'#A9B18F',chataignier:'#9C6B3F',charme:'#B8A98C',bouleau:'#CBBfa0',noyer:'#5B4636',merisier:'#A4572F',robinier:'#8A8A3C',peuplier:'#C6CEBb',pin:'#C98A4F',epicea:'#8FA98F',sapin:'#7E9E86',douglas:'#B06A4F',meleze:'#A85A3C'};
+function essColor(k){ return ESS_COLOR[k]||'#8A7A5C'; }
 
 /* base de données d'essences (attributs observables) */
 const WOOD_Q=[
@@ -1189,7 +1194,7 @@ function renderWoodHub(){
     {v:'new', ic:'➕', t:'Nouvelle grume', s:'Photo → essence → mesure'},
     {v:'identify', ic:'🌳', t:'Identifier une essence', s:'Guide + mini-IA'},
     {v:'stock', ic:'📦', t:'Stock', s:st.count+' grume'+(st.count>1?'s':'')},
-    {v:'projects', ic:'🏗️', t:'Projets possibles', s:'Selon ton stock'}
+    {v:'projects', ic:'📊', t:'Tableau de bord', s:'KPI, stock & projets'}
   ];
   let html=tiles.map(t=>'<button class="woodtile" data-wv="'+t.v+'"><span class="wt-ic">'+t.ic+'</span><span class="wt-mid"><span class="wt-t">'+t.t+'</span><span class="wt-s">'+esc(t.s)+'</span></span><span class="chev">›</span></button>').join('');
   html+='<div class="wood-demo"><button class="demolink" id="woodDemo">🧪 Charger 20 grumes d’exemple</button>'+(st.count?'<button class="demolink del" id="woodClear">Vider le stock</button>':'')+'</div>';
@@ -1210,7 +1215,7 @@ function openWoodView(view){ go(()=>renderWoodFlow(view), WOOD_VIEW_LABEL[view]|
 function renderWoodFlow(view){
   mode='wood';
   if(view==='stock'){ $('wfTitle').textContent='Stock de grumes'; renderWoodStock(); }
-  else if(view==='projects'){ $('wfTitle').textContent='Projets possibles'; renderWoodProjects(); }
+  else if(view==='projects'){ $('wfTitle').textContent='Tableau de bord'; renderWoodDashboard(); }
   else if(view==='identify'){ $('wfTitle').textContent='Identifier une essence'; renderWoodIdentify(); }
   show('scWoodFlow',{accent:'#7C5A34',nav:'wood'});
 }
@@ -1296,16 +1301,57 @@ function woodProjectFit(){
     return {p,count:fit.length,vol,species,ok:fit.length>0,hint,logs:fit};
   });
 }
-function renderWoodProjects(){
-  const b=$('wfBody'); const rows=woodProjectFit();
-  if(!(STORE.woodStock||[]).length){ b.innerHTML='<div class="empty">Ajoute des grumes au stock pour voir les projets réalisables.</div>'; return; }
-  const ok=rows.filter(r=>r.ok), no=rows.filter(r=>!r.ok);
-  const okRow=r=>'<button class="projrow ok" data-proj="'+r.p.k+'"><span class="pr-ic">'+r.p.ic+'</span><span class="pr-mid"><span class="pr-n">'+esc(r.p.n)+'</span><span class="pr-m">'+r.count+' grume'+(r.count>1?'s':'')+' · '+r.vol.toFixed(3)+' m³ · '+esc(r.species.join(', '))+'</span></span><span class="pr-go">Dossier ›</span></button>';
-  const noRow=r=>'<button class="projrow" data-proj="'+r.p.k+'"><span class="pr-ic">'+r.p.ic+'</span><span class="pr-mid"><span class="pr-n">'+esc(r.p.n)+'</span><span class="pr-m">'+esc(r.hint||r.p.desc)+'</span></span><span class="pr-go">Voir ›</span></button>';
-  let html='<div class="ec-head">Réalisable maintenant</div>';
-  html+= ok.length ? '<div class="projlist">'+ok.map(okRow).join('')+'</div>' : '<div class="empty">Rien de réalisable pour l’instant — il te faut des grumes adaptées.</div>';
-  html+='<div class="ec-head">À compléter</div><div class="projlist">'+no.map(noRow).join('')+'</div>';
+/* ---- tableau de bord (KPI + stock par essence + projets cochables) ---- */
+function woodPlanSet(){ return new Set((STORE.woodPlan&&STORE.woodPlan.selected)||[]); }
+function toggleWoodPlan(k){ const sel=woodPlanSet(); if(sel.has(k))sel.delete(k); else sel.add(k); STORE.woodPlan={selected:[...sel]}; saveStore(); }
+function woodDashboardData(){
+  const stock=STORE.woodStock||[];
+  const fit=woodProjectFit();
+  const sel=woodPlanSet();
+  const mob=new Set();                                   // grumes mobilisées par les projets choisis
+  fit.forEach(r=>{ if(sel.has(r.p.k)) r.logs.forEach(l=>mob.add(l.id)); });
+  const totalVol=stock.reduce((a,l)=>a+(l.volumeM3||0),0);
+  const mobVol=stock.filter(l=>mob.has(l.id)).reduce((a,l)=>a+(l.volumeM3||0),0);
+  const byE={};
+  stock.forEach(l=>{ const k=l.speciesKey; const e=essenceByKey(k); if(!byE[k]) byE[k]={k,n:e?e.n:(l.speciesName||'Grume'),count:0,vol:0,mob:0}; byE[k].count++; byE[k].vol+=l.volumeM3||0; if(mob.has(l.id)) byE[k].mob+=l.volumeM3||0; });
+  const essences=Object.values(byE).sort((a,b)=>b.vol-a.vol);
+  const rows=fit.map(r=>{ const selected=sel.has(r.p.k);
+    const freeAdapted=r.logs.filter(l=>!mob.has(l.id));
+    let state, count, vol, species;
+    if(selected){ state='selected'; count=r.logs.length; vol=r.vol; species=r.species; }
+    else if(freeAdapted.length){ state='feasible'; count=freeAdapted.length; vol=freeAdapted.reduce((a,l)=>a+(l.volumeM3||0),0); species=[...new Set(freeAdapted.map(l=>{const e=essenceByKey(l.speciesKey);return e?e.n:'';}).filter(Boolean))]; }
+    else if(r.logs.length){ state='blocked'; count=0; vol=0; species=[]; }
+    else { state='none'; count=0; vol=0; species=[]; }
+    return {p:r.p, state, count, vol, species, hint:r.hint};
+  });
+  return { count:stock.length, totalVol, mobVol, freeVol:totalVol-mobVol, feasible:fit.filter(r=>r.ok).length, selCount:sel.size, essences, rows, maxVol:Math.max(0.001,...essences.map(e=>e.vol)), stillFeasible:rows.filter(r=>r.state==='feasible').length };
+}
+function renderWoodDashboard(){
+  const b=$('wfBody');
+  if(!(STORE.woodStock||[]).length){ b.innerHTML='<div class="empty">Ajoute des grumes au stock (ou charge le jeu d’essai) pour voir le tableau de bord.</div>'; return; }
+  const d=woodDashboardData();
+  const kpi=(v,l)=>'<div class="kpi"><div class="kpi-v">'+v+'</div><div class="kpi-l">'+l+'</div></div>';
+  let html='<div class="kpi-grid">'+kpi(d.count,'grumes')+kpi(d.totalVol.toFixed(2)+' m³','volume total')+kpi(d.feasible,'projets réalisables')+kpi(d.selCount,'projets choisis')+'</div>';
+  if(d.selCount){ html+='<div class="plan-sum"><span class="ps-a">Ta sélection : '+d.mobVol.toFixed(2)+' m³ mobilisés</span><span class="ps-b">'+d.freeVol.toFixed(2)+' m³ libres · '+d.stillFeasible+' projet'+(d.stillFeasible>1?'s':'')+' encore faisable'+(d.stillFeasible>1?'s':'')+'</span></div>'; }
+  // stock par essence
+  html+='<div class="dash-h">Stock par essence</div><div class="stockbars">';
+  d.essences.forEach(e=>{ const w=Math.round(e.vol/d.maxVol*100); const mw=e.vol>0?Math.round(e.mob/e.vol*w):0;
+    html+='<div class="sb-row"><span class="sb-name">'+esc(e.n)+'</span><span class="sb-track"><span class="sb-bar" style="width:'+w+'%;background:'+essColor(e.k)+'"><span class="sb-mob" style="width:'+mw+'%"></span></span></span><span class="sb-val">'+e.count+' · '+e.vol.toFixed(2)+' m³</span></div>';
+  });
+  html+='</div>';
+  // projets cochables
+  html+='<div class="dash-h">Projets — coche ceux que tu veux réaliser</div><div class="psel">';
+  d.rows.forEach(r=>{ const on=r.state==='selected';
+    let sub;
+    if(r.state==='selected') sub=r.count+' grume'+(r.count>1?'s':'')+' · '+r.vol.toFixed(2)+' m³ · '+esc(r.species.join(', '));
+    else if(r.state==='feasible') sub='Réalisable : '+r.count+' grume'+(r.count>1?'s':'')+' · '+r.vol.toFixed(2)+' m³ dispo';
+    else if(r.state==='blocked') sub='Grumes déjà mobilisées par ta sélection';
+    else sub=r.hint||'Aucune grume adaptée';
+    html+='<div class="psel-row '+r.state+'"><button class="psel-chk'+(on?' on':'')+'" data-sel="'+r.p.k+'" aria-label="choisir">'+(on?'✓':'')+'</button><button class="psel-main" data-proj="'+r.p.k+'"><span class="psel-ic">'+r.p.ic+'</span><span class="psel-mid"><span class="psel-n">'+esc(r.p.n)+'</span><span class="psel-s">'+esc(sub)+'</span></span><span class="pr-go">Dossier ›</span></button></div>';
+  });
+  html+='</div>';
   b.innerHTML=html;
+  b.querySelectorAll('[data-sel]').forEach(x=>x.onclick=()=>{ toggleWoodPlan(x.dataset.sel); renderWoodDashboard(); });
   b.querySelectorAll('[data-proj]').forEach(x=>x.onclick=()=>openWoodProjectDoc(x.dataset.proj));
 }
 /* ---- dossier projet : pièce visée, plan de coupe, rendement, guide ---- */

@@ -69,7 +69,7 @@ ok('W16 — peuplier non durable : bardage exclu', !bard4.ok && /Aucune essence/
 c2.renderWoodFlow('stock');
 ok('W17 — liste stock affiche l\'essence et le volume', /Chêne/.test(env2.reg.wfBody.innerHTML) && /m³/.test(env2.reg.wfBody.innerHTML));
 c2.renderWoodFlow('projects');
-ok('W18 — écran projets affiche « Réalisable » + « À compléter »', /Réalisable maintenant/.test(env2.reg.wfBody.innerHTML) && /compléter/.test(env2.reg.wfBody.innerHTML));
+ok('W18 — tableau de bord : KPI + stock par essence + projets cochables', /kpi-grid/.test(env2.reg.wfBody.innerHTML)&&/Stock par essence/.test(env2.reg.wfBody.innerHTML)&&/psel-chk/.test(env2.reg.wfBody.innerHTML));
 
 // ---- dossier projet : rendement (débit) + rendu ----
 ok('WD1 — débit plots (planche 27mm, Ø34 → ~10)', c2.debitYield('plots',{t:27},{diamCm:34,lengthCm:300})===10);
@@ -101,6 +101,21 @@ c.loadWoodDemo();
 ok('W24 — rechargement idempotent (pas de doublon)', c.woodStats().count===20);
 c.clearWoodStock();
 ok('W25 — vider le stock remet à zéro', c.woodStats().count===0);
+
+// ---- tableau de bord : sélection de projets, mise à jour auto, persistance ----
+const env5=makeEnv({mastered:{}}); loadApp(env5); const c5=env5.ctx; c5.loadWoodDemo();
+const D0=c5.woodDashboardData();
+ok('DB1 — KPI : 20 grumes, volume > 0, ≥ 6 réalisables', D0.count===20 && D0.totalVol>0 && D0.feasible>=6);
+ok('DB2 — stock par essence renseigné', D0.essences.length>0 && D0.essences[0].vol>0);
+ok('DB3 — sans sélection : rien de mobilisé', D0.selCount===0 && D0.mobVol===0 && Math.abs(D0.freeVol-D0.totalVol)<1e-9);
+c5.toggleWoodPlan('charpente');
+const D1=c5.woodDashboardData();
+ok('DB4 — cocher charpente : mobilise du volume, met à jour', D1.selCount===1 && D1.mobVol>0 && D1.freeVol<D1.totalVol);
+ok('DB5 — sélection persistée en localStorage', JSON.parse(env5.ls.get('nexus_stable')).woodPlan.selected.indexOf('charpente')>=0);
+ok('DB6 — un projet coché a l’état « selected »', c5.woodDashboardData().rows.find(r=>r.p.k==='charpente').state==='selected');
+c5.toggleWoodPlan('charpente');
+const D2=c5.woodDashboardData();
+ok('DB7 — décocher relibère tout le stock', D2.selCount===0 && D2.mobVol===0);
 
 console.log('\n=== Bilan verif Projet Bois :', pass, 'réussis,', fail, 'échoués ===');
 process.exit(fail?1:0);

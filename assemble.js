@@ -44,7 +44,8 @@ const dataBlock = [dataCore, content, cards].join('\n');
 
 const html = template
   .replace('/* {{DATA_INJECT}} */', dataBlock)
-  .replace('/* {{APP_INJECT}} */',  appCode);
+  .replace('/* {{APP_INJECT}} */',  appCode)
+  .replace(/\{\{VERSION\}\}/g, String(version));
 
 /* ---- écriture ---- */
 fs.writeFileSync(OUTPUT, html, 'utf8');

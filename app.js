@@ -78,10 +78,10 @@ function totalPct(){let m=0,t=0;for(const k in D.SKILLS){m+=mastered[k].size;t+=
 let current=null,currentNode=null,currentSkillK=null,mode='landing';
 function show(screen,{accent='#3F5E4E',nav=''}={}){
   document.documentElement.style.setProperty('--forest',accent);
-  ['scProfiles','scLanding','scHome','scDetail','scCourse','scTest','scProgress','scStable','scGestion','scStableSection','scAnimal','scRevise','scAdmin','scWood','scWoodFlow'].forEach(s=>$(s).classList.remove('active'));
+  ['scProfiles','scLanding','scHome','scDetail','scCourse','scTest','scProgress','scStable','scGestion','scStableSection','scAnimal','scRevise','scAdmin','scWood','scWoodFlow','scBackup'].forEach(s=>$(s).classList.remove('active'));
   $(screen).classList.add('active');
   buildNav(nav);
-  const bn=$('bottomnav'); if(bn) bn.style.display=(screen==='scProfiles'||screen==='scAdmin')?'none':'';
+  const bn=$('bottomnav'); if(bn) bn.style.display=(screen==='scProfiles'||screen==='scAdmin'||screen==='scBackup')?'none':'';
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
@@ -1068,6 +1068,24 @@ $('startRevise').onclick=()=>{ if(dueCards(null).length) startSession(null); };
 if($('modeEclair')) $('modeEclair').onclick=()=>{ startQueue(interleave(dueCards(null)).slice(0,7)); };
 if($('modePioche')) $('modePioche').onclick=()=>{ startQueue(seededShuffle(dueCards(null), daySeed()).slice(0,12)); };
 if($('modeSafety')) $('modeSafety').onclick=()=>{ startQueue(interleave(dueCards(null).filter(c=>SAFETY_NODES.has(c.node)))); };
+
+/* ====== sauvegarde / restauration + jauge de stockage ====== */
+const APP_VERSION=(typeof window!=='undefined'&&window.NEXUS_VERSION)||'?';
+function storageBytes(){ try{ return new Blob([localStorage.getItem('nexus_stable')||'']).size; }catch(e){ try{ return (localStorage.getItem('nexus_stable')||'').length; }catch(_){ return 0; } } }
+function backupData(){ let store={}; try{ store=JSON.parse(localStorage.getItem('nexus_stable')||'{}'); }catch(e){} return { app:'nexus-learn', version:APP_VERSION, exportedAt:new Date().toISOString(), store }; }
+function applyBackup(obj){ const store=(obj&&(obj.store||obj.data))||obj; if(!store||typeof store!=='object'||Array.isArray(store)) return false; try{ localStorage.setItem('nexus_stable', JSON.stringify(store)); return true; }catch(e){ return false; } }
+function exportBackup(){ try{ const blob=new Blob([JSON.stringify(backupData(),null,2)],{type:'application/json'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='nexus-sauvegarde-'+new Date().toISOString().slice(0,10)+'.json'; document.body.appendChild(a); a.click(); setTimeout(()=>{ if(a.parentNode)a.parentNode.removeChild(a); URL.revokeObjectURL(url); },200); }catch(e){ alert('Export impossible sur ce navigateur.'); } }
+function importBackup(file, cb){ const r=new FileReader(); r.onload=e=>{ let ok=false; try{ ok=applyBackup(JSON.parse(e.target.result)); }catch(err){ ok=false; } cb(ok); }; r.onerror=()=>cb(false); r.readAsText(file); }
+function renderBackup(){ mode='landing';
+  const bytes=storageBytes(); const ko=Math.round(bytes/1024); const budget=5*1024*1024; const pct=Math.min(100,Math.round(bytes/budget*100));
+  const warn=pct>80;
+  $('storageBox').innerHTML='<div class="sg-top"><span>Espace utilisé</span><b>≈ '+ko+' Ko</b></div><div class="sg-bar"><i style="width:'+Math.max(2,pct)+'%'+(warn?';background:#B4453A':'')+'"></i></div><div class="sg-sub">'+(warn?'Bientôt plein — exporte puis supprime des photos.':'sur ~5 Mo disponibles sur cet appareil')+'</div>';
+  show('scBackup',{accent:'#3F5E4E',nav:''});
+}
+if($('doorBackup')) $('doorBackup').onclick=()=>go(renderBackup,'sauvegarde');
+if($('btnExport')) $('btnExport').onclick=exportBackup;
+if($('btnImport')) $('btnImport').onclick=()=>$('importInput').click();
+if($('importInput')) $('importInput').onchange=e=>{ const f=e.target.files&&e.target.files[0]; if(f) importBackup(f, ok=>{ if(ok){ alert('Sauvegarde restaurée. L’app va se recharger.'); try{ location.reload(); }catch(_){} } else alert('Fichier de sauvegarde invalide.'); }); e.target.value=''; };
 
 /* ============================================================
    PROJET BOIS — grumes : photo, identification (mini-IA hors-ligne),

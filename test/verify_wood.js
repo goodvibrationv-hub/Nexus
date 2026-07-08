@@ -78,10 +78,16 @@ ok('WD3 — débit fendage (piquet Ø26 ≥ 4)', c2.debitYield('fendage',{d:8},{
 ok('WD4 — débit bûche (Ø38 L300 > 0)', c2.debitYield('buche',{len:33},{diamCm:38,lengthCm:300})>0);
 c2.renderWoodProjectDoc('charpente');
 const doc=env2.reg.wfBody.innerHTML;
-ok('WD5 — dossier : plan de coupe + guide + rendement + séchage', /Plan de coupe/.test(doc)&&/Guide de découpe/.test(doc)&&/Rendement/.test(doc)&&/debitsvg/.test(doc)&&/Séchage/.test(doc));
+ok('WD5 — dossier : plan de coupe + découpe + rendement + séchage', /Plan de coupe/.test(doc)&&/Découpe de la grume/.test(doc)&&/Rendement/.test(doc)&&/debitsvg/.test(doc)&&/Séchage/.test(doc));
 ok('WD6 — dossier réalisable : estimation de pièces', /≈ \d+ poutre/.test(doc));
+ok('WD8 — plan de construction + liste de débit + pièces parfaites', /Ce qu.on construit/.test(doc)&&/plansvg/.test(doc)&&/Liste de débit/.test(doc)&&/cutlist/.test(doc)&&/Sortir des pièces parfaites/.test(doc)&&/Assemblage/.test(doc));
+ok('WD9 — liste de débit : lignes de pièces (arbalétrier/entrait)', /Arbalétrier/.test(doc)&&/Entrait/.test(doc));
 c2.renderWoodProjectDoc('terrasse');
 ok('WD7 — dossier non réalisable : « Pas encore réalisable »', /Pas encore réalisable/.test(env2.reg.wfBody.innerHTML));
+// chaque projet a un plan détaillé complet
+c.loadWoodDemo(); let allDoc=true;
+['charpente','ossature','bardage','terrasse','piquet','planche','meuble','manche','chauffage'].forEach(pk=>{ c.renderWoodProjectDoc(pk); const h=env.reg.wfBody.innerHTML; if(!(/plansvg/.test(h)&&/Liste de débit/.test(h)&&/Sortir des pièces parfaites/.test(h))) allDoc=false; });
+ok('WD10 — les 9 projets ont plan + débit + pièces parfaites', allDoc);
 
 // ---- jeu d'essai : 20 grumes → projets ----
 c.loadWoodDemo();

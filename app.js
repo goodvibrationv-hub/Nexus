@@ -1356,6 +1356,73 @@ function debitSVG(type){ const c='#7C5A34', bg='#EFE6D6', ln='#3F5E4E';
   else if(type==='buche'){ inner='<line x1="60" y1="8" x2="60" y2="112" stroke="'+ln+'" stroke-width="1.6"/><line x1="8" y1="60" x2="112" y2="60" stroke="'+ln+'" stroke-width="1.6"/>'; }
   return '<svg class="debitsvg" viewBox="0 0 120 120" width="118" height="118" aria-hidden="true"><circle cx="60" cy="60" r="54" fill="'+bg+'" stroke="'+c+'" stroke-width="2.6"/>'+inner+'<circle cx="60" cy="60" r="3.2" fill="'+c+'"/></svg>';
 }
+/* ---- plans détaillés de construction (mise en pratique) ---- */
+const PRECISION_BASE=[
+  'Marque une face de référence + un chant de référence sur chaque pièce (repère ✓ du menuisier).',
+  'Dresse la face de référence (droite et plane), puis mets d’épaisseur parallèle : pièces calibrées.',
+  'Trace toujours depuis les faces de référence, au trait fin, et scie côté chute du trait.',
+  'Contrôle l’équerre et la planéité à chaque étape — un défaut se corrige tôt, jamais à la fin.',
+  'Assemblages : vise ±0,5 mm, ajuste au ciseau affûté ou au rabot ; serré « à la main », sans forcer.',
+  'Ponce dans le fil, grains croissants (80 → 120 → 180), sans arrondir les arêtes utiles.'
+];
+function stackSVG(){ let c=''; for(let r=0;r<5;r++){ for(let i=0;i<6;i++){ c+='<circle cx="'+(80+i*20)+'" cy="'+(48+r*20)+'" r="9" fill="#EFE6D6" stroke="#2A2520" stroke-width="1.2"/>'; } }
+  return '<svg class="plansvg" viewBox="0 0 300 170"><rect x="66" y="30" width="128" height="112" fill="none" stroke="#2A2520" stroke-width="2.4"/>'+c+'<g stroke="#A4572F" stroke-width="1"><line x1="212" y1="30" x2="212" y2="142"/><line x1="208" y1="30" x2="216" y2="30"/><line x1="208" y1="142" x2="216" y2="142"/></g><text x="230" y="90" fill="#6E6253" font-family="monospace" font-size="9">1,00 m</text><text x="130" y="164" text-anchor="middle" fill="#6E6253" font-family="monospace" font-size="10">1 stère = 1×1×1 m · bûches 0,33 m</text></svg>'; }
+const WOOD_PLAN={
+  charpente:{build:'Ferme de comble',dims:'Portée 4,00 m · pente ≈ 45 %',
+    plan:'<svg class="plansvg" viewBox="0 0 300 170"><polygon points="30,130 270,130 150,45" fill="#EFE6D6" stroke="#2A2520" stroke-width="2.4" stroke-linejoin="round"/><g stroke="#2A2520" stroke-width="2.2"><line x1="150" y1="130" x2="150" y2="45"/><line x1="92" y1="130" x2="150" y2="88"/><line x1="208" y1="130" x2="150" y2="88"/></g><g stroke="#A4572F" stroke-width="1"><line x1="30" y1="150" x2="270" y2="150"/><line x1="30" y1="146" x2="30" y2="154"/><line x1="270" y1="146" x2="270" y2="154"/></g><text x="150" y="163" text-anchor="middle" fill="#6E6253" font-family="monospace" font-size="10">entrait 4,00 m</text><text x="153" y="70" fill="#6E6253" font-family="monospace" font-size="9">poinçon</text><text x="60" y="118" fill="#6E6253" font-family="monospace" font-size="9">arbalétrier</text></svg>',
+    cutlist:[{p:'Arbalétrier',sec:'8×15',l:'2,40 m',q:2},{p:'Entrait',sec:'8×18',l:'4,10 m',q:1},{p:'Poinçon',sec:'8×12',l:'1,10 m',q:1},{p:'Contrefiche',sec:'8×10',l:'1,20 m',q:2}],
+    joint:{name:'Tenon-mortaise chevillé + embrèvement',desc:'Pied d’arbalétrier embrevé dans l’entrait ; assemblages tenon-mortaise chevillés (cheville chêne Ø14).'},
+    assembly:['Tailler entrait, arbalétriers et poinçon aux longueurs d’épure.','Exécuter mortaises et tenons, ajuster à blanc au sol.','Percer et poser les chevilles, contrôler l’équerre de la ferme.','Lever la ferme, contreventer avant fixation définitive.'],
+    precision:['Épure au sol : trace la ferme grandeur nature sur une aire plane pour reporter angles et longueurs exacts.']},
+  ossature:{build:'Pan de mur ossature',dims:'2,50 × 2,40 m · montants entraxe ≈ 0,60 m',
+    plan:'<svg class="plansvg" viewBox="0 0 300 170"><rect x="30" y="30" width="240" height="110" fill="#EFE6D6" stroke="#2A2520" stroke-width="2.4"/><g stroke="#2A2520" stroke-width="2.2"><line x1="78" y1="30" x2="78" y2="140"/><line x1="126" y1="30" x2="126" y2="140"/><line x1="174" y1="30" x2="174" y2="140"/><line x1="222" y1="30" x2="222" y2="140"/></g><line x1="30" y1="85" x2="270" y2="85" stroke="#2A2520" stroke-width="1.6" stroke-dasharray="5 4"/><g stroke="#A4572F" stroke-width="1"><line x1="30" y1="152" x2="270" y2="152"/><line x1="30" y1="148" x2="30" y2="156"/><line x1="270" y1="148" x2="270" y2="156"/></g><text x="150" y="164" text-anchor="middle" fill="#6E6253" font-family="monospace" font-size="10">2,50 m — entraxe ≈ 0,60 m</text><text x="34" y="26" fill="#6E6253" font-family="monospace" font-size="9">lisses haute &amp; basse</text></svg>',
+    cutlist:[{p:'Lisse haute & basse',sec:'6×8',l:'2,50 m',q:2},{p:'Montant',sec:'6×8',l:'2,28 m',q:5},{p:'Entretoise',sec:'6×8',l:'0,54 m',q:4}],
+    joint:{name:'Vissage en about + équerres',desc:'Montants vissés en about dans les lisses (2 vis 6×120) ou entaillés ; équerres métalliques en angle.'},
+    assembly:['Couper lisses et montants à longueur (butée, pas de mesure répétée).','Répartir les montants à l’entraxe, équerrer le cadre.','Visser en about, poser les entretoises à mi-hauteur.','Diagonale = diagonale : cadre d’équerre avant de contreventer.'],
+    precision:['Toutes les pièces de même rôle à la même longueur exacte : c’est la butée qui garantit l’équerrage, pas le mètre.']},
+  bardage:{build:'Bardage à clins horizontaux',dims:'Recouvrement 2 cm · lame d’air 2 cm',
+    plan:'<svg class="plansvg" viewBox="0 0 300 170"><line x1="58" y1="15" x2="58" y2="155" stroke="#2A2520" stroke-width="2.4"/><rect x="70" y="15" width="8" height="140" fill="#EFE6D6" stroke="#2A2520" stroke-width="1.6"/><g fill="#EFE6D6" stroke="#2A2520" stroke-width="1.8"><rect x="86" y="30" width="150" height="20"/><rect x="86" y="52" width="150" height="20"/><rect x="86" y="74" width="150" height="20"/><rect x="86" y="96" width="150" height="20"/><rect x="86" y="118" width="150" height="20"/></g><g stroke="#A4572F" stroke-width="1"><line x1="58" y1="140" x2="86" y2="140"/></g><text x="58" y="12" fill="#6E6253" font-family="monospace" font-size="9">mur</text><text x="64" y="150" fill="#6E6253" font-family="monospace" font-size="9">tasseau</text><text x="150" y="164" text-anchor="middle" fill="#6E6253" font-family="monospace" font-size="10">lame d’air 20 mm · recouvrement 20 mm</text></svg>',
+    cutlist:[{p:'Tasseau vertical',sec:'27×40',l:'2,40 m',q:6},{p:'Clin',sec:'20×135',l:'selon mur',q:'—'},{p:'Grille anti-rongeur',sec:'—',l:'bas de mur',q:1}],
+    joint:{name:'Pose à clin vissée (inox)',desc:'Chaque clin recouvre le précédent de 2 cm, vissé sur les tasseaux — jamais à travers deux lames (le bois doit pouvoir bouger).'},
+    assembly:['Poser un pare-pluie, puis les tasseaux verticaux d’aplomb.','Fixer une grille anti-rongeur en pied de mur.','Poser les clins du bas vers le haut, avec une cale de recouvrement.','Contrôler l’horizontalité tous les 4–5 rangs.'],
+    precision:['Une cale-gabarit de recouvrement donne le même jour et la même ligne partout, sans mesurer.']},
+  terrasse:{build:'Terrasse sur lambourdes',dims:'Entraxe 40 cm · jour 5 mm · pente 1,5 %',
+    plan:'<svg class="plansvg" viewBox="0 0 300 170"><g stroke="#2A2520" stroke-width="1.6" stroke-dasharray="6 4"><line x1="55" y1="25" x2="55" y2="150"/><line x1="115" y1="25" x2="115" y2="150"/><line x1="175" y1="25" x2="175" y2="150"/><line x1="235" y1="25" x2="235" y2="150"/></g><g fill="#EFE6D6" stroke="#2A2520" stroke-width="1.6"><rect x="30" y="30" width="240" height="15"/><rect x="30" y="49" width="240" height="15"/><rect x="30" y="68" width="240" height="15"/><rect x="30" y="87" width="240" height="15"/><rect x="30" y="106" width="240" height="15"/><rect x="30" y="125" width="240" height="15"/></g><text x="150" y="163" text-anchor="middle" fill="#6E6253" font-family="monospace" font-size="10">lames (—) · lambourdes (··) entraxe 40 cm</text></svg>',
+    cutlist:[{p:'Lambourde',sec:'40×60',l:'selon plots',q:'—'},{p:'Lame',sec:'24×135',l:'selon plan',q:'—'},{p:'Plot / cale de réglage',sec:'—',l:'sous lambourdes',q:'—'}],
+    joint:{name:'Vissage inox en tête',desc:'2 vis inox pré-percées par croisement lame/lambourde, tête fraisée. Bois de bout jamais au ras du sol.'},
+    assembly:['Régler les lambourdes de niveau avec la pente 1,5 %, entraxe 40 cm.','Commencer par une lame de rive, gabarit de jour de 5 mm.','Visser chaque croisement (2 vis), pré-perçage obligatoire.','Aligner les abouts, couper la rive en fin de pose à la règle.'],
+    precision:['Règle + niveau à chaque lame : 1,5 % de pente régulière, aucune lame ne doit retenir l’eau.']},
+  piquet:{build:'Clôture 3 lisses',dims:'Poteaux ts 2,50 m · H 1,20 m · enterré 0,50 m',
+    plan:'<svg class="plansvg" viewBox="0 0 300 170"><g stroke="#2A2520" stroke-width="2.6"><line x1="50" y1="40" x2="50" y2="140"/><line x1="150" y1="40" x2="150" y2="140"/><line x1="250" y1="40" x2="250" y2="140"/></g><g stroke="#2A2520" stroke-width="2" stroke-dasharray="5 4"><line x1="50" y1="140" x2="50" y2="160"/><line x1="150" y1="140" x2="150" y2="160"/><line x1="250" y1="140" x2="250" y2="160"/></g><g stroke="#7C5A34" stroke-width="2.4"><line x1="50" y1="56" x2="250" y2="56"/><line x1="50" y1="90" x2="250" y2="90"/><line x1="50" y1="124" x2="250" y2="124"/></g><line x1="20" y1="140" x2="290" y2="140" stroke="#A4572F" stroke-width="1"/><text x="100" y="36" text-anchor="middle" fill="#6E6253" font-family="monospace" font-size="9">2,50 m</text><text x="150" y="164" text-anchor="middle" fill="#6E6253" font-family="monospace" font-size="10">H 1,20 m · 3 lisses · enterré 0,50 m</text></svg>',
+    cutlist:[{p:'Poteau',sec:'Ø8–10',l:'1,80 m',q:'1 / 2,5 m'},{p:'Lisse (refendue)',sec:'Ø6–8',l:'2,50 m',q:3},{p:'Jambe de force',sec:'Ø8',l:'1,50 m',q:'aux angles'}],
+    joint:{name:'Entaille + tire-fond',desc:'Lisses logées dans une entaille du poteau, fixées au tire-fond ou clou galva ; contrefiche aux angles et tous les ~25 m.'},
+    assembly:['Implanter au cordeau, trous tous les 2,50 m.','Sceller ou battre les poteaux, arase à 1,20 m, d’aplomb.','Entailler et fixer les 3 lisses (gabarit de hauteur).','Poser les jambes de force aux angles, puis tendre l’ensemble.'],
+    precision:['Un gabarit de hauteur reporte l’emplacement des lisses à l’identique sur tous les poteaux.']},
+  planche:{build:'Étagère / caisson',dims:'0,80 × 0,90 × 0,30 m · 3 tablettes ép. 27 mm',
+    plan:'<svg class="plansvg" viewBox="0 0 300 170"><rect x="90" y="20" width="120" height="130" fill="#EFE6D6" stroke="#2A2520" stroke-width="2.4"/><g stroke="#2A2520" stroke-width="2.2"><line x1="90" y1="63" x2="210" y2="63"/><line x1="90" y1="106" x2="210" y2="106"/></g><g stroke="#A4572F" stroke-width="1"><line x1="90" y1="12" x2="210" y2="12"/><line x1="90" y1="8" x2="90" y2="16"/><line x1="210" y1="8" x2="210" y2="16"/></g><text x="150" y="6" text-anchor="middle" fill="#6E6253" font-family="monospace" font-size="9">0,80 m</text><text x="150" y="164" text-anchor="middle" fill="#6E6253" font-family="monospace" font-size="10">3 tablettes ép. 27 mm · H 0,90 m</text></svg>',
+    cutlist:[{p:'Montant',sec:'27×300',l:'0,90 m',q:2},{p:'Tablette',sec:'27×300',l:'0,80 m',q:3},{p:'Traverse arrière',sec:'27×80',l:'0,80 m',q:1}],
+    joint:{name:'Entaille (dado) ou tourillons',desc:'Tablettes logées dans une entaille des montants (ou tourillonnées) ; traverse arrière contre le vrillage.'},
+    assembly:['Corroyer montants et tablettes à épaisseur identique.','Tracer et exécuter les entailles/tourillons, mêmes cotes des deux côtés.','Assembler à blanc, contrôler l’équerre.','Coller et serrer, traverse arrière posée d’équerre.'],
+    precision:['Corroie toutes les tablettes ensemble à la même épaisseur : elles s’emboîtent sans jeu.']},
+  meuble:{build:'Table',dims:'1,80 × 0,90 × 0,75 m · plateau ép. 40 mm',
+    plan:'<svg class="plansvg" viewBox="0 0 300 170"><rect x="40" y="45" width="220" height="16" fill="#EFE6D6" stroke="#2A2520" stroke-width="2.2"/><line x1="60" y1="70" x2="240" y2="70" stroke="#2A2520" stroke-width="4"/><rect x="54" y="61" width="12" height="80" fill="#EFE6D6" stroke="#2A2520" stroke-width="2"/><rect x="234" y="61" width="12" height="80" fill="#EFE6D6" stroke="#2A2520" stroke-width="2"/><g stroke="#A4572F" stroke-width="1"><line x1="40" y1="35" x2="260" y2="35"/><line x1="40" y1="31" x2="40" y2="39"/><line x1="260" y1="31" x2="260" y2="39"/></g><text x="150" y="29" text-anchor="middle" fill="#6E6253" font-family="monospace" font-size="9">1,80 m</text><text x="150" y="164" text-anchor="middle" fill="#6E6253" font-family="monospace" font-size="10">H 0,75 m · ceinture + 4 pieds 8×8</text></svg>',
+    cutlist:[{p:'Plateau (lames collées)',sec:'40×900',l:'1,80 m',q:1},{p:'Pied',sec:'8×8',l:'0,71 m',q:4},{p:'Traverse longue',sec:'3×10',l:'1,50 m',q:2},{p:'Traverse courte',sec:'3×10',l:'0,60 m',q:2}],
+    joint:{name:'Tenon-mortaise + boutons de plateau',desc:'Traverses assemblées aux pieds par tenon-mortaise ; plateau fixé par boutons/tasseaux qui autorisent le retrait du bois.'},
+    assembly:['Coller le plateau lame à lame (livre ouvert), araser après séchage.','Tailler pieds et traverses, tenons-mortaises ajustés.','Monter le piétement à blanc, équerrer, puis coller.','Fixer le plateau avec des boutons (laisse le bois travailler).'],
+    precision:['Monte tout « à blanc » (sans colle) d’abord : tu vérifies l’équerrage et l’absence de vrille avant l’irréversible.']},
+  manche:{build:'Manche d’outil (ex. hache)',dims:'L 0,70 m · poignée ≈ Ø35 mm',
+    plan:'<svg class="plansvg" viewBox="0 0 300 170"><path d="M40,88 C60,72 120,76 150,82 C200,90 232,72 258,86 C232,98 205,88 152,94 C120,98 60,102 40,92 Z" fill="#EFE6D6" stroke="#2A2520" stroke-width="2.2"/><circle cx="250" cy="86" r="13" fill="none" stroke="#2A2520" stroke-width="2"/><g stroke="#A4572F" stroke-width="1"><line x1="40" y1="118" x2="258" y2="118"/><line x1="40" y1="114" x2="40" y2="122"/><line x1="258" y1="114" x2="258" y2="122"/></g><text x="150" y="132" text-anchor="middle" fill="#6E6253" font-family="monospace" font-size="10">L 0,70 m</text><text x="52" y="62" fill="#6E6253" font-family="monospace" font-size="9">talon</text><text x="228" y="60" fill="#6E6253" font-family="monospace" font-size="9">œil / tête</text></svg>',
+    cutlist:[{p:'Ébauche fendue',sec:'4×4',l:'0,75 m',q:1},{p:'Coin d’œil',sec:'bois dur + métal',l:'court',q:1}],
+    joint:{name:'Emmanchement à coin',desc:'Tête ajustée sur le manche puis fendue et coincée (coin bois + coin métal croisé) : serrage définitif, sans jeu.'},
+    assembly:['Dégrossir au fil, garder le fil continu du talon à la tête.','Ajuster l’œil de l’outil au plus juste (lime), sans jeu.','Fendre la tête, poser les coins, araser.','Huiler (lin) : protège et regonfle légèrement les fibres.'],
+    precision:['Suis le fil du bois, pas le trait : un manche parfait épouse les fibres, il ne les tranche pas.']},
+  chauffage:{build:'Stère de bois',dims:'1 × 1 × 1 m · bûches 33 cm',
+    plan:stackSVG(),
+    cutlist:[{p:'Bûche 33 cm',sec:'Ø8–12',l:'0,33 m',q:'≈ 60–80 / stère'},{p:'Palette de base',sec:'—',l:'—',q:2}],
+    joint:{name:'Empilage ventilé',desc:'Piles croisées en tête pour la stabilité ; base sur palette, faces exposées au vent dominant.'},
+    assembly:['Tronçonner à 33 cm avec une butée (longueur constante).','Fendre à 8–12 cm : sèche plus vite et brûle mieux.','Empiler sur palette, écorce vers le haut.','Bâcher le dessus seulement — laisser les côtés respirer.'],
+    precision:['Calibre les bûches à la longueur du foyer avec une butée : rangement serré et combustion régulière.']}
+};
 function openWoodProjectDoc(k){ go(()=>renderWoodProjectDoc(k),'dossier'); }
 function renderWoodProjectDoc(k){
   mode='wood'; const p=WOOD_PROJECTS.find(x=>x.k===k), doc=WOOD_DOC[k], row=woodProjectFit().find(r=>r.p.k===k);
@@ -1367,11 +1434,18 @@ function renderWoodProjectDoc(k){
   const yieldBox = row.ok
     ? '<div class="doc-yield"><span class="dy-n">≈ '+pieces+' '+doc.y.unit+(pieces>1?'s':'')+'</span><span class="dy-s">estimé depuis '+row.count+' grume'+(row.count>1?'s':'')+' adaptée'+(row.count>1?'s':'')+' ('+esc(row.species.join(', '))+')</span></div>'
     : '<div class="doc-yield warn"><span class="dy-n">Pas encore réalisable</span><span class="dy-s">'+esc(row.hint||'—')+'</span></div>';
+  const plan=WOOD_PLAN[k]||{};
+  const cut=(plan.cutlist||[]).map(r=>'<tr><td>'+esc(r.p)+'</td><td>'+esc(r.sec)+'</td><td>'+esc(r.l)+'</td><td>'+esc(''+r.q)+'</td></tr>').join('');
+  const prec=PRECISION_BASE.concat(plan.precision||[]);
   let html='<div class="doc-top"><span class="doc-ic">'+p.ic+'</span><div><div class="doc-intro">'+esc(doc.intro)+'</div></div></div>';
-  html+=sec('La pièce visée','<div class="efiche"><div class="ef-row"><span>Pièce</span><b>'+esc(doc.piece)+'</b></div><div class="ef-row"><span>Section / calibre</span><b>'+esc(doc.section)+'</b></div><div class="ef-row"><span>Longueur</span><b>'+esc(doc.long)+'</b></div><div class="ef-row"><span>Essences conseillées</span><b>'+esc(doc.essences)+'</b></div></div>');
-  html+=sec('Plan de coupe','<div class="debitwrap">'+debitSVG(doc.debit)+'<div class="debit-cap"><b>'+esc(DEBIT_LBL[doc.debit])+'</b><span>Coupe transversale de la grume (● = cœur).</span></div></div>');
+  if(plan.plan){ html+=sec('Ce qu’on construit','<div class="planwrap"><div class="plan-t"><b>'+esc(plan.build)+'</b><span>'+esc(plan.dims)+'</span></div>'+plan.plan+'</div>'); }
+  html+=sec('La pièce à sortir de la grume','<div class="efiche"><div class="ef-row"><span>Pièce</span><b>'+esc(doc.piece)+'</b></div><div class="ef-row"><span>Section / calibre</span><b>'+esc(doc.section)+'</b></div><div class="ef-row"><span>Longueur</span><b>'+esc(doc.long)+'</b></div><div class="ef-row"><span>Essences conseillées</span><b>'+esc(doc.essences)+'</b></div></div>');
+  html+=sec('Plan de coupe de la grume','<div class="debitwrap">'+debitSVG(doc.debit)+'<div class="debit-cap"><b>'+esc(DEBIT_LBL[doc.debit])+'</b><span>Coupe transversale (● = cœur).</span></div></div>');
+  if(cut){ html+=sec('Liste de débit','<div class="tablewrap"><table class="cutlist"><thead><tr><th>Pièce</th><th>Section (cm/mm)</th><th>Long.</th><th>Qté</th></tr></thead><tbody>'+cut+'</tbody></table></div>'); }
   html+=sec('Rendement estimé — ton stock', yieldBox);
-  html+=sec('Guide de découpe', li(doc.guide));
+  if(plan.joint){ html+=sec('Assemblage','<div class="joint"><b>'+esc(plan.joint.name)+'</b><span>'+esc(plan.joint.desc)+'</span></div>'+li(plan.assembly||[])); }
+  html+=sec('Découpe de la grume, pas à pas', li(doc.guide));
+  html+=sec('Sortir des pièces parfaites','<div class="perfect">'+prec.map(s=>'<div class="pf"><span class="pf-c">✓</span><span>'+esc(s)+'</span></div>').join('')+'</div>');
   html+=sec('Outils', tags(doc.outils));
   html+=sec('Séchage','<div class="doc-p">'+esc(doc.sechage)+'</div>');
   html+=sec('Sécurité','<div class="doc-p">'+esc(doc.securite)+'</div>');

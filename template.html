@@ -59,6 +59,7 @@
   .htile.learn{--dc:var(--forest); --wash:rgba(63,94,78,.07); --chip:rgba(63,94,78,.1)}
   .htile.stable{--dc:var(--walnut); --wash:rgba(138,90,60,.07); --chip:rgba(138,90,60,.11)}
   .htile.wood{--dc:#7C5A34; --wash:rgba(124,90,52,.08); --chip:rgba(124,90,52,.12)}
+  .htile.esprit{--dc:#7B6E86; --wash:rgba(123,110,134,.09); --chip:rgba(123,110,134,.13)}
   .htile.soon{--dc:var(--line2); --wash:transparent; --chip:var(--paper2); cursor:default; box-shadow:none; border-style:dashed}
   .htile.soon:hover{box-shadow:none; border-color:var(--line2)}
   .htile.soon .ti{filter:grayscale(1); opacity:.5}
@@ -625,6 +626,48 @@
   .sheet{ box-shadow:0 -10px 44px rgba(42,37,32,.3) }
   /* barre du bas : légère élévation */
   #bottomnav{ box-shadow:0 -1px 0 var(--line), 0 -12px 24px -20px rgba(42,37,32,.35) }
+
+  /* ===== Yoga (Esprit & Matières) ===== */
+  .woodtile.soon{ opacity:.6; border-style:dashed; box-shadow:none; cursor:default }
+  .woodtile.soon .wt-ic{ filter:grayscale(1); opacity:.6 }
+  .posesvg{ width:100%; height:100%; display:block }
+  .posegrid{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px }
+  .posecard{ display:flex; flex-direction:column; align-items:center; gap:2px; cursor:pointer; font:inherit; color:inherit; background:var(--surf); border:1px solid var(--line2); border-radius:16px; padding:12px 10px 14px; box-shadow:var(--elev-1); transition:transform .15s, box-shadow .18s }
+  .posecard:active{ transform:scale(.98) }
+  .posecard .pc-fig{ width:96px; height:104px; display:block }
+  .posecard .pc-n{ font-family:'Fraunces',serif; font-size:15px; font-weight:600; margin-top:4px; text-align:center }
+  .posecard .pc-sk{ font-family:'JetBrains Mono',monospace; font-size:9px; text-transform:uppercase; letter-spacing:.03em; color:var(--mut); text-align:center }
+  .posedetail{ text-align:center }
+  .pd-fig{ width:170px; height:184px; margin:0 auto 6px; display:block }
+  .pd-fig .posesvg{ width:100%; height:100% }
+  .pd-n{ font-family:'Fraunces',serif; font-size:22px; font-weight:600 }
+  .pd-sk{ font-family:'JetBrains Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:.05em; color:var(--mut); margin-bottom:4px }
+  .posedetail .usect{ text-align:left } .posedetail .doc-p{ text-align:left }
+  .posedetail .wnav{ justify-content:flex-start }
+  /* lecteur de séance */
+  .yplayer{ text-align:center; display:flex; flex-direction:column; align-items:center }
+  .yp-prog{ width:100%; height:6px; background:var(--paper2); border-radius:6px; overflow:hidden; margin-bottom:14px }
+  .yp-prog i{ display:block; height:100%; background:#7B6E86; border-radius:6px; transition:width .5s }
+  .yp-step{ font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:.05em; text-transform:uppercase; color:var(--mut) }
+  .yp-fig{ width:190px; height:200px; margin:8px auto 2px }
+  .yp-fig .posesvg{ width:100%; height:100% }
+  .yp-name{ font-family:'Fraunces',serif; font-size:22px; font-weight:600 }
+  .yp-cue{ font-size:14px; color:var(--mut); line-height:1.5; max-width:320px; margin:6px auto 2px }
+  .yp-timer{ font-family:'JetBrains Mono',monospace; font-size:40px; font-weight:500; margin:10px 0 2px; font-variant-numeric:tabular-nums }
+  .yp-next{ font-size:12.5px; color:var(--mut); margin-bottom:14px }
+  .yp-ctrl{ display:flex; align-items:center; gap:10px; width:100%; max-width:340px }
+  .yp-ctrl .save{ flex:1; margin:0 }
+  .yp-ctrl .miniBtn{ flex:none; margin:0 }
+  /* respiration */
+  .bplayer{ text-align:center; display:flex; flex-direction:column; align-items:center }
+  .breathwrap{ position:relative; width:220px; height:220px; margin:22px auto 6px; display:flex; align-items:center; justify-content:center }
+  .breathcircle{ position:absolute; width:200px; height:200px; border-radius:50%; background:radial-gradient(circle at 50% 40%, rgba(123,110,134,.35), rgba(123,110,134,.14)); border:2px solid rgba(123,110,134,.5); transform:scale(.45); transition:transform 5s ease-in-out }
+  .breathlbl{ position:relative; font-family:'Fraunces',serif; font-size:22px; font-weight:600; color:var(--ink) }
+  /* écran de fin */
+  .ydone{ text-align:center; padding:30px 10px }
+  .yd-ic{ font-size:52px }
+  .yd-t{ font-family:'Fraunces',serif; font-size:24px; font-weight:600; margin-top:8px }
+  .yd-s{ font-size:14px; color:var(--mut); margin-top:6px }
 </style>
 </head>
 <body>
@@ -645,7 +688,7 @@
     <div class="homegrid">
       <button class="htile learn" id="doorLearn"><span class="ti">❦</span><h2>Apprendre</h2><span class="ts">Savoir-faire</span></button>
       <button class="htile stable" id="doorStable"><span class="ti">🐴</span><h2>Domaine du Freyche</h2><span class="ts">Animaux &amp; planning</span></button>
-      <button class="htile soon" id="doorSoon" disabled><span class="ti">✦</span><h2>Bientôt</h2><span class="ts">À venir</span></button>
+      <button class="htile esprit" id="doorEsprit"><span class="ti">🧘</span><h2>Esprit &amp; Matières</h2><span class="ts">Yoga &amp; pratiques</span></button>
       <button class="htile wood" id="doorWood"><span class="ti">🪵</span><h2>Projet Bois</h2><span class="ts">Grumes &amp; stock</span></button>
     </div>
     <button class="supervlink" id="doorAdmin" style="display:none">🔐 Supervision &amp; comptes</button>
@@ -853,6 +896,22 @@
     <div id="wfBody"></div>
   </section>
   <input type="file" id="woodPhotoInput" accept="image/*" capture="environment" style="display:none">
+
+  <!-- ESPRIT & MATIÈRES (univers : Yoga, + à venir) -->
+  <section class="screen" id="scEsprit">
+    <h1 class="title">Esprit &amp; Matières</h1>
+    <p class="intro">Prendre soin du corps et du souffle. D'autres pratiques viendront.</p>
+    <div class="woodtiles" id="espritTiles"></div>
+  </section>
+  <section class="screen" id="scYoga">
+    <h1 class="title">Yoga</h1>
+    <p class="intro" id="yogaSummary"></p>
+    <div class="woodtiles" id="yogaTiles"></div>
+  </section>
+  <section class="screen" id="scYogaFlow">
+    <h1 class="title" id="yfTitle"></h1>
+    <div id="yfBody"></div>
+  </section>
 
   <!-- SAUVEGARDE / RESTAURATION -->
   <section class="screen" id="scBackup">

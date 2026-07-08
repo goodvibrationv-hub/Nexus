@@ -22,7 +22,8 @@ function loadStore(){
       if(d.projects) STORE.projects=d.projects; if(d.seedProjects) STORE.seedProjects=d.seedProjects;
       if(d.daily) STORE.daily=d.daily;
       if(d.profiles){ STORE.profiles=d.profiles; STORE.currentProfile=d.currentProfile||'mael'; if(d.seedProfiles) STORE.seedProfiles=d.seedProfiles; }
-      if(d.woodStock) STORE.woodStock=d.woodStock; if(d.woodPlan) STORE.woodPlan=d.woodPlan; }
+      if(d.woodStock) STORE.woodStock=d.woodStock; if(d.woodPlan) STORE.woodPlan=d.woodPlan;
+      if(d.yoga) STORE.yoga=d.yoga; }
   }catch(e){ /* mémoire seule */ }
   Object.keys(D.SKILLS).forEach(k=>{ if(!STORE.mastered[k]) STORE.mastered[k]=[]; });
 }
@@ -78,10 +79,11 @@ function totalPct(){let m=0,t=0;for(const k in D.SKILLS){m+=mastered[k].size;t+=
 let current=null,currentNode=null,currentSkillK=null,mode='landing';
 function show(screen,{accent='#3F5E4E',nav=''}={}){
   document.documentElement.style.setProperty('--forest',accent);
-  ['scProfiles','scLanding','scHome','scDetail','scCourse','scTest','scProgress','scStable','scGestion','scStableSection','scAnimal','scRevise','scAdmin','scWood','scWoodFlow','scBackup'].forEach(s=>$(s).classList.remove('active'));
+  ['scProfiles','scLanding','scHome','scDetail','scCourse','scTest','scProgress','scStable','scGestion','scStableSection','scAnimal','scRevise','scAdmin','scWood','scWoodFlow','scBackup','scEsprit','scYoga','scYogaFlow'].forEach(s=>$(s).classList.remove('active'));
   $(screen).classList.add('active');
   buildNav(nav);
   const bn=$('bottomnav'); if(bn) bn.style.display=(screen==='scProfiles'||screen==='scAdmin'||screen==='scBackup')?'none':'';
+  if(typeof stopYoga==='function' && screen!=='scYogaFlow') stopYoga();
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
@@ -126,7 +128,12 @@ function navBtn(active, key, icon, label){
 }
 function buildNav(active){
   const nav=$('bottomnav');
-  if(mode==='wood'){
+  if(mode==='esprit'){
+    document.body.classList.add('stable-mode');
+    nav.innerHTML=
+      navBtn(active,'landing',NAV_IC.home,'Accueil')+
+      navBtn(active,'esprit',NAV_IC.revise,'Esprit');
+  } else if(mode==='wood'){
     document.body.classList.add('stable-mode');
     nav.innerHTML=
       navBtn(active,'landing',NAV_IC.home,'Accueil')+
@@ -164,6 +171,7 @@ function navGo(g){
   else if(g==='revise') go(rRevise,'révision');
   else if(g==='stable') go(rStable,'domaine');
   else if(g==='wood') go(rWood,'projet bois');
+  else if(g==='esprit') go(rEsprit,'esprit');
 }
 
 /* ====== landing ====== */
@@ -180,6 +188,7 @@ function goHome(){ goRoot(goLanding,'accueil'); }
 $('doorLearn').onclick=()=>go(rDomains,'domaines');
 $('doorStable').onclick=()=>navGo('stable');
 if($('doorWood')) $('doorWood').onclick=()=>navGo('wood');
+if($('doorEsprit')) $('doorEsprit').onclick=()=>navGo('esprit');
 if($('profileChip')) $('profileChip').onclick=()=>goProfiles();
 if($('doorAdmin')) $('doorAdmin').onclick=()=>openAdmin();
 
@@ -1086,6 +1095,184 @@ if($('doorBackup')) $('doorBackup').onclick=()=>go(renderBackup,'sauvegarde');
 if($('btnExport')) $('btnExport').onclick=exportBackup;
 if($('btnImport')) $('btnImport').onclick=()=>$('importInput').click();
 if($('importInput')) $('importInput').onchange=e=>{ const f=e.target.files&&e.target.files[0]; if(f) importBackup(f, ok=>{ if(ok){ alert('Sauvegarde restaurée. L’app va se recharger.'); try{ location.reload(); }catch(_){} } else alert('Fichier de sauvegarde invalide.'); }); e.target.value=''; };
+
+/* ============================================================
+   ESPRIT & MATIÈRES — univers Yoga (séances minutées, postures,
+   respiration guidée, suivi). 100% local, aucune requête réseau.
+   ============================================================ */
+if(!STORE.yoga||!Array.isArray(STORE.yoga.log)) STORE.yoga={log:[]};
+function yogaState(){ if(!STORE.yoga||!Array.isArray(STORE.yoga.log)) STORE.yoga={log:[]}; return STORE.yoga; }
+function fmtSec(n){ n=Math.max(0,Math.round(n)); const m=Math.floor(n/60), s=n%60; return m+':'+String(s).padStart(2,'0'); }
+function yfig(inner){ return '<svg class="posesvg" viewBox="0 0 120 130" aria-hidden="true"><g fill="none" stroke="#3F5E4E" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round">'+inner+'</g></svg>'; }
+const YOGA_POSES=[
+  {k:'montagne',n:'Montagne',sk:'Tadasana',lvl:'Débutant',benefit:'Posture d’ancrage : aligne le dos, calme le mental, base des postures debout.',caution:'Épaules basses, poids réparti sur les deux pieds, respire par le ventre.',fig:yfig('<circle cx="60" cy="18" r="7" fill="#3F5E4E"/><path d="M60,26 V72 M60,38 L46,64 M60,38 L74,64 M60,72 L52,114 M60,72 L68,114"/>')},
+  {k:'chien',n:'Chien tête en bas',sk:'Adho Mukha Svanasana',lvl:'Débutant',benefit:'Étire l’arrière des jambes et le dos, dynamise, soulage la nuque.',caution:'Plie les genoux si ça tire ; mains bien écartées, hanches vers le haut.',fig:yfig('<circle cx="40" cy="98" r="6.5" fill="#3F5E4E"/><path d="M22,112 L60,44 L98,112"/>')},
+  {k:'guerrier',n:'Guerrier II',sk:'Virabhadrasana II',lvl:'Débutant',benefit:'Renforce jambes et gainage, ouvre les hanches, ancre et stabilise.',caution:'Genou avant au-dessus de la cheville, jamais au-delà.',fig:yfig('<circle cx="60" cy="38" r="7" fill="#3F5E4E"/><path d="M60,46 V74 M26,54 H94 M60,74 L28,114 M60,74 L98,114"/>')},
+  {k:'arbre',n:'Arbre',sk:'Vrksasana',lvl:'Débutant',benefit:'Équilibre et concentration, renforce les chevilles, apaise le mental.',caution:'Le pied s’appuie au-dessus ou en dessous du genou, jamais dessus.',fig:yfig('<circle cx="60" cy="40" r="7" fill="#3F5E4E"/><path d="M60,48 V72 M60,48 L52,30 M60,48 L68,30 M52,30 L60,20 M68,30 L60,20 M60,72 V114 M60,84 L44,90 L57,76"/>')},
+  {k:'cobra',n:'Cobra',sk:'Bhujangasana',lvl:'Débutant',benefit:'Ouvre la poitrine, renforce le bas du dos, contre la position assise.',caution:'Épaules loin des oreilles, ne force pas la cambrure.',fig:yfig('<circle cx="33" cy="70" r="6.5" fill="#3F5E4E"/><path d="M102,106 H56 Q46,106 41,86 M41,86 L47,106"/>')},
+  {k:'enfant',n:'Posture de l’enfant',sk:'Balasana',lvl:'Débutant',benefit:'Repos, étire doucement le dos, apaise le système nerveux.',caution:'Idéale pour souffler entre deux postures. Front au sol, relâche tout.',fig:yfig('<circle cx="30" cy="92" r="6.5" fill="#3F5E4E"/><path d="M40,96 Q72,58 90,78 Q94,100 76,106 L46,106 M36,94 L16,101"/>')},
+  {k:'assise',n:'Assise facile',sk:'Sukhasana',lvl:'Débutant',benefit:'Assise de respiration et de méditation, redresse la colonne.',caution:'Surélève le bassin sur un coussin si le dos s’arrondit.',fig:yfig('<circle cx="60" cy="27" r="7" fill="#3F5E4E"/><path d="M60,35 V74 M60,52 L40,72 M60,52 L80,72 M40,102 L60,80 L80,102 M40,102 H80"/>')}
+];
+function poseByKey(k){ return YOGA_POSES.find(p=>p.k===k); }
+const YOGA_SEANCES=[
+  {k:'reveil',n:'Réveil du matin',dur:'~6 min',desc:'Réveiller le corps en douceur.',steps:[
+    {p:'montagne',s:40,cue:'Ancre tes pieds, grandis-toi — 3 respirations.'},
+    {p:'chien',s:45,cue:'Pousse les mains, monte les hanches.'},
+    {p:'guerrier',s:45,cue:'Côté droit — regard par-dessus la main avant.'},
+    {p:'guerrier',s:45,cue:'Côté gauche.'},
+    {p:'arbre',s:40,cue:'Un pied ancré, fixe un point devant toi.'},
+    {p:'montagne',s:30,cue:'Reviens debout, ressens l’énergie.'}]},
+  {k:'dos',n:'Dos & nuque',dur:'~7 min',desc:'Détendre le dos après la position assise.',steps:[
+    {p:'enfant',s:50,cue:'Front au sol, relâche les épaules.'},
+    {p:'chien',s:45,cue:'Étire tout l’arrière du corps.'},
+    {p:'cobra',s:40,cue:'Ouvre la poitrine, épaules basses.'},
+    {p:'enfant',s:40,cue:'Repos.'},
+    {p:'assise',s:60,cue:'Assise, grandis la colonne, respire.'}]},
+  {k:'soir',n:'Détente du soir',dur:'~6 min',desc:'Relâcher avant le coucher.',steps:[
+    {p:'assise',s:60,cue:'Respire lentement, allonge l’expiration.'},
+    {p:'enfant',s:60,cue:'Abandonne le poids du corps.'},
+    {p:'cobra',s:30,cue:'Douce ouverture, sans forcer.'},
+    {p:'enfant',s:50,cue:'Repos.'},
+    {p:'assise',s:60,cue:'Quelques respirations pour finir.'}]}
+];
+function seanceSec(s){ return s.steps.reduce((a,st)=>a+st.s,0); }
+const YOGA_BREATH=[
+  {k:'coherence',n:'Cohérence cardiaque',desc:'5 s inspire / 5 s expire, ~5 min. Apaise, réduit le stress.',phases:[{l:'Inspire',s:5},{l:'Expire',s:5}],cycles:30},
+  {k:'478',n:'Respiration 4-7-8',desc:'Inspire 4, retiens 7, expire 8. Favorise l’endormissement.',phases:[{l:'Inspire',s:4},{l:'Retiens',s:7},{l:'Expire',s:8}],cycles:8},
+  {k:'carree',n:'Respiration carrée',desc:'4-4-4-4 : équilibre et concentration.',phases:[{l:'Inspire',s:4},{l:'Retiens',s:4},{l:'Expire',s:4},{l:'Retiens',s:4}],cycles:10}
+];
+/* --- suivi (log local) --- */
+function logYoga(type,label,sec){ const y=yogaState(); y.log.push({date:todayStr(),type,label,sec:Math.round(sec||0)}); saveStore(); }
+function yogaTotals(log){ log=log||[]; const days={}; log.forEach(e=>days[e.date]=1); return {count:log.length, sec:log.reduce((a,e)=>a+(e.sec||0),0), days:Object.keys(days).length}; }
+function yogaStreak(log, today){ const days={}; (log||[]).forEach(e=>days[e.date]=1); let d=new Date((today||todayStr())+'T00:00:00');
+  if(!days[d.toISOString().slice(0,10)]) d.setDate(d.getDate()-1);
+  let n=0; while(days[d.toISOString().slice(0,10)]){ n++; d.setDate(d.getDate()-1); } return n; }
+
+/* --- hub Esprit & Matières --- */
+function rEsprit(){ mode='esprit'; renderEspritHub(); show('scEsprit',{accent:'#7B6E86',nav:'esprit'}); }
+function renderEspritHub(){
+  const st=yogaTotals(yogaState().log);
+  const yogaSub=st.count?(st.count+' séance'+(st.count>1?'s':'')+' · '+Math.round(st.sec/60)+' min'):'Séances, postures, respiration';
+  $('espritTiles').innerHTML=
+    '<button class="woodtile" data-e="yoga"><span class="wt-ic">🧘</span><span class="wt-mid"><span class="wt-t">Yoga</span><span class="wt-s">'+esc(yogaSub)+'</span></span><span class="chev">›</span></button>'+
+    '<button class="woodtile soon" disabled><span class="wt-ic">✦</span><span class="wt-mid"><span class="wt-t">Bientôt</span><span class="wt-s">D’autres pratiques à venir</span></span></button>';
+  const y=$('espritTiles').querySelector('[data-e]'); if(y) y.onclick=()=>openYoga();
+}
+function openYoga(){ go(rYoga,'yoga'); }
+function rYoga(){ mode='esprit'; stopYoga(); renderYogaHub(); show('scYoga',{accent:'#7B6E86',nav:'esprit'}); }
+function renderYogaHub(){
+  const log=yogaState().log; const t=yogaTotals(log); const streak=yogaStreak(log);
+  $('yogaSummary').textContent = t.count ? (t.count+' séance'+(t.count>1?'s':'')+' · '+Math.round(t.sec/60)+' min · série '+streak+' j') : 'Séances guidées, postures, respiration.';
+  const tiles=[{v:'seances',ic:'🧘',t:'Séances guidées',s:'Routines minutées'},{v:'postures',ic:'🌿',t:'Postures',s:'Bibliothèque illustrée'},{v:'respiration',ic:'🌬️',t:'Respiration',s:'Cohérence, 4-7-8…'},{v:'suivi',ic:'📈',t:'Suivi',s:'Séries & temps'}];
+  $('yogaTiles').innerHTML=tiles.map(t=>'<button class="woodtile" data-yv="'+t.v+'"><span class="wt-ic">'+t.ic+'</span><span class="wt-mid"><span class="wt-t">'+t.t+'</span><span class="wt-s">'+esc(t.s)+'</span></span><span class="chev">›</span></button>').join('');
+  $('yogaTiles').querySelectorAll('[data-yv]').forEach(b=>b.onclick=()=>openYogaView(b.dataset.yv));
+}
+const YOGA_VLABEL={seances:'séances',postures:'postures',respiration:'respiration',suivi:'suivi'};
+function openYogaView(view){ go(()=>renderYogaFlow(view), YOGA_VLABEL[view]||'yoga'); }
+function renderYogaFlow(view){ mode='esprit'; stopYoga();
+  if(view==='seances'){ $('yfTitle').textContent='Séances guidées'; renderSeanceList(); }
+  else if(view==='postures'){ $('yfTitle').textContent='Postures'; renderPostureList(); }
+  else if(view==='respiration'){ $('yfTitle').textContent='Respiration'; renderBreathList(); }
+  else if(view==='suivi'){ $('yfTitle').textContent='Suivi de pratique'; renderYogaSuivi(); }
+  show('scYogaFlow',{accent:'#7B6E86',nav:'esprit'});
+}
+/* --- timers (séance + respiration) --- */
+let yogaTimer=null, seancePlay=null, breathPlay=null;
+function stopYoga(){ if(yogaTimer){ try{ clearInterval(yogaTimer); }catch(e){} yogaTimer=null; } seancePlay=null; breathPlay=null; }
+/* --- séances guidées --- */
+function renderSeanceList(){ const b=$('yfBody');
+  b.innerHTML=YOGA_SEANCES.map(s=>'<button class="woodtile" data-seance="'+s.k+'"><span class="wt-ic">🧘</span><span class="wt-mid"><span class="wt-t">'+esc(s.n)+'</span><span class="wt-s">'+esc(s.dur+' · '+s.desc)+'</span></span><span class="chev">›</span></button>').join('');
+  b.querySelectorAll('[data-seance]').forEach(x=>x.onclick=()=>startSeance(x.dataset.seance));
+}
+function startSeance(k){ const s=YOGA_SEANCES.find(x=>x.k===k); if(!s) return;
+  seancePlay={ s, i:0, remaining:s.steps[0].s, playing:true, elapsed:0, total:seanceSec(s) };
+  drawSeance(); if(typeof setInterval==='function'){ if(yogaTimer)clearInterval(yogaTimer); yogaTimer=setInterval(tickSeance,1000); }
+}
+function tickSeance(){ const p=seancePlay; if(!p||!p.playing) return; p.remaining--; p.elapsed++;
+  if(p.remaining<=0){ p.i++; if(p.i>=p.s.steps.length){ finishSeance(); return; } p.remaining=p.s.steps[p.i].s; }
+  drawSeance();
+}
+function drawSeance(){ const p=seancePlay; if(!p) return; const st=p.s.steps[p.i]; const pose=poseByKey(st.p); const next=p.s.steps[p.i+1]; const nextPose=next?poseByKey(next.p):null;
+  const pct=Math.round(p.elapsed/p.total*100);
+  $('yfBody').innerHTML='<div class="yplayer">'+
+    '<div class="yp-prog"><i style="width:'+pct+'%"></i></div>'+
+    '<div class="yp-step">Posture '+(p.i+1)+' / '+p.s.steps.length+' · '+esc(p.s.n)+'</div>'+
+    '<div class="yp-fig">'+(pose?pose.fig:'')+'</div>'+
+    '<div class="yp-name">'+(pose?esc(pose.n):'')+'</div>'+
+    '<div class="yp-cue">'+esc(st.cue)+'</div>'+
+    '<div class="yp-timer">'+fmtSec(p.remaining)+'</div>'+
+    '<div class="yp-next">'+(nextPose?'Ensuite : '+esc(nextPose.n):'Dernière posture')+'</div>'+
+    '<div class="yp-ctrl"><button class="miniBtn" id="ypPrev">◀︎ Préc.</button><button class="save" id="ypPlay">'+(p.playing?'Pause':'Reprendre')+'</button><button class="miniBtn" id="ypNext">Suiv. ▶︎</button></div>'+
+    '<button class="demolink del" id="ypStop" style="margin-top:12px;flex:none;width:100%">Arrêter la séance</button>'+
+  '</div>';
+  $('ypPlay').onclick=()=>{ p.playing=!p.playing; drawSeance(); };
+  $('ypPrev').onclick=()=>{ if(p.i>0){ p.i--; p.remaining=p.s.steps[p.i].s; drawSeance(); } };
+  $('ypNext').onclick=()=>{ p.i++; if(p.i>=p.s.steps.length){ finishSeance(); } else { p.remaining=p.s.steps[p.i].s; drawSeance(); } };
+  $('ypStop').onclick=()=>{ stopYoga(); renderSeanceList(); };
+}
+function finishSeance(){ const p=seancePlay; stopYoga(); if(p) logYoga('seance', p.s.n, p.total);
+  $('yfBody').innerHTML='<div class="ydone"><div class="yd-ic">🌿</div><div class="yd-t">Séance terminée</div><div class="yd-s">Bravo — '+(p?Math.round(p.total/60):0)+' min enregistrées.</div><button class="save" id="ydBack" style="margin-top:16px">Terminer</button></div>';
+  const bk=$('ydBack'); if(bk) bk.onclick=()=>renderSeanceList();
+}
+/* --- postures (bibliothèque) --- */
+function renderPostureList(){ const b=$('yfBody');
+  b.innerHTML='<div class="posegrid">'+YOGA_POSES.map(p=>'<button class="posecard" data-pose="'+p.k+'"><span class="pc-fig">'+p.fig+'</span><span class="pc-n">'+esc(p.n)+'</span><span class="pc-sk">'+esc(p.sk)+'</span></button>').join('')+'</div>';
+  b.querySelectorAll('[data-pose]').forEach(x=>x.onclick=()=>renderPostureDetail(x.dataset.pose));
+}
+function renderPostureDetail(k){ const p=poseByKey(k); if(!p) return; const b=$('yfBody');
+  b.innerHTML='<div class="posedetail"><div class="pd-fig">'+p.fig+'</div><div class="pd-n">'+esc(p.n)+'</div><div class="pd-sk">'+esc(p.sk)+' · '+esc(p.lvl)+'</div>'+
+    '<div class="usect">Bienfaits</div><div class="doc-p">'+esc(p.benefit)+'</div>'+
+    '<div class="usect">À savoir</div><div class="doc-p">'+esc(p.caution)+'</div>'+
+    '<div class="wnav"><button class="miniBtn" id="pdBack">← Postures</button></div></div>';
+  const bk=$('pdBack'); if(bk) bk.onclick=()=>renderPostureList();
+}
+/* --- respiration guidée --- */
+function renderBreathList(){ const b=$('yfBody');
+  b.innerHTML=YOGA_BREATH.map(p=>'<button class="woodtile" data-breath="'+p.k+'"><span class="wt-ic">🌬️</span><span class="wt-mid"><span class="wt-t">'+esc(p.n)+'</span><span class="wt-s">'+esc(p.desc)+'</span></span><span class="chev">›</span></button>').join('');
+  b.querySelectorAll('[data-breath]').forEach(x=>x.onclick=()=>startBreath(x.dataset.breath));
+}
+function breathTotal(pat){ return pat.cycles*pat.phases.reduce((a,p)=>a+p.s,0); }
+function startBreath(k){ const pat=YOGA_BREATH.find(x=>x.k===k); if(!pat) return;
+  breathPlay={ pat, cycle:0, pi:0, remaining:pat.phases[0].s, playing:true, elapsed:0, total:breathTotal(pat) };
+  drawBreath(true); if(typeof setInterval==='function'){ if(yogaTimer)clearInterval(yogaTimer); yogaTimer=setInterval(tickBreath,1000); }
+}
+function tickBreath(){ const p=breathPlay; if(!p||!p.playing) return; p.remaining--; p.elapsed++;
+  if(p.elapsed>=p.total){ finishBreath(); return; }
+  if(p.remaining<=0){ p.pi++; if(p.pi>=p.pat.phases.length){ p.pi=0; p.cycle++; } p.remaining=p.pat.phases[p.pi].s; drawBreath(true); }
+  else drawBreath(false);
+}
+function drawBreath(phaseChange){ const p=breathPlay; if(!p) return; const ph=p.pat.phases[p.pi];
+  const scale = /inspire/i.test(ph.l)?1 : /expire/i.test(ph.l)?0.45 : null;
+  if(phaseChange){
+    $('yfBody').innerHTML='<div class="bplayer">'+
+      '<div class="yp-step">'+esc(p.pat.n)+' · cycle '+(p.cycle+1)+' / '+p.pat.cycles+'</div>'+
+      '<div class="breathwrap"><span class="breathcircle" id="breathCircle"></span><span class="breathlbl" id="breathLbl"></span></div>'+
+      '<div class="yp-timer" id="breathCount"></div>'+
+      '<div class="yp-ctrl"><button class="save" id="bpPlay" style="flex:none;min-width:140px">Pause</button></div>'+
+      '<button class="demolink del" id="bpStop" style="margin-top:12px;flex:none;width:100%">Arrêter</button>'+
+    '</div>';
+    const pb=$('bpPlay'); if(pb) pb.onclick=()=>{ p.playing=!p.playing; pb.textContent=p.playing?'Pause':'Reprendre'; };
+    const sb=$('bpStop'); if(sb) sb.onclick=()=>{ stopYoga(); renderBreathList(); };
+  }
+  const c=$('breathCircle'); if(c && scale!=null){ c.style.transitionDuration=ph.s+'s'; c.style.transform='scale('+scale+')'; }
+  const l=$('breathLbl'); if(l) l.textContent=ph.l;
+  const cn=$('breathCount'); if(cn) cn.textContent=p.remaining;
+}
+function finishBreath(){ const p=breathPlay; stopYoga(); if(p) logYoga('respiration', p.pat.n, p.total);
+  $('yfBody').innerHTML='<div class="ydone"><div class="yd-ic">🌸</div><div class="yd-t">Respiration terminée</div><div class="yd-s">'+(p?Math.round(p.total/60):0)+' min · beau travail.</div><button class="save" id="ydBack" style="margin-top:16px">Terminer</button></div>';
+  const bk=$('ydBack'); if(bk) bk.onclick=()=>renderBreathList();
+}
+/* --- suivi --- */
+function renderYogaSuivi(){ const b=$('yfBody'); const log=yogaState().log; const t=yogaTotals(log); const streak=yogaStreak(log);
+  const kpi=(v,l)=>'<div class="kpi"><div class="kpi-v">'+v+'</div><div class="kpi-l">'+l+'</div></div>';
+  let html='<div class="kpi-grid">'+kpi(streak+' j','série en cours')+kpi(t.count,'séances')+kpi(Math.round(t.sec/60)+' min','temps total')+kpi(t.days,'jours actifs')+'</div>';
+  html+='<button class="addbtn" id="yManual" style="margin-top:14px">+ J’ai pratiqué aujourd’hui</button>';
+  html+='<div class="dash-h">Historique</div>';
+  const recent=log.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||'')).slice(0,25);
+  html+= recent.length ? '<div class="woodlist">'+recent.map(e=>'<div class="logrow"><span class="lg-ph">'+(e.type==='respiration'?'🌬️':e.type==='seance'?'🧘':'✔️')+'</span><span class="lg-mid"><span class="lg-n">'+esc(e.label||'Pratique')+'</span><span class="lg-m">'+esc(e.date)+' · '+Math.max(1,Math.round((e.sec||0)/60))+' min</span></span></div>').join('')+'</div>' : '<div class="empty">Aucune pratique enregistrée. Fais une séance, ou note-la ici.</div>';
+  b.innerHTML=html;
+  const m=$('yManual'); if(m) m.onclick=()=>{ logYoga('manuel','Pratique libre',10*60); renderYogaSuivi(); };
+}
 
 /* ============================================================
    PROJET BOIS — grumes : photo, identification (mini-IA hors-ligne),

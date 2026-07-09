@@ -123,6 +123,18 @@ function refreshBack(){
   if(tb){ if(navHist.length){ tb.style.display='flex'; tb.onclick=doBack; } else { tb.style.display='none'; tb.onclick=null; } }
 }
 if(BROWSER_NAV) window.addEventListener('popstate', ()=>{ navBack(); });
+/* geste : balayer vers la droite = retour (pouce). On démarre au-delà du bord
+   gauche pour ne pas gêner le geste « précédent » du navigateur, et on exige un
+   mouvement franchement horizontal pour ne pas perturber le défilement. */
+(function(){
+  if(typeof window==='undefined'||!window.addEventListener) return;
+  let sx=0, sy=0, st=0, ok=false;
+  window.addEventListener('touchstart', e=>{ if(!e.touches||e.touches.length!==1){ ok=false; return; } const t=e.touches[0]; sx=t.clientX; sy=t.clientY; st=Date.now(); ok=sx>30; }, {passive:true});
+  window.addEventListener('touchend', e=>{ if(!ok||!st) return; ok=false; const t=(e.changedTouches&&e.changedTouches[0]); if(!t) return;
+    const dx=t.clientX-sx, dy=t.clientY-sy, dt=Date.now()-st;
+    if(dx>78 && Math.abs(dy)<48 && Math.abs(dx)>Math.abs(dy)*1.7 && dt<600 && navHist.length){ doBack(); }
+  }, {passive:true});
+})();
 
 /* ====== bottom nav (contextual) ====== */
 function navBtn(active, key, icon, label){

@@ -579,18 +579,20 @@
   .sb-bar{display:block; height:100%; border-radius:5px; position:relative; min-width:3px}
   .sb-mob{position:absolute; left:0; top:0; bottom:0; background:rgba(42,37,32,.4)}
   .sb-val{width:96px; flex:none; text-align:right; font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--mut); font-variant-numeric:tabular-nums}
-  .psel{display:flex; flex-direction:column; gap:8px}
-  .psel-row{display:flex; align-items:stretch; gap:9px}
-  .psel-chk{flex:none; width:30px; border:1.6px solid var(--line2); border-radius:9px; background:var(--surf); cursor:pointer; font-size:14px; color:#fff; display:flex; align-items:center; justify-content:center}
+  .psel{display:flex; flex-direction:column; gap:11px}
+  .psel-row{display:flex; align-items:stretch; gap:10px}
+  .psel-chk{flex:none; width:40px; border:1.6px solid var(--line2); border-radius:12px; background:var(--surf); cursor:pointer; font-size:17px; color:#fff; display:flex; align-items:center; justify-content:center}
   .psel-chk.on{background:var(--forest); border-color:var(--forest)}
-  .psel-main{flex:1; min-width:0; display:flex; align-items:center; gap:11px; text-align:left; cursor:pointer; font:inherit; color:inherit; background:var(--surf); border:1px solid var(--line2); border-radius:11px; padding:9px 12px}
+  .psel-main{flex:1; min-width:0; display:flex; align-items:center; gap:14px; text-align:left; cursor:pointer; font:inherit; color:inherit; background:var(--surf); border:1px solid var(--line2); border-radius:14px; padding:16px 17px; min-height:74px}
   .psel-row.selected .psel-main{border-color:var(--forest); box-shadow:0 0 0 1px var(--forest) inset}
   .psel-row.blocked .psel-main,.psel-row.none .psel-main{opacity:.6}
-  .psel-ic{font-size:21px; flex:none; width:26px; text-align:center}
-  .psel-mid{flex:1; min-width:0; display:flex; flex-direction:column; gap:2px}
-  .psel-n{font-family:'Fraunces',serif; font-size:15px; font-weight:600}
-  .psel-s{font-size:11.5px; color:var(--mut); line-height:1.35}
+  .psel-ic{font-size:27px; flex:none; width:34px; text-align:center}
+  .psel-mid{flex:1; min-width:0; display:flex; flex-direction:column; gap:3px}
+  .psel-n{font-family:'Fraunces',serif; font-size:17.5px; font-weight:600}
+  .psel-s{font-size:12.5px; color:var(--mut); line-height:1.4}
   .psel-row.feasible .psel-s{color:var(--forest)}
+  .psel-main .pr-go{align-self:center; font-family:'Fraunces',serif; font-size:12.5px; letter-spacing:0; text-transform:none; color:var(--mut); font-weight:600; white-space:nowrap}
+  .psel-row.selected .psel-main .pr-go,.psel-row.feasible .psel-main .pr-go{color:var(--forest)}
   .wood-demo{display:flex; gap:8px; margin-top:14px}
   .demolink{flex:1; background:none; border:1px dashed var(--line2); border-radius:11px; padding:11px; cursor:pointer; font:inherit; font-size:12.5px; color:var(--mut)}
   .demolink:active{background:var(--surf)}

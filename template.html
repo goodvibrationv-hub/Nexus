@@ -692,6 +692,63 @@
     box-shadow:0 4px 10px rgba(42,37,32,.22), 0 14px 30px -12px rgba(42,37,32,.55); transition:transform .14s, background .15s }
   .thumbback:active{ transform:scale(.92) }
   body.stable-mode .thumbback{ background:var(--walnut) }
+
+  /* ===== Atelier G270 (aide pratique) ===== */
+  .atelier-banner{ display:flex; align-items:center; gap:14px; width:100%; text-align:left; cursor:pointer; font:inherit; color:inherit;
+    border:1px solid rgba(140,74,74,.4); border-radius:13px; padding:15px 16px; margin:2px 0 14px;
+    background:linear-gradient(150deg,var(--surf) 60%,rgba(140,74,74,.08)); box-shadow:var(--elev-1) }
+  .atelier-banner:active{ transform:scale(.99) }
+  .atelier-banner .ab-ic{ font-size:26px; flex:none }
+  .atelier-banner .ab-mid{ flex:1; min-width:0; display:flex; flex-direction:column; gap:2px }
+  .atelier-banner .ab-t{ font-family:'Fraunces',serif; font-size:16.5px; font-weight:600 }
+  .atelier-banner .ab-s{ font-size:11.5px; color:var(--mut); line-height:1.35 }
+  .atelier-banner .ab-go{ flex:none; align-self:center; font-family:'JetBrains Mono',monospace; font-size:10.5px; letter-spacing:.05em; text-transform:uppercase; color:#8C4A4A; font-weight:600 }
+  .atf-lead{ font-size:13px; color:var(--mut); margin-bottom:14px; line-height:1.5 }
+  .atf-note{ font-size:11.5px; color:var(--mut); margin-top:12px; line-height:1.45 }
+  .atf-key{ background:rgba(140,74,74,.07); border:1px solid rgba(140,74,74,.22); border-radius:12px; padding:13px 15px; font-size:12.5px; line-height:1.55; margin-top:14px }
+  .dep-cat{ font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:.16em; text-transform:uppercase; color:var(--mut); margin:16px 0 8px; display:flex; align-items:center; gap:10px }
+  .dep-cat::after{ content:""; flex:1; height:1px; background:var(--line) }
+  details.dep-item{ background:var(--surf); border:1px solid var(--line2); border-radius:11px; margin-bottom:8px; overflow:hidden }
+  details.dep-item>summary{ list-style:none; cursor:pointer; padding:13px 15px; display:flex; align-items:center; gap:10px; justify-content:space-between }
+  details.dep-item>summary::-webkit-details-marker{ display:none }
+  .dep-s{ font-family:'Fraunces',serif; font-size:15px; font-weight:600; flex:1; min-width:0 }
+  .dep-c{ flex:none; font-family:'JetBrains Mono',monospace; font-size:9px; letter-spacing:.05em; text-transform:uppercase; color:#8C4A4A; background:rgba(140,74,74,.1); padding:3px 8px; border-radius:20px }
+  details.dep-item[open]>summary{ border-bottom:1px solid var(--line) }
+  .dep-k{ padding:11px 15px; font-size:12.5px; line-height:1.5; color:var(--ink) }
+  .mnt-list{ display:flex; flex-direction:column; gap:8px }
+  .mnt-row{ display:flex; align-items:center; gap:12px; background:var(--surf); border:1px solid var(--line2); border-radius:11px; padding:12px 14px }
+  .mnt-row.done{ background:linear-gradient(180deg,rgba(63,94,78,.06),var(--surf)); border-color:rgba(63,94,78,.3) }
+  .mnt-mid{ flex:1; min-width:0; display:flex; flex-direction:column; gap:2px }
+  .mnt-t{ font-family:'Fraunces',serif; font-size:14.5px; font-weight:600 }
+  .mnt-f{ font-size:11px; color:var(--mut) }
+  .mnt-btn{ flex:none; border:1px solid var(--forest); background:var(--surf); color:var(--forest); border-radius:9px; padding:9px 13px; font:inherit; font-size:12.5px; font-weight:600; cursor:pointer }
+  .mnt-row.done .mnt-btn{ color:var(--mut); border-color:var(--line2) }
+  .mnt-btn:active{ transform:scale(.97) }
+  .mnt-btn.add{ border-color:#8C4A4A; color:#8C4A4A }
+  .jr-add{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px }
+  .jr-add input{ font:inherit; font-size:13px; border:1px solid var(--line2); border-radius:9px; padding:10px 12px; background:var(--surf); color:inherit }
+  .jr-add #jrKm{ width:120px }
+  .jr-add #jrText{ flex:1; min-width:150px }
+  .jr-list{ display:flex; flex-direction:column; gap:7px }
+  .jr-row{ display:flex; align-items:center; gap:11px; background:var(--surf); border:1px solid var(--line2); border-radius:10px; padding:10px 13px }
+  .jr-d{ flex:none; font-family:'JetBrains Mono',monospace; font-size:10.5px; color:var(--mut); white-space:nowrap }
+  .jr-t{ flex:1; min-width:0; font-size:13px }
+  .jr-del{ flex:none; border:none; background:none; color:var(--mut); font-size:14px; cursor:pointer; padding:4px 6px }
+  .fiche{ display:flex; flex-direction:column; gap:11px }
+  .fiche-f{ display:flex; flex-direction:column; gap:5px }
+  .fiche-f>span{ font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--mut) }
+  .fiche-f input,.fiche-f textarea{ font:inherit; font-size:14px; border:1px solid var(--line2); border-radius:10px; padding:11px 13px; background:var(--surf); color:inherit; width:100%; resize:vertical }
+  .fiche-f input:focus,.fiche-f textarea:focus,.jr-add input:focus{ outline:none; border-color:#8C4A4A; box-shadow:0 0 0 1px rgba(140,74,74,.4) }
+  .repgal{ display:flex; flex-direction:column; gap:16px }
+  .repcard{ background:var(--surf); border:1px solid var(--line2); border-radius:13px; overflow:hidden; box-shadow:var(--elev-1) }
+  .repcard img{ width:100%; height:auto; display:block; cursor:zoom-in; background:#000 }
+  .repcard figcaption{ padding:12px 14px; display:flex; flex-direction:column; gap:4px }
+  .rep-cat{ align-self:flex-start; font-family:'JetBrains Mono',monospace; font-size:9px; letter-spacing:.05em; text-transform:uppercase; color:#8C4A4A; background:rgba(140,74,74,.1); padding:3px 8px; border-radius:20px }
+  .rep-l{ font-family:'Fraunces',serif; font-size:16px; font-weight:600 }
+  .rep-d{ font-size:12.5px; color:var(--mut); line-height:1.5 }
+  .rep-lb{ position:fixed; inset:0; z-index:120; background:rgba(20,17,14,.92); display:none; align-items:center; justify-content:center; padding:12px; cursor:zoom-out }
+  .rep-lb img{ max-width:100%; max-height:100%; border-radius:8px }
+  .rep-lb-x{ position:absolute; top:16px; right:20px; color:#fff; font-size:26px }
 </style>
 </head>
 <body>
@@ -920,6 +977,17 @@
     <div id="wfBody"></div>
   </section>
   <input type="file" id="woodPhotoInput" accept="image/*" capture="environment" style="display:none">
+
+  <!-- ATELIER G270 (aide pratique persistante, à côté des cours) -->
+  <section class="screen" id="scAtelier">
+    <h1 class="title">🧰 Atelier G270</h1>
+    <p class="intro" id="atelierSummary"></p>
+    <div class="woodtiles" id="atelierTiles"></div>
+  </section>
+  <section class="screen" id="scAtelierFlow">
+    <h1 class="title" id="atfTitle"></h1>
+    <div id="atfBody"></div>
+  </section>
 
   <!-- ESPRIT & MATIÈRES (univers : Yoga, + à venir) -->
   <section class="screen" id="scEsprit">

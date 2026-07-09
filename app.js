@@ -23,7 +23,7 @@ function loadStore(){
       if(d.daily) STORE.daily=d.daily;
       if(d.profiles){ STORE.profiles=d.profiles; STORE.currentProfile=d.currentProfile||'mael'; if(d.seedProfiles) STORE.seedProfiles=d.seedProfiles; }
       if(d.woodStock) STORE.woodStock=d.woodStock; if(d.woodPlan) STORE.woodPlan=d.woodPlan;
-      if(d.yoga) STORE.yoga=d.yoga; }
+      if(d.yoga) STORE.yoga=d.yoga; if(d.g270) STORE.g270=d.g270; }
   }catch(e){ /* mémoire seule */ }
   Object.keys(D.SKILLS).forEach(k=>{ if(!STORE.mastered[k]) STORE.mastered[k]=[]; });
 }
@@ -79,7 +79,7 @@ function totalPct(){let m=0,t=0;for(const k in D.SKILLS){m+=mastered[k].size;t+=
 let current=null,currentNode=null,currentSkillK=null,mode='landing';
 function show(screen,{accent='#3F5E4E',nav=''}={}){
   document.documentElement.style.setProperty('--forest',accent);
-  ['scProfiles','scLanding','scHome','scDetail','scCourse','scTest','scProgress','scStable','scGestion','scStableSection','scAnimal','scRevise','scAdmin','scWood','scWoodFlow','scBackup','scEsprit','scYoga','scYogaFlow'].forEach(s=>$(s).classList.remove('active'));
+  ['scProfiles','scLanding','scHome','scDetail','scCourse','scTest','scProgress','scStable','scGestion','scStableSection','scAnimal','scRevise','scAdmin','scWood','scWoodFlow','scAtelier','scAtelierFlow','scBackup','scEsprit','scYoga','scYogaFlow'].forEach(s=>$(s).classList.remove('active'));
   $(screen).classList.add('active');
   buildNav(nav);
   const bn=$('bottomnav'); if(bn) bn.style.display=(screen==='scProfiles'||screen==='scAdmin'||screen==='scBackup')?'none':'';
@@ -332,6 +332,12 @@ function renderTree(){
   const k=current,s=D.SKILLS[k];
   $('dProg').innerHTML='<b>'+mastered[k].size+'</b> / '+s.nodes.length+' étapes acquises';
   const tree=$('tree'); tree.innerHTML='';
+  if(k==='g270'){
+    const at=document.createElement('button'); at.className='atelier-banner'; at.type='button';
+    at.innerHTML='<span class="ab-ic">🧰</span><span class="ab-mid"><span class="ab-t">Atelier — aide pratique</span><span class="ab-s">Dépannage · entretien · fiche du camion · repérage photos</span></span><span class="ab-go">Ouvrir ›</span>';
+    at.onclick=()=>openAtelier();
+    tree.appendChild(at);
+  }
   TIERS.forEach((label,ti)=>{
     const tn=s.nodes.filter(n=>n.tier===ti); if(!tn.length)return;
     const wrap=document.createElement('div'); wrap.className='tier';
@@ -1811,6 +1817,159 @@ function saveWoodLog(){
   STORE.woodStock.push(log);
   if(!saveStoreOk()){ STORE.woodStock.pop(); alert('Stockage plein — grume non enregistrée. Supprime des photos/grumes.'); return; }
   woodDraft=null; goRoot(rWood,'projet bois');
+}
+
+/* ============================================================
+   ATELIER G270 — aide pratique persistante (à côté des cours)
+   4 sections : dépannage · entretien · fiche du camion · repérage photos.
+   Données du camion stockées à la racine du STORE (un seul véhicule).
+   ============================================================ */
+function g270S(){ if(!STORE.g270) STORE.g270={sheet:{},fait:{},journal:[]};
+  if(!STORE.g270.sheet) STORE.g270.sheet={}; if(!STORE.g270.fait) STORE.g270.fait={};
+  if(!Array.isArray(STORE.g270.journal)) STORE.g270.journal=[]; return STORE.g270; }
+
+const G270_DEP=[
+  {cat:'Démarrage', items:[
+    {s:'Le démarreur ne lance pas', c:'Circuit électrique', k:'Batteries, masses corrodées, coupe-batterie, contacteur, démarreur.'},
+    {s:'Il lance mais le moteur ne part pas', c:'Gasoil / compression', k:'Électrovanne d\'arrêt (stop), filtre à gasoil, air dans le circuit (purger), préchauffage à froid.'},
+    {s:'Démarre mal à froid', c:'Préchauffage', k:'Réchauffeur d\'air / bougies, eau dans le gasoil, compression faible.'} ]},
+  {cat:'Moteur', items:[
+    {s:'Manque de puissance', c:'Air / gasoil', k:'Filtre à air, filtre à gasoil, prise d\'air d\'admission, turbo, injection.'},
+    {s:'Fumée noire', c:'Excès gasoil / manque d\'air', k:'Filtre à air colmaté, turbo, injection.'},
+    {s:'Fumée bleue', c:'Brûle de l\'huile', k:'Segments, turbo.'},
+    {s:'Fumée blanche', c:'Gasoil non brûlé / eau', k:'À froid : préchauffage. Sinon eau = joint de culasse (odeur, persistance).'},
+    {s:'Surchauffe', c:'Refroidissement', k:'Niveau d\'eau, thermostat bloqué, courroie, ventilateur/viscocoupleur, radiateur encrassé.'},
+    {s:'Chute de pression d\'huile', c:'Lubrification', k:'ARRÊT IMMÉDIAT. Niveau d\'huile, pompe, capteur.'} ]},
+  {cat:'Air & freins', items:[
+    {s:'La pression d\'air ne monte pas / lentement', c:'Production / fuite', k:'Compresseur, courroie, fuite (eau savonneuse), assécheur.'},
+    {s:'Eau à la purge des réservoirs', c:'Assécheur', k:'Cartouche HS ; risque de gel des valves en hiver.'},
+    {s:'Un frein traîne ou reste serré', c:'Commande / ressort', k:'Valve, correcteur de charge, ressort qui ne se desserre pas.'},
+    {s:'Freins bloqués faute d\'air', c:'Sécurité', k:'Refaire la pression d\'abord. NE JAMAIS forcer ni démonter un frein à ressort sous contrainte.'} ]},
+  {cat:'Transmission', items:[
+    {s:'Embrayage qui patine', c:'Disque', k:'Régime qui monte sans accélérer, odeur : disque usé ou souillé d\'huile (fuite de joint).'},
+    {s:'Passages de vitesses difficiles', c:'Embrayage / synchros', k:'Embrayage qui traîne (garde, commande), synchros ; vérifier le niveau d\'huile de boîte.'},
+    {s:'Vibrations / claquements en roulant', c:'Arbre', k:'Croisillons, équilibrage d\'arbre, jeu de pont.'} ]}
+];
+const G270_TASKS=[
+  {key:'purge_air', t:'Purge des réservoirs d\'air', f:'chaque jour'},
+  {key:'niveaux',   t:'Niveaux (huile moteur, refroidissement)', f:'chaque semaine'},
+  {key:'pneus',     t:'Pression & état des pneus', f:'chaque semaine'},
+  {key:'graissage', t:'Graissage des croisillons', f:'périodique'},
+  {key:'vidange',   t:'Vidange huile moteur + filtre', f:'périodique'},
+  {key:'filtre_air',t:'Filtre à air', f:'périodique'},
+  {key:'filtre_go', t:'Filtre à gasoil + décanteur (eau)', f:'périodique'},
+  {key:'assecheur', t:'Cartouche d\'assécheur d\'air', f:'périodique'},
+  {key:'freins',    t:'Garnitures de frein & jeux', f:'périodique'},
+  {key:'boite_pont',t:'Niveaux boîte & pont, garde d\'embrayage', f:'périodique'}
+];
+const G270_FIELDS=[
+  {key:'immat',   t:'Immatriculation'},
+  {key:'vin',     t:'N° de série (VIN)'},
+  {key:'moteur',  t:'Réf. moteur (MIDR)'},
+  {key:'boite',   t:'Réf. boîte de vitesses'},
+  {key:'wabco',   t:'Réfs WABCO (valves)'},
+  {key:'huile_m', t:'Huile moteur (type / capacité)'},
+  {key:'refroid', t:'Refroidissement (type / capacité)'},
+  {key:'pneu_av', t:'Pression pneus AV'},
+  {key:'pneu_ar', t:'Pression pneus AR'},
+  {key:'couple',  t:'Couple de serrage des roues'},
+  {key:'notes',   t:'Notes', big:true}
+];
+
+function openAtelier(){ go(renderAtelierHub,'atelier'); }
+function renderAtelierHub(){
+  mode='learn'; g270S();
+  const nb=(STORE.g270.journal||[]).length;
+  const filled=G270_FIELDS.filter(f=>(STORE.g270.sheet[f.key]||'').trim()).length;
+  $('atelierSummary').textContent='Aide qui reste avec les cours : à consulter et à remplir.';
+  const tiles=[
+    {v:'depannage', ic:'🩺', t:'Aide-mémoire dépannage', s:'Symptôme → cause → contrôle'},
+    {v:'entretien', ic:'🔧', t:'Carnet d\'entretien', s:nb?(nb+' intervention'+(nb>1?'s':'')+' notée'+(nb>1?'s':'')):'Checklist + journal'},
+    {v:'fiche',     ic:'📋', t:'Fiche de mon camion', s:filled?(filled+' champ'+(filled>1?'s':'')+' rempli'+(filled>1?'s':'')):'Références & réglages'},
+    {v:'reperage',  ic:'📸', t:'Repérage des organes', s:((window.G270_PHOTOS||[]).length||0)+' photos annotées'}
+  ];
+  $('atelierTiles').innerHTML=tiles.map(t=>'<button class="woodtile" data-av="'+t.v+'"><span class="wt-ic">'+t.ic+'</span><span class="wt-mid"><span class="wt-t">'+t.t+'</span><span class="wt-s">'+esc(t.s)+'</span></span><span class="chev">›</span></button>').join('');
+  $('atelierTiles').querySelectorAll('[data-av]').forEach(b=>b.onclick=()=>openAtelierView(b.dataset.av));
+  show('scAtelier',{accent:'#8C4A4A',nav:'domains'});
+}
+const ATELIER_LABEL={depannage:'dépannage',entretien:'entretien',fiche:'fiche',reperage:'repérage'};
+function openAtelierView(v){ go(()=>renderAtelierFlow(v), ATELIER_LABEL[v]||'atelier'); }
+function renderAtelierFlow(v){
+  mode='learn'; g270S();
+  if(v==='depannage'){ $('atfTitle').textContent='Aide-mémoire dépannage'; renderDepannage(); }
+  else if(v==='entretien'){ $('atfTitle').textContent='Carnet d\'entretien'; renderEntretien(); }
+  else if(v==='fiche'){ $('atfTitle').textContent='Fiche de mon camion'; renderFiche(); }
+  else if(v==='reperage'){ $('atfTitle').textContent='Repérage des organes'; renderReperage(); }
+  show('scAtelierFlow',{accent:'#8C4A4A',nav:'domains'});
+}
+function renderDepannage(){
+  let h='<p class="atf-lead">Touche un symptôme pour voir la cause probable et ce qu\'il faut contrôler.</p>';
+  G270_DEP.forEach(g=>{
+    h+='<div class="dep-cat">'+esc(g.cat)+'</div>';
+    g.items.forEach(it=>{
+      h+='<details class="dep-item"><summary><span class="dep-s">'+esc(it.s)+'</span><span class="dep-c">'+esc(it.c)+'</span></summary><div class="dep-k"><b>À contrôler :</b> '+esc(it.k)+'</div></details>';
+    });
+  });
+  h+='<div class="atf-key"><b>Deux procédures utiles.</b><br>• <b>Purger le circuit de gasoil</b> : desserrer la vis de purge du filtre / de la pompe, actionner la pompe d\'amorçage manuelle jusqu\'à ce que le gasoil sorte sans bulles, resserrer, relancer.<br>• <b>Contrôler la pression d\'air</b> : moteur tournant, le manomètre doit monter au seuil puis se stabiliser ; une montée lente = fuite ou compresseur.</div>';
+  h+='<p class="atf-note">Pense-bête sécurité : freins à ressort, injection haute pression et soudure sur châssis = un professionnel.</p>';
+  $('atfBody').innerHTML=h;
+}
+function relDay(d){ if(!d) return 'jamais'; const t=Date.parse(d+'T00:00:00'); if(isNaN(t)) return d;
+  const n=Math.floor((Date.now()-t)/86400000); if(n<=0) return "aujourd'hui"; if(n===1) return 'hier'; if(n<30) return 'il y a '+n+' j'; return 'il y a '+Math.floor(n/30)+' mois'; }
+function renderEntretien(){
+  const S=g270S(); const today=new Date().toISOString().slice(0,10);
+  let h='<div class="dep-cat">À faire régulièrement</div><div class="mnt-list">';
+  G270_TASKS.forEach(t=>{ const done=S.fait[t.key]; const on=!!done;
+    h+='<div class="mnt-row'+(on?' done':'')+'"><span class="mnt-mid"><span class="mnt-t">'+esc(t.t)+'</span><span class="mnt-f">'+esc(t.f)+' · fait '+relDay(done&&done.date)+(done&&done.km?(' à '+esc(String(done.km))+' km'):'')+'</span></span><button class="mnt-btn" data-fait="'+t.key+'">'+(on?'refait ✓':'Fait ✓')+'</button></div>';
+  });
+  h+='</div>';
+  h+='<div class="dep-cat">Journal d\'entretien</div>';
+  h+='<div class="jr-add"><input id="jrKm" type="number" inputmode="numeric" placeholder="km (optionnel)"><input id="jrText" type="text" placeholder="Ex : vidange + filtre à huile"><button id="jrAdd" class="mnt-btn add">Ajouter</button></div>';
+  const j=(S.journal||[]).slice().sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  if(j.length){ h+='<div class="jr-list">'; j.forEach(e=>{ h+='<div class="jr-row"><span class="jr-d">'+esc(e.date||'')+(e.km?(' · '+esc(String(e.km))+' km'):'')+'</span><span class="jr-t">'+esc(e.text||'')+'</span><button class="jr-del" data-del="'+e.id+'" aria-label="supprimer">✕</button></div>'; }); h+='</div>'; }
+  else h+='<p class="atf-note">Aucune intervention notée pour l\'instant.</p>';
+  $('atfBody').innerHTML=h;
+  $('atfBody').querySelectorAll('[data-fait]').forEach(b=>b.onclick=()=>{ S.fait[b.dataset.fait]={date:today}; saveStore(); renderEntretien(); });
+  const add=$('jrAdd'); if(add) add.onclick=()=>{
+    const txt=($('jrText').value||'').trim(); if(!txt){ $('jrText').focus(); return; }
+    const kmv=parseInt($('jrKm').value,10);
+    S.journal.push({id:'jr_'+Date.now(), date:today, km:isNaN(kmv)?'':kmv, text:txt});
+    if(!saveStoreOk()){ S.journal.pop(); alert('Stockage plein — intervention non enregistrée.'); return; }
+    renderEntretien();
+  };
+  $('atfBody').querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{ S.journal=S.journal.filter(e=>e.id!==b.dataset.del); saveStore(); renderEntretien(); });
+}
+function renderFiche(){
+  const S=g270S();
+  let h='<p class="atf-lead">Note une fois les vraies références de ton camion (relevées sur les plaques). Elles restent enregistrées.</p><div class="fiche">';
+  G270_FIELDS.forEach(f=>{
+    const val=esc(S.sheet[f.key]||'');
+    if(f.big) h+='<label class="fiche-f big"><span>'+esc(f.t)+'</span><textarea data-fk="'+f.key+'" rows="3">'+val+'</textarea></label>';
+    else h+='<label class="fiche-f"><span>'+esc(f.t)+'</span><input type="text" data-fk="'+f.key+'" value="'+val+'"></label>';
+  });
+  h+='</div><p class="atf-note" id="ficheSaved">Enregistré automatiquement.</p>';
+  $('atfBody').innerHTML=h;
+  $('atfBody').querySelectorAll('[data-fk]').forEach(el=>{ el.onchange=()=>{
+    S.sheet[el.dataset.fk]=el.value; if(saveStoreOk()){ const s=$('ficheSaved'); if(s){ s.textContent='✓ Enregistré'; setTimeout(()=>{ if(s) s.textContent='Enregistré automatiquement.'; },1500); } }
+    else alert('Stockage plein — modification non enregistrée.');
+  }; });
+}
+function renderReperage(){
+  const ph=(window.G270_PHOTOS||[]);
+  if(!ph.length){ $('atfBody').innerHTML='<p class="atf-note">Aucune photo embarquée.</p>'; return; }
+  let h='<p class="atf-lead">Tes photos annotées, pour identifier chaque organe sous le camion. Touche une image pour l\'agrandir.</p><div class="repgal">';
+  ph.forEach((p,i)=>{
+    h+='<figure class="repcard"><img src="'+p.img+'" alt="'+esc(p.label)+'" data-rep="'+i+'" loading="lazy"><figcaption><span class="rep-cat">'+esc(p.cat)+'</span><span class="rep-l">'+esc(p.label)+'</span><span class="rep-d">'+esc(p.desc)+'</span></figcaption></figure>';
+  });
+  h+='</div>';
+  $('atfBody').innerHTML=h;
+  $('atfBody').querySelectorAll('[data-rep]').forEach(img=>img.onclick=()=>openLightbox(img.src));
+}
+function openLightbox(src){
+  let ov=$('repLightbox');
+  if(!ov){ ov=document.createElement('div'); ov.id='repLightbox'; ov.className='rep-lb'; document.body.appendChild(ov); ov.onclick=()=>{ ov.style.display='none'; ov.innerHTML=''; }; }
+  ov.innerHTML='<img src="'+src+'" alt=""><span class="rep-lb-x">✕</span>';
+  ov.style.display='flex';
 }
 
 goProfiles();

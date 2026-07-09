@@ -39,8 +39,12 @@ const content  = read('content_courses.js');
 const cards    = read('cards.js');
 const appCode  = read('app.js');
 
+/* photos embarquées (base64) — optionnel */
+let photos = '';
+try { photos = read('g270_photos.js'); } catch { photos = ''; }
+
 /* ---- injection ---- */
-const dataBlock = [dataCore, content, cards].join('\n');
+const dataBlock = [dataCore, content, cards, photos].join('\n');
 
 const html = template
   .replace('/* {{DATA_INJECT}} */', dataBlock)

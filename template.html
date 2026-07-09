@@ -668,6 +668,28 @@
   .yd-ic{ font-size:52px }
   .yd-t{ font-family:'Fraunces',serif; font-size:24px; font-weight:600; margin-top:8px }
   .yd-s{ font-size:14px; color:var(--mut); margin-top:6px }
+
+  /* ===== Menus qui remplissent la hauteur de l'écran (tous appareils) ===== */
+  #scLanding.active,#scHome.active,#scStable.active,#scWood.active,#scEsprit.active,#scYoga.active{
+    display:flex; flex-direction:column; min-height:calc(100dvh - var(--nav-h) - env(safe-area-inset-bottom) - 30px);
+  }
+  #scLanding .homegrid{ flex:1 1 auto; grid-auto-rows:1fr; margin-bottom:10px }
+  #scLanding .htile{ aspect-ratio:auto; min-height:120px }
+  #scHome .domain-grid{ flex:1 1 auto; grid-auto-rows:1fr }
+  #scHome .dtile{ min-height:0; justify-content:center }
+  #scStable .doors{ flex:1 1 auto; display:flex; flex-direction:column; gap:12px }
+  #scStable .doors .door{ flex:1 1 0; min-height:0; display:flex; flex-direction:column; justify-content:center }
+  #scStable .doors .door .di{ margin-bottom:8px }
+  #scWood .woodtiles,#scEsprit .woodtiles,#scYoga .woodtiles{ flex:1 1 auto; display:flex; flex-direction:column; gap:10px }
+  #scWood .woodtiles>.woodtile,#scEsprit .woodtiles>.woodtile,#scYoga .woodtiles>.woodtile{ flex:1 1 0; min-height:66px }
+  #scWood .woodtiles>.wood-demo{ flex:none }
+
+  /* ===== Retour au pouce : bouton flottant en bas à droite ===== */
+  .thumbback{ position:fixed; right:16px; bottom:calc(var(--nav-h) + env(safe-area-inset-bottom) + 16px); width:54px; height:54px; border-radius:50%; border:none; cursor:pointer;
+    background:var(--forest); color:#fff; font-size:24px; display:flex; align-items:center; justify-content:center; z-index:60;
+    box-shadow:0 4px 10px rgba(42,37,32,.22), 0 14px 30px -12px rgba(42,37,32,.55); transition:transform .14s, background .15s }
+  .thumbback:active{ transform:scale(.92) }
+  body.stable-mode .thumbback{ background:var(--walnut) }
 </style>
 </head>
 <body>
@@ -994,6 +1016,7 @@
   <div class="sheetbtns"><button class="cancel" id="tCancel">Annuler</button><button class="save" id="tSave">Enregistrer</button></div>
 </div></div>
 
+<button class="thumbback" id="thumbBack" aria-label="Retour" style="display:none">←</button>
 <nav class="bottomnav" id="bottomnav"></nav>
 
 

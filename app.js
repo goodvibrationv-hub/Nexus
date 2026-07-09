@@ -119,6 +119,8 @@ function refreshBack(){
   const b=$('backBtn');
   if(navHist.length){ b.style.display='flex'; $('backLbl').textContent=navHist[navHist.length-1].label||'retour'; b.onclick=doBack; }
   else { b.style.display='none'; b.onclick=null; }
+  const tb=$('thumbBack');
+  if(tb){ if(navHist.length){ tb.style.display='flex'; tb.onclick=doBack; } else { tb.style.display='none'; tb.onclick=null; } }
 }
 if(BROWSER_NAV) window.addEventListener('popstate', ()=>{ navBack(); });
 

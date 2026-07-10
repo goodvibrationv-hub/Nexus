@@ -2012,8 +2012,14 @@ function renderTutoScreen(id){
   if(t.cause) h+='<div class="tuto-top"><span class="dep-c">'+esc(t.cause)+'</span></div>';
   if(t.context) h+='<p class="atf-lead">'+esc(t.context)+'</p>';
   if(t.outils&&t.outils.length) h+='<div class="tuto-tools"><b>Outils</b> '+t.outils.map(esc).join(' · ')+'</div>';
-  h+='<ol class="tuto-steps">'+t.etapes.map(e=>'<li>'+esc(typeof e==='string'?e:(e.t+' — '+e.d))+'</li>').join('')+'</ol>';
-  h+=tutoPhotosHtml(t.photos);
+  const phList=(window.G270_PHOTOS||[]); const usedPh=[];
+  h+='<ol class="tuto-steps">'+t.etapes.map(e=>{ let txt, ph=null;
+    if(typeof e==='string') txt=e; else { txt=(e.t?e.t+' — ':'')+e.d; ph=e.photo||null; }
+    let li='<li>'+esc(txt);
+    if(ph){ const p=phList.find(x=>x.key===ph); if(p){ usedPh.push(ph); li+='<figure class="step-ph"><img src="'+p.img+'" data-lb="1" alt="'+esc(p.label)+'"><figcaption>'+esc(p.label)+'</figcaption></figure>'; } }
+    return li+'</li>';
+  }).join('')+'</ol>';
+  h+=tutoPhotosHtml((t.photos||[]).filter(k=>usedPh.indexOf(k)<0));
   if(t.securite&&t.securite!=='—') h+='<div class="tuto-secu"><b>⚠️ Sécurité</b> '+esc(t.securite)+'</div>';
   $('atfBody').innerHTML=h; bindLb();
   show('scAtelierFlow',{accent:'#8C4A4A',nav:'domains'});

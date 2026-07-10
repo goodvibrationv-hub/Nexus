@@ -749,6 +749,44 @@
   .rep-lb{ position:fixed; inset:0; z-index:120; background:rgba(20,17,14,.92); display:none; align-items:center; justify-content:center; padding:12px; cursor:zoom-out }
   .rep-lb img{ max-width:100%; max-height:100%; border-radius:8px }
   .rep-lb-x{ position:absolute; top:16px; right:20px; color:#fff; font-size:26px }
+  /* dépannage : rangées cliquables vers un tuto */
+  .dep-btn{ display:flex; align-items:center; gap:12px; width:100%; text-align:left; cursor:pointer; font:inherit; color:inherit; background:var(--surf); border:1px solid var(--line2); border-radius:11px; padding:13px 15px; margin-bottom:8px }
+  .dep-btn:active{ transform:scale(.99) }
+  .dep-mid{ flex:1; min-width:0; display:flex; align-items:center; gap:10px; justify-content:space-between }
+  /* tutoriel pas-à-pas */
+  .tuto-top{ margin-bottom:10px }
+  .tuto-tools{ font-size:12.5px; background:var(--surf); border:1px solid var(--line2); border-radius:10px; padding:10px 13px; margin-bottom:12px }
+  .tuto-tools b{ font-family:'JetBrains Mono',monospace; font-size:9.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--mut); margin-right:6px }
+  ol.tuto-steps{ margin:0 0 4px; padding-left:0; list-style:none; counter-reset:st }
+  ol.tuto-steps>li{ counter-increment:st; position:relative; padding:11px 13px 11px 44px; background:var(--surf); border:1px solid var(--line2); border-radius:11px; margin-bottom:8px; font-size:13.5px; line-height:1.5 }
+  ol.tuto-steps>li::before{ content:counter(st); position:absolute; left:11px; top:11px; width:24px; height:24px; border-radius:50%; background:#8C4A4A; color:#fff; font-family:'Fraunces',serif; font-size:13px; font-weight:600; display:flex; align-items:center; justify-content:center }
+  ol.tuto-steps.big>li{ font-size:14px }
+  .tuto-secu{ background:rgba(164,87,47,.08); border:1px solid rgba(164,87,47,.28); border-radius:11px; padding:11px 14px; font-size:12.5px; line-height:1.5; margin-top:6px }
+  .tuto-secu b{ color:var(--terra); margin-right:4px }
+  .tuto-ph{ display:flex; flex-direction:column; gap:12px; margin:12px 0 4px }
+  .tuto-pc{ background:var(--surf); border:1px solid var(--line2); border-radius:12px; overflow:hidden }
+  .tuto-pc img{ width:100%; height:auto; display:block; cursor:zoom-in; background:#000 }
+  .tuto-pc figcaption{ padding:9px 12px; font-size:12px; color:var(--mut) }
+  .mnt-mid.link{ cursor:pointer }
+  .mnt-how{ font-family:'JetBrains Mono',monospace; font-size:9px; letter-spacing:.05em; text-transform:uppercase; color:#8C4A4A; background:rgba(140,74,74,.1); padding:2px 7px; border-radius:20px; margin-left:6px; vertical-align:middle }
+  /* bannière + écran panne en cours */
+  .panne-banner{ display:flex; align-items:center; gap:13px; width:100%; text-align:left; cursor:pointer; font:inherit; color:inherit;
+    border:1px solid rgba(180,69,58,.5); border-radius:13px; padding:14px 16px; margin-bottom:12px;
+    background:linear-gradient(150deg,#fff6f2,rgba(180,69,58,.12)); box-shadow:var(--elev-1) }
+  .panne-banner:active{ transform:scale(.99) }
+  .panne-banner .pb-ic{ font-size:24px; flex:none }
+  .panne-banner .pb-mid{ flex:1; min-width:0; display:flex; flex-direction:column; gap:2px }
+  .panne-banner .pb-t{ font-family:'Fraunces',serif; font-size:15.5px; font-weight:600; color:#9C3A2E }
+  .panne-banner .pb-s{ font-size:11.5px; color:var(--mut) }
+  .panne-head{ margin-bottom:6px }
+  .pan-badge{ display:inline-block; font-family:'JetBrains Mono',monospace; font-size:9.5px; letter-spacing:.08em; text-transform:uppercase; color:#fff; background:#B4453A; padding:3px 9px; border-radius:20px; margin-bottom:8px }
+  .pan-title{ font-family:'Fraunces',serif; font-size:19px; font-weight:600; line-height:1.15 }
+  .pan-susp{ display:flex; gap:12px; background:var(--surf); border:1px solid var(--line2); border-radius:11px; padding:12px 14px; margin-bottom:8px }
+  .pan-n{ flex:none; width:26px; height:26px; border-radius:50%; background:#8C4A4A; color:#fff; font-family:'Fraunces',serif; font-weight:600; display:flex; align-items:center; justify-content:center; font-size:13px }
+  .pan-mid{ flex:1; min-width:0; display:flex; flex-direction:column; gap:3px }
+  .pan-s{ font-family:'Fraunces',serif; font-size:15px; font-weight:600 }
+  .pan-p{ align-self:flex-start; font-family:'JetBrains Mono',monospace; font-size:9px; letter-spacing:.05em; text-transform:uppercase; color:#8C4A4A; background:rgba(140,74,74,.1); padding:2px 8px; border-radius:20px }
+  .pan-w{ font-size:12.5px; color:var(--mut); line-height:1.5 }
 </style>
 </head>
 <body>

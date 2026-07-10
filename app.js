@@ -1828,28 +1828,7 @@ function g270S(){ if(!STORE.g270) STORE.g270={sheet:{},fait:{},journal:[]};
   if(!STORE.g270.sheet) STORE.g270.sheet={}; if(!STORE.g270.fait) STORE.g270.fait={};
   if(!Array.isArray(STORE.g270.journal)) STORE.g270.journal=[]; return STORE.g270; }
 
-const G270_DEP=[
-  {cat:'Démarrage', items:[
-    {s:'Le démarreur ne lance pas', c:'Circuit électrique', k:'Batteries, masses corrodées, coupe-batterie, contacteur, démarreur.'},
-    {s:'Il lance mais le moteur ne part pas', c:'Gasoil / compression', k:'Électrovanne d\'arrêt (stop), filtre à gasoil, air dans le circuit (purger), préchauffage à froid.'},
-    {s:'Démarre mal à froid', c:'Préchauffage', k:'Réchauffeur d\'air / bougies, eau dans le gasoil, compression faible.'} ]},
-  {cat:'Moteur', items:[
-    {s:'Manque de puissance', c:'Air / gasoil', k:'Filtre à air, filtre à gasoil, prise d\'air d\'admission, turbo, injection.'},
-    {s:'Fumée noire', c:'Excès gasoil / manque d\'air', k:'Filtre à air colmaté, turbo, injection.'},
-    {s:'Fumée bleue', c:'Brûle de l\'huile', k:'Segments, turbo.'},
-    {s:'Fumée blanche', c:'Gasoil non brûlé / eau', k:'À froid : préchauffage. Sinon eau = joint de culasse (odeur, persistance).'},
-    {s:'Surchauffe', c:'Refroidissement', k:'Niveau d\'eau, thermostat bloqué, courroie, ventilateur/viscocoupleur, radiateur encrassé.'},
-    {s:'Chute de pression d\'huile', c:'Lubrification', k:'ARRÊT IMMÉDIAT. Niveau d\'huile, pompe, capteur.'} ]},
-  {cat:'Air & freins', items:[
-    {s:'La pression d\'air ne monte pas / lentement', c:'Production / fuite', k:'Compresseur, courroie, fuite (eau savonneuse), assécheur.'},
-    {s:'Eau à la purge des réservoirs', c:'Assécheur', k:'Cartouche HS ; risque de gel des valves en hiver.'},
-    {s:'Un frein traîne ou reste serré', c:'Commande / ressort', k:'Valve, correcteur de charge, ressort qui ne se desserre pas.'},
-    {s:'Freins bloqués faute d\'air', c:'Sécurité', k:'Refaire la pression d\'abord. NE JAMAIS forcer ni démonter un frein à ressort sous contrainte.'} ]},
-  {cat:'Transmission', items:[
-    {s:'Embrayage qui patine', c:'Disque', k:'Régime qui monte sans accélérer, odeur : disque usé ou souillé d\'huile (fuite de joint).'},
-    {s:'Passages de vitesses difficiles', c:'Embrayage / synchros', k:'Embrayage qui traîne (garde, commande), synchros ; vérifier le niveau d\'huile de boîte.'},
-    {s:'Vibrations / claquements en roulant', c:'Arbre', k:'Croisillons, équilibrage d\'arbre, jeu de pont.'} ]}
-];
+/* G270_DEP, G270_TUTO, G270_PANNE : fournis par g270_atelier.js (window.*). */
 const G270_TASKS=[
   {key:'purge_air', t:'Purge des réservoirs d\'air', f:'chaque jour'},
   {key:'niveaux',   t:'Niveaux (huile moteur, refroidissement)', f:'chaque semaine'},
@@ -1883,13 +1862,17 @@ function renderAtelierHub(){
   const filled=G270_FIELDS.filter(f=>(STORE.g270.sheet[f.key]||'').trim()).length;
   $('atelierSummary').textContent='Aide qui reste avec les cours : à consulter et à remplir.';
   const tiles=[
-    {v:'depannage', ic:'🩺', t:'Aide-mémoire dépannage', s:'Symptôme → cause → contrôle'},
+    {v:'depannage', ic:'🩺', t:'Aide-mémoire dépannage', s:'Touche un symptôme → tuto pas-à-pas'},
     {v:'entretien', ic:'🔧', t:'Carnet d\'entretien', s:nb?(nb+' intervention'+(nb>1?'s':'')+' notée'+(nb>1?'s':'')):'Checklist + journal'},
     {v:'fiche',     ic:'📋', t:'Fiche de mon camion', s:filled?(filled+' champ'+(filled>1?'s':'')+' rempli'+(filled>1?'s':'')):'Références & réglages'},
-    {v:'reperage',  ic:'📸', t:'Repérage des organes', s:((window.G270_PHOTOS||[]).length||0)+' photos annotées'}
+    {v:'reperage',  ic:'📸', t:'Repérage des organes', s:((window.G270_PHOTOS||[]).length||0)+' photos'}
   ];
-  $('atelierTiles').innerHTML=tiles.map(t=>'<button class="woodtile" data-av="'+t.v+'"><span class="wt-ic">'+t.ic+'</span><span class="wt-mid"><span class="wt-t">'+t.t+'</span><span class="wt-s">'+esc(t.s)+'</span></span><span class="chev">›</span></button>').join('');
+  let html='';
+  if(window.G270_PANNE) html+='<button class="panne-banner" id="panneBtn"><span class="pb-ic">⚠️</span><span class="pb-mid"><span class="pb-t">Panne en cours — démarre puis cale à ~45 s</span><span class="pb-s">Diagnostic guidé pas à pas</span></span><span class="ab-go">Ouvrir ›</span></button>';
+  html+=tiles.map(t=>'<button class="woodtile" data-av="'+t.v+'"><span class="wt-ic">'+t.ic+'</span><span class="wt-mid"><span class="wt-t">'+t.t+'</span><span class="wt-s">'+esc(t.s)+'</span></span><span class="chev">›</span></button>').join('');
+  $('atelierTiles').innerHTML=html;
   $('atelierTiles').querySelectorAll('[data-av]').forEach(b=>b.onclick=()=>openAtelierView(b.dataset.av));
+  const pb=$('panneBtn'); if(pb) pb.onclick=()=>openPanne();
   show('scAtelier',{accent:'#8C4A4A',nav:'domains'});
 }
 const ATELIER_LABEL={depannage:'dépannage',entretien:'entretien',fiche:'fiche',reperage:'repérage'};
@@ -1903,24 +1886,67 @@ function renderAtelierFlow(v){
   show('scAtelierFlow',{accent:'#8C4A4A',nav:'domains'});
 }
 function renderDepannage(){
-  let h='<p class="atf-lead">Touche un symptôme pour voir la cause probable et ce qu\'il faut contrôler.</p>';
-  G270_DEP.forEach(g=>{
-    h+='<div class="dep-cat">'+esc(g.cat)+'</div>';
+  const dep=window.G270_DEP||[];
+  let h='<p class="atf-lead">Touche un symptôme pour ouvrir le tutoriel pas-à-pas (outils, étapes, photos).</p>';
+  dep.forEach(g=>{
+    h+='<div class="dep-cat">'+esc(g.cat)+'</div><div class="mnt-list">';
     g.items.forEach(it=>{
-      h+='<details class="dep-item"><summary><span class="dep-s">'+esc(it.s)+'</span><span class="dep-c">'+esc(it.c)+'</span></summary><div class="dep-k"><b>À contrôler :</b> '+esc(it.k)+'</div></details>';
+      h+='<button class="dep-btn" data-tuto="'+esc(it.tuto)+'"><span class="dep-mid"><span class="dep-s">'+esc(it.s)+'</span><span class="dep-c">'+esc(it.c)+'</span></span><span class="chev">›</span></button>';
     });
+    h+='</div>';
   });
-  h+='<div class="atf-key"><b>Deux procédures utiles.</b><br>• <b>Purger le circuit de gasoil</b> : desserrer la vis de purge du filtre / de la pompe, actionner la pompe d\'amorçage manuelle jusqu\'à ce que le gasoil sorte sans bulles, resserrer, relancer.<br>• <b>Contrôler la pression d\'air</b> : moteur tournant, le manomètre doit monter au seuil puis se stabiliser ; une montée lente = fuite ou compresseur.</div>';
   h+='<p class="atf-note">Pense-bête sécurité : freins à ressort, injection haute pression et soudure sur châssis = un professionnel.</p>';
   $('atfBody').innerHTML=h;
+  $('atfBody').querySelectorAll('[data-tuto]').forEach(b=>b.onclick=()=>openTuto(b.dataset.tuto));
+}
+/* ---- tutoriel pas-à-pas (dépannage & entretien) ---- */
+function openTuto(id){ go(()=>renderTutoScreen(id), 'tuto'); }
+function tutoPhotosHtml(keys){ if(!keys||!keys.length) return ''; const ph=(window.G270_PHOTOS||[]);
+  let h='<div class="tuto-ph">'; keys.forEach(k=>{ const p=ph.find(x=>x.key===k); if(p) h+='<figure class="tuto-pc"><img src="'+p.img+'" data-lb="1" alt="'+esc(p.label)+'"><figcaption>'+esc(p.label)+'</figcaption></figure>'; }); return h+'</div>'; }
+function bindLb(){ $('atfBody').querySelectorAll('img[data-lb]').forEach(img=>img.onclick=()=>openLightbox(img.src)); }
+function renderTutoScreen(id){
+  mode='learn'; const t=(window.G270_TUTO||{})[id];
+  if(!t){ $('atfTitle').textContent='Tutoriel'; $('atfBody').innerHTML='<p class="atf-note">Tutoriel indisponible.</p>'; show('scAtelierFlow',{accent:'#8C4A4A',nav:'domains'}); return; }
+  $('atfTitle').textContent=t.title;
+  let h='';
+  if(t.cause) h+='<div class="tuto-top"><span class="dep-c">'+esc(t.cause)+'</span></div>';
+  if(t.context) h+='<p class="atf-lead">'+esc(t.context)+'</p>';
+  if(t.outils&&t.outils.length) h+='<div class="tuto-tools"><b>Outils</b> '+t.outils.map(esc).join(' · ')+'</div>';
+  h+='<ol class="tuto-steps">'+t.etapes.map(e=>'<li>'+esc(typeof e==='string'?e:(e.t+' — '+e.d))+'</li>').join('')+'</ol>';
+  h+=tutoPhotosHtml(t.photos);
+  if(t.securite&&t.securite!=='—') h+='<div class="tuto-secu"><b>⚠️ Sécurité</b> '+esc(t.securite)+'</div>';
+  $('atfBody').innerHTML=h; bindLb();
+  show('scAtelierFlow',{accent:'#8C4A4A',nav:'domains'});
+}
+/* ---- diagnostic de la panne en cours ---- */
+function openPanne(){ go(renderPanneScreen,'panne'); }
+function renderPanneScreen(){
+  mode='learn'; const P0=window.G270_PANNE;
+  $('atfTitle').textContent='Panne en cours';
+  if(!P0){ $('atfBody').innerHTML='<p class="atf-note">Diagnostic indisponible.</p>'; show('scAtelierFlow',{accent:'#8C4A4A',nav:'domains'}); return; }
+  let h='<div class="panne-head"><span class="pan-badge">Panne actuelle</span><h2 class="pan-title">'+esc(P0.title)+'</h2></div>';
+  h+='<p class="atf-lead">'+esc(P0.resume)+'</p>';
+  h+='<div class="dep-cat">Suspects, du plus probable au moins</div>';
+  P0.suspects.forEach((s,i)=>{ h+='<div class="pan-susp"><span class="pan-n">'+(i+1)+'</span><span class="pan-mid"><span class="pan-s">'+esc(s.n)+'</span><span class="pan-p">'+esc(s.p)+'</span><span class="pan-w">'+esc(s.why)+'</span></span></div>'; });
+  h+='<div class="dep-cat">Marche à suivre</div><ol class="tuto-steps big">';
+  P0.etapes.forEach(e=>{ h+='<li><b>'+esc(e.t)+'.</b> '+esc(e.d)+'</li>'; });
+  h+='</ol>';
+  h+=tutoPhotosHtml(P0.photos);
+  if(P0.note) h+='<div class="atf-key">'+esc(P0.note)+'</div>';
+  if(P0.photoWanted) h+='<p class="atf-note">📸 '+esc(P0.photoWanted)+'</p>';
+  h+='<button class="mnt-btn add" id="panneLog">Noter un essai dans le carnet</button>';
+  $('atfBody').innerHTML=h; bindLb();
+  const pl=$('panneLog'); if(pl) pl.onclick=()=>openAtelierView('entretien');
+  show('scAtelierFlow',{accent:'#8C4A4A',nav:'domains'});
 }
 function relDay(d){ if(!d) return 'jamais'; const t=Date.parse(d+'T00:00:00'); if(isNaN(t)) return d;
   const n=Math.floor((Date.now()-t)/86400000); if(n<=0) return "aujourd'hui"; if(n===1) return 'hier'; if(n<30) return 'il y a '+n+' j'; return 'il y a '+Math.floor(n/30)+' mois'; }
 function renderEntretien(){
   const S=g270S(); const today=new Date().toISOString().slice(0,10);
   let h='<div class="dep-cat">À faire régulièrement</div><div class="mnt-list">';
-  G270_TASKS.forEach(t=>{ const done=S.fait[t.key]; const on=!!done;
-    h+='<div class="mnt-row'+(on?' done':'')+'"><span class="mnt-mid"><span class="mnt-t">'+esc(t.t)+'</span><span class="mnt-f">'+esc(t.f)+' · fait '+relDay(done&&done.date)+(done&&done.km?(' à '+esc(String(done.km))+' km'):'')+'</span></span><button class="mnt-btn" data-fait="'+t.key+'">'+(on?'refait ✓':'Fait ✓')+'</button></div>';
+  const hasTuto=(window.G270_TUTO||{});
+  G270_TASKS.forEach(t=>{ const done=S.fait[t.key]; const on=!!done; const tut=!!hasTuto[t.key];
+    h+='<div class="mnt-row'+(on?' done':'')+'"><span class="mnt-mid'+(tut?' link':'')+'"'+(tut?' data-tuto="'+t.key+'"':'')+'><span class="mnt-t">'+esc(t.t)+(tut?' <span class="mnt-how">voir</span>':'')+'</span><span class="mnt-f">'+esc(t.f)+' · fait '+relDay(done&&done.date)+(done&&done.km?(' à '+esc(String(done.km))+' km'):'')+'</span></span><button class="mnt-btn" data-fait="'+t.key+'">'+(on?'refait ✓':'Fait ✓')+'</button></div>';
   });
   h+='</div>';
   h+='<div class="dep-cat">Journal d\'entretien</div>';
@@ -1930,6 +1956,7 @@ function renderEntretien(){
   else h+='<p class="atf-note">Aucune intervention notée pour l\'instant.</p>';
   $('atfBody').innerHTML=h;
   $('atfBody').querySelectorAll('[data-fait]').forEach(b=>b.onclick=()=>{ S.fait[b.dataset.fait]={date:today}; saveStore(); renderEntretien(); });
+  $('atfBody').querySelectorAll('.mnt-mid[data-tuto]').forEach(b=>b.onclick=()=>openTuto(b.dataset.tuto));
   const add=$('jrAdd'); if(add) add.onclick=()=>{
     const txt=($('jrText').value||'').trim(); if(!txt){ $('jrText').focus(); return; }
     const kmv=parseInt($('jrKm').value,10);

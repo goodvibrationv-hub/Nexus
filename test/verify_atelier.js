@@ -17,7 +17,7 @@ function makeEnv(seed){ const reg={}; const $id=id=>{ if(!reg[id])reg[id]=mkEl(i
   const ctx={window:{scrollTo(){},addEventListener(){},matchMedia:()=>({matches:false,addEventListener(){}}),NEXUS_VERSION:'63'},document,localStorage,console,alert:()=>{},
     setTimeout:()=>0,clearTimeout:()=>{},fetch:()=>{throw new Error('net');},Math,Date,JSON,parseInt,parseFloat,isNaN,Object,Array,String,Number,Boolean,RegExp,Set,Map};
   vm.createContext(ctx); return {ctx,reg,ls:_ls}; }
-function loadApp(env){ for(const f of ['data_core.js','content_courses.js','cards.js','g270_photos.js','app.js']) vm.runInContext(fs.readFileSync(P(f),'utf8'),env.ctx,{filename:f}); }
+function loadApp(env){ for(const f of ['data_core.js','content_courses.js','cards.js','g270_photos.js','g270_atelier.js','app.js']) vm.runInContext(fs.readFileSync(P(f),'utf8'),env.ctx,{filename:f}); }
 const store=env=>JSON.parse(env.ls.get('nexus_stable'));
 
 const env=makeEnv({mastered:{}}); loadApp(env); const c=env.ctx, R=env.reg;
@@ -32,11 +32,22 @@ const hub=R.atelierTiles.innerHTML;
 ok('A2 — le hub liste les 4 sections', /dépannage/i.test(hub)&&/entretien/i.test(hub)&&/fiche/i.test(hub.toLowerCase())&&/repérage/i.test(hub));
 ok('A3 — écran scAtelier activé', R.scAtelier.classList.contains('active'));
 
-// ---- dépannage ----
+// ---- dépannage : rangées cliquables vers un tuto ----
 c.renderAtelierFlow('depannage');
 const dep=R.atfBody.innerHTML;
 ok('A4 — dépannage : 4 familles', /Démarrage/.test(dep)&&/Moteur/.test(dep)&&/Air &amp; freins|Air &/.test(dep)&&/Transmission/.test(dep));
-ok('A5 — dépannage : contrôle + procédures', /À contrôler/.test(dep)&&/Purger le circuit de gasoil/.test(dep));
+ok('A5 — dépannage : symptômes cliquables (data-tuto)', /data-tuto="dep_nopart"/.test(dep)&&/data-tuto="dep_patine"/.test(dep));
+
+// ---- tutoriel pas-à-pas ----
+c.openTuto('dep_nopart');
+const tut=R.atfBody.innerHTML;
+ok('A5b — tuto : étapes numérotées + électrovanne + purge', /class="tuto-steps"/.test(tut)&&/électrovanne/.test(tut)&&/gasoil/.test(tut));
+
+// ---- diagnostic de la panne en cours ----
+c.openPanne();
+const pan=R.atfBody.innerHTML;
+ok('A5c — panne : suspects + marche à suivre + électrovanne', /Marche à suivre/.test(pan)&&/électrovanne/.test(pan)&&/45/.test(pan));
+ok('A5d — panne : photo de la pompe d\'injection', /<img[^>]+data-lb/.test(pan)&&/src="data:image\/jpeg/.test(pan));
 
 // ---- entretien ----
 c.renderAtelierFlow('entretien');
@@ -59,7 +70,7 @@ ok('A10 — journal persisté', (S2.journal||[]).some(e=>e.id==='jr_x'&&e.text==
 
 // ---- photos embarquées ----
 const ph=env.ctx.window.G270_PHOTOS||[];
-ok('A11 — 9 photos embarquées', ph.length===9);
+ok('A11 — 15 photos embarquées', ph.length===15);
 ok('A12 — chaque photo = data URI JPEG + libellé + description', ph.every(p=>/^data:image\/jpeg;base64,/.test(p.img)&&p.label&&p.desc&&p.cat));
 
 // ---- repérage ----

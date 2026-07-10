@@ -39,8 +39,7 @@ function persistMastered(){ Object.keys(mastered).forEach(k=>STORE.mastered[k]=[
    et des stats d'usage. Le Domaine du Freyche (chevaux, tâches, projets…) reste commun.
    STORE.mastered / STORE.srs / STORE.hardMode pointent toujours sur le profil actif :
    persistMastered() et reviewCard() écrivent donc directement dans le bon profil. */
-const ADMIN_CODE='Lavieaufreyche';
-let adminUnlocked=false;                          // déverrouillage de session, jamais persisté
+const RECOVERY_CODE='Lavieaufreyche';   // code parent de secours (déblocage d'un profil dont le code est oublié)
 function todayStr(){ return new Date().toISOString().slice(0,10); }
 function newStats(){ return { createdAt:Date.now(), lastSeen:0, reviews:0, sessions:0, days:[] }; }
 function initProfiles(){
@@ -63,7 +62,7 @@ function curProfile(){ return STORE.profiles[STORE.currentProfile]; }
 function bumpSeen(){ const p=curProfile(); if(!p) return; p.stats.lastSeen=Date.now(); const t=todayStr(); if(!p.stats.days.includes(t)) p.stats.days.push(t); }
 function activateProfile(id){
   if(!STORE.profiles[id]) id='mael';
-  STORE.currentProfile=id; adminUnlocked=false;
+  STORE.currentProfile=id;
   const p=STORE.profiles[id];
   STORE.mastered=p.mastered; STORE.srs=p.srs; STORE.hardMode=!!p.hardMode;   // partage par référence
   Object.keys(D.SKILLS).forEach(k=>{ mastered[k].clear(); (p.mastered[k]||[]).forEach(x=>mastered[k].add(x)); });
@@ -79,10 +78,10 @@ function totalPct(){let m=0,t=0;for(const k in D.SKILLS){m+=mastered[k].size;t+=
 let current=null,currentNode=null,currentSkillK=null,mode='landing';
 function show(screen,{accent='#3F5E4E',nav=''}={}){
   document.documentElement.style.setProperty('--forest',accent);
-  ['scProfiles','scLanding','scHome','scDetail','scCourse','scTest','scProgress','scStable','scGestion','scStableSection','scAnimal','scRevise','scAdmin','scWood','scWoodFlow','scAtelier','scAtelierFlow','scBackup','scEsprit','scYoga','scYogaFlow'].forEach(s=>$(s).classList.remove('active'));
+  ['scProfiles','scLock','scLanding','scHome','scDetail','scCourse','scTest','scProgress','scStable','scGestion','scStableSection','scAnimal','scRevise','scWood','scWoodFlow','scAtelier','scAtelierFlow','scBackup','scEsprit','scYoga','scYogaFlow'].forEach(s=>$(s).classList.remove('active'));
   $(screen).classList.add('active');
   buildNav(nav);
-  const bn=$('bottomnav'); if(bn) bn.style.display=(screen==='scProfiles'||screen==='scAdmin'||screen==='scBackup')?'none':'';
+  const bn=$('bottomnav'); if(bn) bn.style.display=(screen==='scProfiles'||screen==='scLock'||screen==='scBackup')?'none':'';
   if(typeof stopYoga==='function' && screen!=='scYogaFlow') stopYoga();
   window.scrollTo({top:0,behavior:'smooth'});
 }
@@ -195,7 +194,7 @@ function goLanding(){ mode='landing';
   const p=curProfile();
   if($('chipName')) $('chipName').textContent=p?p.name:'Profil';
   if($('chipAv')) $('chipAv').textContent=profileAvatar(STORE.currentProfile);
-  if($('doorAdmin')) $('doorAdmin').style.display=(p&&p.role==='admin')?'block':'none';
+  if($('pinBtn')) $('pinBtn').textContent=(p&&p.pin)?'🔒 Modifier / retirer le code':'🔒 Protéger ce profil par un code';
   show('scLanding',{accent:'#3F5E4E',nav:'landing'});
 }
 function goHome(){ goRoot(goLanding,'accueil'); }
@@ -204,7 +203,7 @@ $('doorStable').onclick=()=>navGo('stable');
 if($('doorWood')) $('doorWood').onclick=()=>navGo('wood');
 if($('doorEsprit')) $('doorEsprit').onclick=()=>navGo('esprit');
 if($('profileChip')) $('profileChip').onclick=()=>goProfiles();
-if($('doorAdmin')) $('doorAdmin').onclick=()=>openAdmin();
+if($('pinBtn')) $('pinBtn').onclick=()=>{ const id=STORE.currentProfile; if(id) startSetPin(id, goLanding); };
 
 /* ====== choix de profil (écran racine) ====== */
 function goProfiles(){ mode='landing'; goRoot(renderProfiles,'profils'); }
@@ -214,10 +213,10 @@ function renderProfiles(){
     const b=document.createElement('button'); b.className='pcard'+(p.role==='admin'?' admin':'');
     const gp=globalPct(p);
     b.innerHTML='<span class="pv">'+profileAvatar(id)+'</span>'+
-      '<span class="pmid"><span class="pnm">'+esc(p.name)+(p.role==='admin'?' <span class="prole">admin</span>':'')+'</span>'+
+      '<span class="pmid"><span class="pnm">'+esc(p.name)+(p.pin?'<span class="plock">🔒</span>':'')+'</span>'+
       '<span class="psub">'+gp+'% de progression'+(p.stats&&p.stats.lastSeen?' · vu '+relDate(p.stats.lastSeen):'')+'</span></span>'+
       '<span class="parw">→</span>';
-    b.onclick=()=>{ activateProfile(id); goHome(); };
+    b.onclick=()=>openProfile(id);
     g.appendChild(b);
   });
   show('scProfiles',{accent:'#3F5E4E',nav:''});
@@ -226,24 +225,60 @@ function globalPct(p){ let m=0,t=0; for(const k in D.SKILLS){ m+=(p.mastered[k]|
 function relDate(ts){ if(!ts) return 'jamais'; const d=Math.floor((Date.now()-ts)/86400000);
   if(d<=0) return "aujourd'hui"; if(d===1) return 'hier'; if(d<7) return 'il y a '+d+' j'; if(d<30) return 'il y a '+Math.floor(d/7)+' sem'; return 'il y a '+Math.floor(d/30)+' mois'; }
 
-/* ====== supervision (admin, protégée par code) ====== */
-function openAdmin(){ go(renderAdmin,'supervision'); }
-function renderAdmin(){
-  const unlocked=adminUnlocked;
-  $('adminGate').style.display=unlocked?'none':'block';
-  $('adminBoard').style.display=unlocked?'block':'none';
-  if(!unlocked){
-    if($('adminCode')) $('adminCode').value='';
-    if($('adminErr')) $('adminErr').style.display='none';
-  } else { renderAdminBoard(); }
-  show('scAdmin',{accent:'#8A5A3C',nav:''});
+/* ====== verrou par code (PIN 4 chiffres, par profil) ======
+   Sécurité locale : le code protège l'ACCÈS à un profil sur l'appareil. Il est
+   stocké empreinté (non en clair), mais comme tout est hors-ligne sur le
+   téléphone, ce n'est pas un chiffrement des données : c'est un verrou d'entrée.
+   Le code parent de secours (RECOVERY_CODE) débloque un profil en cas d'oubli. */
+function hashPin(s){ s=String(s); let h=5381; for(let i=0;i<s.length;i++) h=(((h<<5)+h)^s.charCodeAt(i))>>>0; return 'p'+h.toString(36); }
+let lock=null;   // {mode:'unlock'|'set'|'confirm', profileId, buf, first, cb}
+function renderKeypad(){ const kp=$('keypad'); if(!kp) return;
+  const keys=['1','2','3','4','5','6','7','8','9','','0','⌫'];
+  kp.innerHTML=keys.map(k=>k===''?'<span class="kp-empty"></span>':'<button class="kp-btn" data-k="'+k+'">'+k+'</button>').join('');
+  kp.querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>pinPress(b.dataset.k));
 }
-if($('adminEnter')) $('adminEnter').onclick=()=>{
-  const v=($('adminCode').value||'').trim();
-  if(v===ADMIN_CODE){ adminUnlocked=true; renderAdmin(); }
-  else { $('adminErr').style.display='block'; }
-};
-if($('adminCode')) $('adminCode').onkeydown=(e)=>{ if(e&&e.key==='Enter') $('adminEnter').onclick(); };
+function lockDots(){ const d=$('lockDots'); if(!d) return; const n=(lock&&lock.buf.length)||0; let h=''; for(let i=0;i<4;i++) h+='<span class="dot'+(i<n?' on':'')+'"></span>'; d.innerHTML=h; }
+function lockShake(msg){ if($('lockMsg')) $('lockMsg').textContent=msg||''; if(lock) lock.buf=''; lockDots();
+  const w=$('lockWrap'); if(w&&w.classList){ w.classList.remove('shake'); void (w.offsetWidth||0); w.classList.add('shake'); } }
+function pinPress(k){ if(!lock) return;
+  if(k==='⌫'){ lock.buf=lock.buf.slice(0,-1); if($('lockMsg'))$('lockMsg').textContent=''; lockDots(); return; }
+  if(lock.buf.length>=4) return;
+  lock.buf+=k; lockDots();
+  if(lock.buf.length===4){ const done=()=>pinComplete(); (typeof setTimeout==='function')?setTimeout(done,110):done(); }
+}
+function pinComplete(){ if(!lock) return; const code=lock.buf; lock.buf='';
+  if(lock.mode==='unlock'){ const p=STORE.profiles[lock.profileId];
+    if(p&&p.pin===hashPin(code)) enterProfile(lock.profileId); else lockShake('Code incorrect'); }
+  else if(lock.mode==='set'){ lock.first=code; lock.mode='confirm';
+    if($('lockTitle'))$('lockTitle').textContent='Confirme le code'; if($('lockSub'))$('lockSub').textContent='Retape les 4 chiffres'; if($('lockMsg'))$('lockMsg').textContent=''; lockDots(); }
+  else if(lock.mode==='confirm'){
+    if(code===lock.first){ const p=STORE.profiles[lock.profileId]; p.pin=hashPin(code); saveStore(); const cb=lock.cb; lock=null; (cb||goLanding)(); }
+    else { lock.mode='set'; lock.first=''; if($('lockTitle'))$('lockTitle').textContent='Choisis un code'; lockShake('Les deux codes diffèrent'); } }
+}
+function openProfile(id){ const p=STORE.profiles[id]; if(!p) return; if(p.pin) startUnlock(id); else enterProfile(id); }
+function enterProfile(id){ lock=null; activateProfile(id); goHome(); }
+function startUnlock(id){ const p=STORE.profiles[id]; if(!p) return; lock={mode:'unlock',profileId:id,buf:'',first:''};
+  if($('lockAv'))$('lockAv').textContent=profileAvatar(id); if($('lockTitle'))$('lockTitle').textContent=p.name;
+  if($('lockSub'))$('lockSub').textContent='Entre ton code à 4 chiffres'; if($('lockMsg'))$('lockMsg').textContent='';
+  const f=$('lockForgot'); if(f){ f.style.display='block'; f.textContent='Code oublié ?'; f.onclick=recoverPin; }
+  const c=$('lockCancel'); if(c) c.onclick=()=>goProfiles();
+  renderKeypad(); lockDots(); show('scLock',{accent:'#3F5E4E',nav:''});
+}
+function startSetPin(id, cb){ const p=STORE.profiles[id]; if(!p) return; lock={mode:'set',profileId:id,buf:'',first:'',cb:cb};
+  if($('lockAv'))$('lockAv').textContent=profileAvatar(id); if($('lockTitle'))$('lockTitle').textContent='Choisis un code';
+  if($('lockSub'))$('lockSub').textContent='4 chiffres pour protéger « '+p.name+' »'; if($('lockMsg'))$('lockMsg').textContent='';
+  const f=$('lockForgot');
+  if(f){ if(p.pin){ f.style.display='block'; f.textContent='Retirer le code'; f.onclick=()=>{ delete p.pin; saveStore(); const g=cb||goLanding; lock=null; g(); }; }
+         else { f.style.display='none'; f.onclick=null; } }
+  const c=$('lockCancel'); if(c) c.onclick=()=>{ const g=cb||goLanding; lock=null; g(); };
+  renderKeypad(); lockDots(); show('scLock',{accent:'#3F5E4E',nav:''});
+}
+function recoverPin(){ if(!lock) return; const id=lock.profileId;
+  const code=(typeof prompt==='function')?prompt('Code parent de secours'):null;
+  if(code==null) return;
+  if(String(code).trim()===RECOVERY_CODE){ const p=STORE.profiles[id]; if(p) delete p.pin; saveStore(); enterProfile(id); }
+  else lockShake('Code parent incorrect');
+}
 
 /* stats d'un profil (lecture seule ; réutilise LEVELS/NEXUS_CARDS) */
 function profileStats(p){
@@ -262,46 +297,6 @@ function profileStats(p){
   const prop=totalN?masteredN/totalN:0; let li=0; for(let i=0;i<LEVELS.length;i++){ if(prop>=LEVELS[i][0]) li=i; }
   const weakest=Object.entries(domPct).filter(([k])=>(p.mastered[k]||[]).length<D.SKILLS[k].nodes.length).sort((a,b)=>a[1]-b[1])[0];
   return { level:LEVELS[li][1], glob:Math.round(prop*100), masteredN, totalN, dDone, nDom, domPct, solide, fragile, retard, vue, jamais, weakest, stats:p.stats||newStats() };
-}
-function renderAdminBoard(){
-  const users=Object.entries(STORE.profiles);
-  $('adminSub').textContent=users.length+' profils · progression, révisions et lacunes.';
-  const wrap=$('adminCards'); wrap.innerHTML='';
-  users.forEach(([id,p])=>{
-    const st=profileStats(p); const S=st.stats;
-    const card=document.createElement('div'); card.className='ucard'+(p.role==='admin'?' admin':'');
-    const doms=Object.entries(st.domPct).sort((a,b)=>b[1]-a[1])
-      .map(([k,v])=>'<div class="udom"><span class="dn">'+esc(D.SKILLS[k].name)+'</span><span class="db"><i style="width:'+v+'%;background:'+D.SKILLS[k].color+'"></i></span><span class="dp">'+v+'%</span></div>').join('');
-    const stat=(v,l,warn)=>'<div class="ustat'+(warn?' warn':'')+'"><div class="sv">'+v+'</div><div class="sl">'+l+'</div></div>';
-    const weak=st.weakest?('« '+D.SKILLS[st.weakest[0]].name+' » ('+st.weakest[1]+'%)'):'—';
-    card.innerHTML=
-      '<div class="uhead"><span class="uav">'+profileAvatar(id)+'</span><span class="unm">'+esc(p.name)+'</span><span class="ulvl">'+st.level+'</span></div>'+
-      '<div class="uglob"><span class="ubig">'+st.glob+'%</span><span class="ubar"><i style="width:'+st.glob+'%"></i></span></div>'+
-      '<div class="usect">Progression par domaine</div><div class="udoms">'+doms+'</div>'+
-      '<div class="usect">Activité de révision</div><div class="ustats">'+
-        stat((S.reviews||0),'révisions faites')+stat((S.sessions||0),'séries lancées')+
-        stat((S.days?S.days.length:0),'jours actifs')+stat(relDate(S.lastSeen),'dernière activité')+
-      '</div>'+
-      '<div class="usect">Lacunes</div><div class="ustats">'+
-        stat(st.totalN-st.masteredN,'nœuds à débloquer',st.totalN-st.masteredN>0)+
-        stat(st.fragile,'fiches fragiles',st.fragile>0)+
-        stat(st.retard,'fiches en retard',st.retard>0)+
-        stat(weak,'domaine le plus faible')+
-      '</div>'+
-      '<div class="uacts"><button data-rename="'+id+'">Renommer</button><button class="danger" data-reset="'+id+'">Réinitialiser la progression</button></div>';
-    wrap.appendChild(card);
-  });
-  wrap.querySelectorAll('[data-rename]').forEach(b=>b.onclick=()=>{
-    const id=b.dataset.rename, p=STORE.profiles[id];
-    const nv=(typeof prompt==='function')?prompt('Nouveau nom du profil',p.name):null;
-    if(renameProfile(id,nv)) renderAdminBoard();
-  });
-  wrap.querySelectorAll('[data-reset]').forEach(b=>b.onclick=()=>{
-    const id=b.dataset.reset;
-    if(b.classList.contains('armed')){ resetProfile(id); renderAdminBoard(); return; }
-    b.classList.add('armed'); b.textContent='Confirmer ? (toucher à nouveau)';
-    setTimeout(()=>{ if(b&&b.classList.contains('armed')){ b.classList.remove('armed'); b.textContent='Réinitialiser la progression'; } },4000);
-  });
 }
 function renameProfile(id,name){ const p=STORE.profiles[id]; if(p&&name&&String(name).trim()){ p.name=String(name).trim(); saveStore(); return true; } return false; }
 function resetProfile(id){ const p=STORE.profiles[id]; if(!p) return;

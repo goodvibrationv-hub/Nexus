@@ -787,6 +787,26 @@
   .pan-s{ font-family:'Fraunces',serif; font-size:15px; font-weight:600 }
   .pan-p{ align-self:flex-start; font-family:'JetBrains Mono',monospace; font-size:9px; letter-spacing:.05em; text-transform:uppercase; color:#8C4A4A; background:rgba(140,74,74,.1); padding:2px 8px; border-radius:20px }
   .pan-w{ font-size:12.5px; color:var(--mut); line-height:1.5 }
+  /* verrou PIN */
+  #scLock{ display:none }
+  #scLock.active{ display:flex; flex-direction:column; min-height:calc(100dvh - 30px); }
+  .lockwrap{ margin:auto; width:100%; max-width:340px; display:flex; flex-direction:column; align-items:center; text-align:center; padding:20px 8px }
+  .lock-av{ font-size:44px; margin-bottom:6px }
+  .lock-title{ font-family:'Fraunces',serif; font-size:24px; font-weight:600 }
+  .lock-sub{ color:var(--mut); font-size:13px; margin-top:4px }
+  .lock-dots{ display:flex; gap:16px; margin:22px 0 6px }
+  .lock-dots .dot{ width:15px; height:15px; border-radius:50%; border:2px solid var(--line2); background:transparent; transition:background .12s, border-color .12s }
+  .lock-dots .dot.on{ background:var(--forest); border-color:var(--forest) }
+  .lock-msg{ min-height:18px; color:#B4453A; font-size:12.5px; margin-bottom:8px }
+  .keypad{ display:grid; grid-template-columns:repeat(3,1fr); gap:12px; width:100%; margin-top:4px }
+  .kp-btn{ aspect-ratio:1.5; border:1px solid var(--line2); border-radius:14px; background:var(--surf); font-family:'Fraunces',serif; font-size:24px; color:var(--ink); cursor:pointer; box-shadow:var(--elev-1) }
+  .kp-btn:active{ transform:scale(.96); background:var(--paper2) }
+  .kp-empty{ visibility:hidden }
+  .lock-2nd{ margin-top:18px; background:none; border:none; color:var(--forest); font:inherit; font-size:13px; cursor:pointer; text-decoration:underline }
+  .lock-cancel{ margin-top:8px; background:none; border:none; color:var(--mut); font:inherit; font-size:12.5px; cursor:pointer }
+  .lockwrap.shake{ animation:shk .3s }
+  @keyframes shk{ 0%,100%{transform:translateX(0)} 20%,60%{transform:translateX(-8px)} 40%,80%{transform:translateX(8px)} }
+  .pcard .plock{ margin-left:6px; font-size:11px; opacity:.7 }
 </style>
 </head>
 <body>
@@ -800,6 +820,20 @@
     <div class="profilepick" id="profileList"></div>
   </section>
 
+  <!-- VERROU : code d'accès (PIN) -->
+  <section class="screen" id="scLock">
+    <div class="lockwrap" id="lockWrap">
+      <span class="lock-av" id="lockAv">👤</span>
+      <h1 class="lock-title" id="lockTitle">Code d'accès</h1>
+      <p class="lock-sub" id="lockSub"></p>
+      <div class="lock-dots" id="lockDots"></div>
+      <div class="lock-msg" id="lockMsg"></div>
+      <div class="keypad" id="keypad"></div>
+      <button class="lock-2nd" id="lockForgot" style="display:none"></button>
+      <button class="lock-cancel" id="lockCancel">Retour</button>
+    </div>
+  </section>
+
   <!-- LANDING : two doors -->
   <section class="screen" id="scLanding">
     <button class="profilechip" id="profileChip"><span class="pc-av" id="chipAv">👤</span><span class="pc-nm" id="chipName">Profil</span><span class="pc-x">Changer</span></button>
@@ -810,7 +844,7 @@
       <button class="htile esprit" id="doorEsprit"><span class="ti">🧘</span><h2>Esprit &amp; Matières</h2><span class="ts">Yoga &amp; pratiques</span></button>
       <button class="htile wood" id="doorWood"><span class="ti">🪵</span><h2>Projet Bois</h2><span class="ts">Grumes &amp; stock</span></button>
     </div>
-    <button class="supervlink" id="doorAdmin" style="display:none">🔐 Supervision &amp; comptes</button>
+    <button class="supervlink" id="pinBtn">🔒 Code d'accès</button>
     <button class="supervlink" id="doorBackup">⤓ Sauvegarde des données</button>
   </section>
 
@@ -986,22 +1020,6 @@
     <button class="addbtn" id="anPhotoAdd">📷 Ajouter une photo</button>
     <input type="file" id="anPhotoInput" accept="image/*" style="display:none">
     <div class="photogrid" id="anPhotos"></div>
-  </section>
-
-  <!-- SUPERVISION (admin) -->
-  <section class="screen" id="scAdmin">
-    <div id="adminGate">
-      <h1 class="title">Supervision</h1>
-      <p class="intro">Espace réservé. Saisis le code d'accès pour suivre l'utilisation et gérer les comptes.</p>
-      <div class="field"><label>Code d'accès</label><input id="adminCode" type="password" placeholder="••••••••" autocomplete="off"></div>
-      <button class="save adminGo" id="adminEnter">Entrer</button>
-      <div class="adminErr" id="adminErr" style="display:none">Code incorrect.</div>
-    </div>
-    <div id="adminBoard" style="display:none">
-      <h1 class="title">Supervision</h1>
-      <p class="intro" id="adminSub"></p>
-      <div id="adminCards"></div>
-    </div>
   </section>
 
   <!-- PROJET BOIS -->

@@ -28,11 +28,62 @@ function loadStore(){
   Object.keys(D.SKILLS).forEach(k=>{ if(!STORE.mastered[k]) STORE.mastered[k]=[]; });
 }
 let _saveWarned=false;
-function saveStore(){ try{ localStorage.setItem('nexus_stable', JSON.stringify(STORE)); _saveWarned=false; return true; }
+function saveStore(){ if(cryptoOn){ scheduleVaultSave(); return true; }
+  try{ localStorage.setItem('nexus_stable', JSON.stringify(STORE)); _saveWarned=false; return true; }
   catch(e){ if(!_saveWarned){ _saveWarned=true; try{ alert('⚠️ Mémoire de l’appareil pleine : ta dernière saisie n’a pas pu être enregistrée (elle sera perdue au rechargement).\n\nLibère de la place : supprime des photos (fiches animaux ou grumes), puis réessaie.'); }catch(_){} } return false; } }
 loadStore();
 const mastered={}; Object.keys(D.SKILLS).forEach(k=>mastered[k]=new Set());
 function persistMastered(){ Object.keys(mastered).forEach(k=>STORE.mastered[k]=[...mastered[k]]); saveStore(); }
+
+/* ====== chiffrement des données (coffre AES-GCM, clé dérivée d'une phrase) ======
+   Chiffrement AU REPOS, optionnel. Par défaut l'app reste en clair (comportement
+   inchangé). Une fois activé, tout le STORE est chiffré dans localStorage sous une
+   clé de données (DK) aléatoire, elle-même « enveloppée » par une phrase secrète
+   (PBKDF2-SHA256 → AES-GCM) et par le code parent de secours. Web Crypto natif. */
+const VAULT_KEY='nexus_vault';
+let cryptoOn=false, cryptoLocked=false, sessionDK=null, _vaultSaveTimer=null;
+function _subtle(){ try{ if(typeof crypto!=='undefined'&&crypto.subtle) return crypto; if(typeof window!=='undefined'&&window.crypto&&window.crypto.subtle) return window.crypto; }catch(e){} return null; }
+function cryptoAvailable(){ return !!_subtle(); }
+function _b64e(buf){ const b=new Uint8Array(buf); let s=''; for(let i=0;i<b.length;i++) s+=String.fromCharCode(b[i]); return btoa(s); }
+function _b64d(str){ const s=atob(str); const b=new Uint8Array(s.length); for(let i=0;i<s.length;i++) b[i]=s.charCodeAt(i); return b; }
+function _sb(s){ return new TextEncoder().encode(String(s)); }
+function _bs(b){ return new TextDecoder().decode(b); }
+async function _derive(pass, saltBytes){ const c=_subtle();
+  const base=await c.subtle.importKey('raw', _sb(pass), 'PBKDF2', false, ['deriveKey']);
+  return c.subtle.deriveKey({name:'PBKDF2', salt:saltBytes, iterations:150000, hash:'SHA-256'}, base, {name:'AES-GCM', length:256}, false, ['encrypt','decrypt']); }
+async function _importDK(raw){ return _subtle().subtle.importKey('raw', raw, {name:'AES-GCM', length:256}, false, ['encrypt','decrypt']); }
+async function _enc(key, bytes){ const c=_subtle(); const iv=c.getRandomValues(new Uint8Array(12)); const ct=await c.subtle.encrypt({name:'AES-GCM', iv}, key, bytes); return { iv:_b64e(iv), ct:_b64e(ct) }; }
+async function _dec(key, ivB64, ctB64){ const pt=await _subtle().subtle.decrypt({name:'AES-GCM', iv:_b64d(ivB64)}, key, _b64d(ctB64)); return new Uint8Array(pt); }
+async function _wrap(pass, dkRaw){ const c=_subtle(); const salt=c.getRandomValues(new Uint8Array(16)); const k=await _derive(pass, salt); const w=await _enc(k, dkRaw); return { salt:_b64e(salt), iv:w.iv, ct:w.ct }; }
+async function _unwrap(wrap, pass){ try{ const k=await _derive(pass, _b64d(wrap.salt)); return await _dec(k, wrap.iv, wrap.ct); }catch(e){ return null; } }
+async function enableEncryption(pass){ const c=_subtle(); if(!c) throw new Error('crypto indisponible');
+  const dkRaw=c.getRandomValues(new Uint8Array(32));
+  const wraps={ code:await _wrap(pass, dkRaw), rec:await _wrap(RECOVERY_CODE, dkRaw) };
+  const dk=await _importDK(dkRaw);
+  const vault={ v:1, wraps, data:await _enc(dk, _sb(JSON.stringify(STORE))) };
+  // vérification round-trip AVANT d'effacer le clair
+  const back=await _unwrap(vault.wraps.code, pass); if(!back) throw new Error('verify');
+  const chk=JSON.parse(_bs(await _dec(await _importDK(back), vault.data.iv, vault.data.ct)));
+  if(!chk||typeof chk!=='object') throw new Error('verify');
+  localStorage.setItem(VAULT_KEY, JSON.stringify(vault));
+  localStorage.removeItem('nexus_stable');        // seulement après écriture + vérification
+  cryptoOn=true; cryptoLocked=false; sessionDK=dk; return true; }
+async function unlockVault(pass, useRecovery){
+  const raw=localStorage.getItem(VAULT_KEY); if(!raw) return false; const vault=JSON.parse(raw);
+  let dkRaw = useRecovery ? await _unwrap(vault.wraps.rec, pass) : await _unwrap(vault.wraps.code, pass);
+  if(!dkRaw && vault.wraps.rec) dkRaw=await _unwrap(vault.wraps.rec, pass);   // le code parent marche aussi
+  if(!dkRaw) return false;
+  let obj; try{ obj=JSON.parse(_bs(await _dec(await _importDK(dkRaw), vault.data.iv, vault.data.ct))); }catch(e){ return false; }
+  hydrateStore(obj); sessionDK=await _importDK(dkRaw); cryptoOn=true; cryptoLocked=false; return true; }
+async function disableEncryption(){ if(!cryptoOn) return true;
+  localStorage.setItem('nexus_stable', JSON.stringify(STORE)); localStorage.removeItem(VAULT_KEY);
+  cryptoOn=false; cryptoLocked=false; sessionDK=null; return true; }
+function scheduleVaultSave(){ if(!cryptoOn||!sessionDK||_vaultSaveTimer) return;
+  const run=async()=>{ _vaultSaveTimer=null; try{ const raw=localStorage.getItem(VAULT_KEY); if(!raw) return; const vault=JSON.parse(raw);
+    vault.data=await _enc(sessionDK, _sb(JSON.stringify(STORE))); localStorage.setItem(VAULT_KEY, JSON.stringify(vault)); }catch(e){} };
+  if(typeof setTimeout==='function') _vaultSaveTimer=setTimeout(run,350); else run(); }
+function hydrateStore(obj){ Object.keys(STORE).forEach(k=>{ delete STORE[k]; }); Object.assign(STORE, obj); if(!STORE.mastered) STORE.mastered={}; }
+if(localStorage.getItem(VAULT_KEY)){ cryptoOn=true; cryptoLocked=true; }   // coffre présent → attendre le déverrouillage
 
 /* ====== profils (multi-utilisateur local + supervision) ======
    Chaque profil possède SA progression d'apprentissage (mastered + srs + hardMode)
@@ -68,8 +119,7 @@ function activateProfile(id){
   Object.keys(D.SKILLS).forEach(k=>{ mastered[k].clear(); (p.mastered[k]||[]).forEach(x=>mastered[k].add(x)); });
   bumpSeen(); saveStore();
 }
-initProfiles();
-activateProfile(STORE.currentProfile);
+if(!cryptoLocked){ initProfiles(); activateProfile(STORE.currentProfile); }
 
 function pct(k){return Math.round(mastered[k].size/D.SKILLS[k].nodes.length*100);}
 function totalPct(){let m=0,t=0;for(const k in D.SKILLS){m+=mastered[k].size;t+=D.SKILLS[k].nodes.length;}return Math.round(m/t*100);}
@@ -78,10 +128,10 @@ function totalPct(){let m=0,t=0;for(const k in D.SKILLS){m+=mastered[k].size;t+=
 let current=null,currentNode=null,currentSkillK=null,mode='landing';
 function show(screen,{accent='#3F5E4E',nav=''}={}){
   document.documentElement.style.setProperty('--forest',accent);
-  ['scProfiles','scLock','scLanding','scHome','scDetail','scCourse','scTest','scProgress','scStable','scGestion','scStableSection','scAnimal','scRevise','scWood','scWoodFlow','scAtelier','scAtelierFlow','scBackup','scEsprit','scYoga','scYogaFlow'].forEach(s=>$(s).classList.remove('active'));
+  ['scProfiles','scLock','scVault','scLanding','scHome','scDetail','scCourse','scTest','scProgress','scStable','scGestion','scStableSection','scAnimal','scRevise','scWood','scWoodFlow','scAtelier','scAtelierFlow','scBackup','scEsprit','scYoga','scYogaFlow'].forEach(s=>$(s).classList.remove('active'));
   $(screen).classList.add('active');
   buildNav(nav);
-  const bn=$('bottomnav'); if(bn) bn.style.display=(screen==='scProfiles'||screen==='scLock'||screen==='scBackup')?'none':'';
+  const bn=$('bottomnav'); if(bn) bn.style.display=(screen==='scProfiles'||screen==='scLock'||screen==='scVault'||screen==='scBackup')?'none':'';
   if(typeof stopYoga==='function' && screen!=='scYogaFlow') stopYoga();
   window.scrollTo({top:0,behavior:'smooth'});
 }
@@ -552,7 +602,7 @@ if(!STORE.seedProjects){
     .forEach((title,i)=>{ if(!STORE.projects.some(p=>(p.title||'').trim().toLowerCase()===title.toLowerCase())) STORE.projects.push({ id:'pj_seed_'+i, title, detail:'', done:false }); });
   STORE.seedProjects=true; saveStore();
 }
-function saveStoreOk(){ try{ localStorage.setItem('nexus_stable', JSON.stringify(STORE)); return true; }catch(e){ return false; } }
+function saveStoreOk(){ if(cryptoOn){ scheduleVaultSave(); return true; } try{ localStorage.setItem('nexus_stable', JSON.stringify(STORE)); return true; }catch(e){ return false; } }
 
 const STABLE_MENU=[
   {key:'projects', ic:'🧰', t:'Projets', count:()=>{const td=STORE.projects.filter(p=>!p.done).length; return td?td+' à faire':STORE.projects.length+' projets';}},
@@ -1095,8 +1145,8 @@ if($('modeSafety')) $('modeSafety').onclick=()=>{ startQueue(interleave(dueCards
 
 /* ====== sauvegarde / restauration + jauge de stockage ====== */
 const APP_VERSION=(typeof window!=='undefined'&&window.NEXUS_VERSION)||'?';
-function storageBytes(){ try{ return new Blob([localStorage.getItem('nexus_stable')||'']).size; }catch(e){ try{ return (localStorage.getItem('nexus_stable')||'').length; }catch(_){ return 0; } } }
-function backupData(){ let store={}; try{ store=JSON.parse(localStorage.getItem('nexus_stable')||'{}'); }catch(e){} return { app:'nexus-learn', version:APP_VERSION, exportedAt:new Date().toISOString(), store }; }
+function storageBytes(){ const key=cryptoOn?VAULT_KEY:'nexus_stable'; try{ return new Blob([localStorage.getItem(key)||'']).size; }catch(e){ try{ return (localStorage.getItem(key)||'').length; }catch(_){ return 0; } } }
+function backupData(){ let store={}; try{ store=cryptoOn?JSON.parse(JSON.stringify(STORE)):JSON.parse(localStorage.getItem('nexus_stable')||'{}'); }catch(e){} return { app:'nexus-learn', version:APP_VERSION, exportedAt:new Date().toISOString(), store }; }
 function applyBackup(obj){ const store=(obj&&(obj.store||obj.data))||obj; if(!store||typeof store!=='object'||Array.isArray(store)) return false; try{ localStorage.setItem('nexus_stable', JSON.stringify(store)); return true; }catch(e){ return false; } }
 function exportBackup(){ try{ const blob=new Blob([JSON.stringify(backupData(),null,2)],{type:'application/json'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='nexus-sauvegarde-'+new Date().toISOString().slice(0,10)+'.json'; document.body.appendChild(a); a.click(); setTimeout(()=>{ if(a.parentNode)a.parentNode.removeChild(a); URL.revokeObjectURL(url); },200); }catch(e){ alert('Export impossible sur ce navigateur.'); } }
 function importBackup(file, cb){ const r=new FileReader(); r.onload=e=>{ let ok=false; try{ ok=applyBackup(JSON.parse(e.target.result)); }catch(err){ ok=false; } cb(ok); }; r.onerror=()=>cb(false); r.readAsText(file); }
@@ -1104,12 +1154,67 @@ function renderBackup(){ mode='landing';
   const bytes=storageBytes(); const ko=Math.round(bytes/1024); const budget=5*1024*1024; const pct=Math.min(100,Math.round(bytes/budget*100));
   const warn=pct>80;
   $('storageBox').innerHTML='<div class="sg-top"><span>Espace utilisé</span><b>≈ '+ko+' Ko</b></div><div class="sg-bar"><i style="width:'+Math.max(2,pct)+'%'+(warn?';background:#B4453A':'')+'"></i></div><div class="sg-sub">'+(warn?'Bientôt plein — exporte puis supprime des photos.':'sur ~5 Mo disponibles sur cet appareil')+'</div>';
+  renderCryptoBox();
   show('scBackup',{accent:'#3F5E4E',nav:''});
+}
+function renderCryptoBox(){ const box=$('cryptoBox'); if(!box) return;
+  if(!cryptoAvailable()){ box.innerHTML='<div class="crypto-row"><span>🔐 Chiffrement</span><span class="crypto-off">non disponible sur ce navigateur</span></div>'; return; }
+  if(cryptoOn){
+    box.innerHTML='<div class="crypto-row"><span>🔐 Données chiffrées</span><span class="crypto-badge">activé</span></div><button class="miniBtn" id="btnCryptoOff">Désactiver le chiffrement</button>';
+    const b=$('btnCryptoOff'); if(b) b.onclick=async()=>{ if(!confirm('Désactiver le chiffrement ? Les données seront de nouveau stockées en clair sur cet appareil.')) return; await disableEncryption(); alert('Chiffrement désactivé.'); renderBackup(); };
+  } else {
+    box.innerHTML='<button class="save" id="btnCryptoOn" style="width:100%">🔐 Chiffrer mes données</button><div class="backup-note">Choisis une phrase secrète : les données seront illisibles sans elle. <b>Exporte d’abord une sauvegarde</b> par sécurité — une phrase perdue = données irrécupérables.</div>';
+    const b=$('btnCryptoOn'); if(b) b.onclick=()=>startEnableEncryption();
+  }
 }
 if($('doorBackup')) $('doorBackup').onclick=()=>go(renderBackup,'sauvegarde');
 if($('btnExport')) $('btnExport').onclick=exportBackup;
 if($('btnImport')) $('btnImport').onclick=()=>$('importInput').click();
 if($('importInput')) $('importInput').onchange=e=>{ const f=e.target.files&&e.target.files[0]; if(f) importBackup(f, ok=>{ if(ok){ alert('Sauvegarde restaurée. L’app va se recharger.'); try{ location.reload(); }catch(_){} } else alert('Fichier de sauvegarde invalide.'); }); e.target.value=''; };
+
+/* ---- écran coffre (phrase secrète) : déverrouillage au démarrage & activation ---- */
+let vaultMode='unlock';
+function _vq(id){ return $(id); }
+function startVaultUnlock(){ vaultMode='unlock';
+  if($('vaultTitle')) $('vaultTitle').textContent='Données chiffrées';
+  if($('vaultSub')) $('vaultSub').textContent='Entre ta phrase secrète pour ouvrir l’application.';
+  if($('vaultPass')){ $('vaultPass').value=''; $('vaultPass').placeholder='Phrase secrète'; }
+  if($('vaultPass2')) $('vaultPass2').style.display='none';
+  if($('vaultMsg')) $('vaultMsg').textContent='';
+  if($('vaultGo')) $('vaultGo').textContent='Déverrouiller';
+  const a=$('vaultAlt'); if(a){ a.style.display='block'; a.textContent='Utiliser le code parent'; a.onclick=()=>{ vaultMode='recover'; if($('vaultSub'))$('vaultSub').textContent='Entre le code parent de secours.'; if($('vaultPass'))$('vaultPass').placeholder='Code parent'; a.style.display='none'; }; }
+  show('scVault',{accent:'#3F5E4E',nav:''});
+}
+function startEnableEncryption(){ vaultMode='enable';
+  if($('vaultTitle')) $('vaultTitle').textContent='Chiffrer mes données';
+  if($('vaultSub')) $('vaultSub').textContent='Choisis une phrase secrète (6 caractères minimum). Note-la : sans elle, tes données seront illisibles.';
+  if($('vaultPass')){ $('vaultPass').value=''; $('vaultPass').placeholder='Phrase secrète'; }
+  if($('vaultPass2')){ $('vaultPass2').value=''; $('vaultPass2').placeholder='Confirme la phrase'; $('vaultPass2').style.display='block'; }
+  if($('vaultMsg')) $('vaultMsg').textContent='';
+  if($('vaultGo')) $('vaultGo').textContent='Activer le chiffrement';
+  const a=$('vaultAlt'); if(a){ a.style.display='block'; a.textContent='Annuler'; a.onclick=()=>go(renderBackup,'sauvegarde'); }
+  go(()=>show('scVault',{accent:'#3F5E4E',nav:''}), 'chiffrement');
+}
+function vaultErr(m){ if($('vaultMsg')) $('vaultMsg').textContent=m||''; }
+async function vaultSubmit(){
+  const pass=($('vaultPass')&&$('vaultPass').value)||'';
+  if(vaultMode==='enable'){
+    const p2=($('vaultPass2')&&$('vaultPass2').value)||'';
+    if(pass.length<6){ vaultErr('6 caractères minimum.'); return; }
+    if(pass!==p2){ vaultErr('Les deux phrases diffèrent.'); return; }
+    if($('vaultGo')) $('vaultGo').textContent='Chiffrement…';
+    try{ await enableEncryption(pass); try{ alert('Chiffrement activé. Garde bien ta phrase secrète.'); }catch(_){}; goHome(); }
+    catch(e){ vaultErr('Échec du chiffrement sur cet appareil.'); if($('vaultGo')) $('vaultGo').textContent='Activer le chiffrement'; }
+  } else {
+    if(!pass){ vaultErr('Entre ta phrase.'); return; }
+    if($('vaultGo')) $('vaultGo').textContent='…';
+    const ok=await unlockVault(pass, vaultMode==='recover');
+    if(ok){ initProfiles(); activateProfile(STORE.currentProfile); goProfiles(); }
+    else { vaultErr('Phrase incorrecte.'); if($('vaultGo')) $('vaultGo').textContent='Déverrouiller'; }
+  }
+}
+if($('vaultGo')) $('vaultGo').onclick=vaultSubmit;
+['vaultPass','vaultPass2'].forEach(id=>{ const el=$(id); if(el) el.onkeydown=(e)=>{ if(e&&e.key==='Enter') vaultSubmit(); }; });
 
 /* ============================================================
    ESPRIT & MATIÈRES — univers Yoga (séances minutées, postures,
@@ -1994,4 +2099,4 @@ function openLightbox(src){
   ov.style.display='flex';
 }
 
-goProfiles();
+if(cryptoLocked) startVaultUnlock(); else goProfiles();

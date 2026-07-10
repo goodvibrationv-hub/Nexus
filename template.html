@@ -807,6 +807,16 @@
   .lockwrap.shake{ animation:shk .3s }
   @keyframes shk{ 0%,100%{transform:translateX(0)} 20%,60%{transform:translateX(-8px)} 40%,80%{transform:translateX(8px)} }
   .pcard .plock{ margin-left:6px; font-size:11px; opacity:.7 }
+  /* coffre chiffré */
+  #scVault{ display:none }
+  #scVault.active{ display:flex; flex-direction:column; min-height:calc(100dvh - 30px) }
+  .vault-input{ width:100%; font:inherit; font-size:15px; border:1px solid var(--line2); border-radius:11px; padding:13px 14px; background:var(--surf); color:inherit; margin-top:10px }
+  .vault-input:focus{ outline:none; border-color:var(--forest); box-shadow:0 0 0 1px var(--forest) }
+  #scVault .lock-msg{ margin-top:10px }
+  #scVault .save{ margin-top:14px }
+  .crypto-row{ display:flex; align-items:center; justify-content:space-between; gap:10px; background:var(--surf); border:1px solid var(--line2); border-radius:11px; padding:13px 15px; margin-bottom:10px; font-size:14px }
+  .crypto-badge{ font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:.05em; text-transform:uppercase; color:var(--forest); background:rgba(63,94,78,.1); padding:3px 9px; border-radius:20px }
+  .crypto-off{ font-size:12px; color:var(--mut) }
 </style>
 </head>
 <body>
@@ -831,6 +841,20 @@
       <div class="keypad" id="keypad"></div>
       <button class="lock-2nd" id="lockForgot" style="display:none"></button>
       <button class="lock-cancel" id="lockCancel">Retour</button>
+    </div>
+  </section>
+
+  <!-- COFFRE : phrase secrète (chiffrement des données) -->
+  <section class="screen" id="scVault">
+    <div class="lockwrap">
+      <span class="lock-av">🔐</span>
+      <h1 class="lock-title" id="vaultTitle">Données chiffrées</h1>
+      <p class="lock-sub" id="vaultSub"></p>
+      <input class="vault-input" id="vaultPass" type="password" inputmode="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Phrase secrète">
+      <input class="vault-input" id="vaultPass2" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Confirme" style="display:none">
+      <div class="lock-msg" id="vaultMsg"></div>
+      <button class="save" id="vaultGo" style="width:100%">Déverrouiller</button>
+      <button class="lock-2nd" id="vaultAlt" style="display:none"></button>
     </div>
   </section>
 
@@ -1070,6 +1094,8 @@
     <button class="miniBtn" id="btnImport" style="width:100%">⤴ Restaurer depuis un fichier…</button>
     <input type="file" id="importInput" accept="application/json,.json" style="display:none">
     <div class="backup-note">La restauration remplace les données actuelles de cet appareil. Exporte d'abord si tu as un doute.</div>
+    <div class="sectlabel" style="margin-top:22px">Confidentialité</div>
+    <div id="cryptoBox"></div>
   </section>
 </div>
 

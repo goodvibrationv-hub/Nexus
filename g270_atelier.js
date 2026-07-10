@@ -206,14 +206,14 @@ window.G270_PANNE = {
   ],
   etapes:[
     {t:"Sécurité", d:"Frein de parking serré, roues calées, boîte au point mort. On ne cherche pas une fuite de gasoil à la main."},
-    {t:"Gasoil visible", d:"Niveau suffisant ; filtre et décanteur : purge l'eau et guette des bulles d'air dans le bol. Un filtre très encrassé se remplace."},
+    {t:"Gasoil visible", d:"Niveau suffisant ; filtre et décanteur : purge l'eau et guette des bulles d'air dans le bol. Un filtre très encrassé se remplace.", photo:"filtre_go1"},
     {t:"Test du reniflard", d:"Quand le moteur cale (ou avant un nouvel essai), desserre le bouchon du réservoir. S'il repart ou tient mieux, la mise à l'air est bouchée."},
     {t:"Purge du circuit de gasoil", d:"Desserre la vis de purge du filtre/pompe, actionne la pompe d'amorçage jusqu'à ce que le gasoil sorte sans bulles, resserre, relance. Si ça tient plus longtemps, c'était une prise d'air."},
-    {t:"Écoute l'électrovanne", d:"Sur la pompe d'injection, repère l'électrovanne (petit solénoïde avec un fil). Contact mis puis coupé, on doit sentir/entendre un léger « clac »."},
-    {t:"Mesure sa tension", d:"Multimètre aux bornes de l'électrovanne, contact en position « marche » : on attend environ 24 V, et surtout que la tension SE MAINTIENNE pendant les 45 s et au moment où ça cale."},
+    {t:"Écoute l'électrovanne", d:"Sur la pompe d'injection, repère l'électrovanne (petit solénoïde avec un fil). Contact mis puis coupé, on doit sentir/entendre un léger « clac ».", photo:"inj_elec"},
+    {t:"Mesure sa tension", d:"Multimètre aux bornes de l'électrovanne, contact en position « marche » : on attend environ 24 V, et surtout que la tension SE MAINTIENNE pendant les 45 s et au moment où ça cale.", photo:"pompe_inj"},
     {t:"Conclure", d:"Tension qui tombe quand ça cale → alimentation (contacteur, relais, fil, masse). Tension maintenue mais moteur qui cale → électrovanne défaillante (à remplacer) ou gasoil en parallèle. Redémarrage seulement après refroidissement → électrovanne thermique quasi confirmée."}
   ],
   note:"Signe très utile à observer : après avoir calé, est-ce que ça redémarre si tu attends quelques minutes (le temps que ça refroidisse) ? Si oui, c'est un fort indice en faveur de l'électrovanne d'arrêt. Le remplacement de l'électrovanne et toute intervention sur l'injection se font au propre : dans le doute, fais confirmer par un professionnel.",
-  photos:["pompe_inj","inj_elec","filtre_go1"],
+  photos:[],
   photoWanted:"Sur tes photos, l'électrovanne d'arrêt est le solénoïde muni d'un fil, sur la pompe d'injection. Si tu veux, fais un gros plan bien net de ce solénoïde et de son fil : je pourrai l'annoter précisément pour ton camion."
 };

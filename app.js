@@ -2029,7 +2029,10 @@ function renderPanneScreen(){
   h+='<div class="dep-cat">Suspects, du plus probable au moins</div>';
   P0.suspects.forEach((s,i)=>{ h+='<div class="pan-susp"><span class="pan-n">'+(i+1)+'</span><span class="pan-mid"><span class="pan-s">'+esc(s.n)+'</span><span class="pan-p">'+esc(s.p)+'</span><span class="pan-w">'+esc(s.why)+'</span></span></div>'; });
   h+='<div class="dep-cat">Marche à suivre</div><ol class="tuto-steps big">';
-  P0.etapes.forEach(e=>{ h+='<li><b>'+esc(e.t)+'.</b> '+esc(e.d)+'</li>'; });
+  const phList=(window.G270_PHOTOS||[]);
+  P0.etapes.forEach(e=>{ h+='<li><b>'+esc(e.t)+'.</b> '+esc(e.d);
+    if(e.photo){ const p=phList.find(x=>x.key===e.photo); if(p) h+='<figure class="step-ph"><img src="'+p.img+'" data-lb="1" alt="'+esc(p.label)+'"><figcaption>'+esc(p.label)+'</figcaption></figure>'; }
+    h+='</li>'; });
   h+='</ol>';
   h+=tutoPhotosHtml(P0.photos);
   if(P0.note) h+='<div class="atf-key">'+esc(P0.note)+'</div>';

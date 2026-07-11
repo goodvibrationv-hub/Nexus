@@ -18,7 +18,8 @@ function makeEnv(seed, opts){ opts=opts||{}; const reg={}; const $id=id=>{ if(!r
   const localStorage={getItem:k=>_ls.has(k)?_ls.get(k):null,setItem:(k,v)=>_ls.set(k,String(v)),removeItem:k=>_ls.delete(k),clear:()=>_ls.clear()};
   const win={scrollTo(){},addEventListener(){},matchMedia:()=>({matches:false,addEventListener(){}}),
     location:{hash:opts.hash||'',pathname:'/nexus/',search:''},
-    NEXUS_ACCESS:{ mael:djb2(TOK.mael), alizee:djb2(TOK.alizee), lali:djb2(TOK.lali) }};
+    NEXUS_ACCESS:{ mael:djb2(TOK.mael), alizee:djb2(TOK.alizee), lali:djb2(TOK.lali) },
+    NEXUS_PRESET:{ mael:djb2('1111'), alizee:djb2('2468'), lali:djb2('3333') }};
   const ctx={window:win,document,localStorage,console,alert:()=>{},prompt:()=>opts.promptVal,
     history:{replaceState(){},pushState(){}},
     setTimeout:(f)=>{f();return 0;},clearTimeout:()=>{},Math,Date,JSON,parseInt,parseFloat,isNaN,Object,Array,String,Number,Boolean,RegExp,Set,Map};
@@ -36,9 +37,11 @@ ok('X2 — aucun propriétaire lié', !store(v).deviceOwner);
 const a=makeEnv({mastered:{}}, {hash:'#acces='+TOK.alizee}); loadApp(a); const A=a.ctx;
 ok('X3 — lien d’Alizée : appareil lié à alizee', store(a).deviceOwner==='alizee');
 ok('X4 — date de première connexion enregistrée', !!store(a).profiles.alizee.claimedAt);
-ok('X5 — première connexion : création du code demandée', a.reg.scLock.classList.contains('active'));
-feed(A,'2468'); feed(A,'2468');                       // choisit puis confirme SON code
-ok('X6 — code enregistré (empreinté) et session ouverte', store(a).profiles.alizee.pin===A.hashPin('2468') && store(a).currentProfile==='alizee' && a.reg.scLanding.classList.contains('active'));
+ok('X5 — première connexion : code de session pré-attribué et demandé', a.reg.scLock.classList.contains('active') && store(a).profiles.alizee.pin===A.hashPin('2468'));
+feed(A,'0000');                                        // mauvais code refusé
+ok('X5b — mauvais code refusé', store(a).currentProfile!=='alizee');
+feed(A,'2468');                                        // code reçu avec le lien
+ok('X6 — bon code : session ouverte sur SON compte', store(a).currentProfile==='alizee' && a.reg.scLanding.classList.contains('active'));
 
 // ---- reboots suivants : direct sur SON compte, code exigé, pas de sélecteur ----
 const a2=makeEnv(store(a)); loadApp(a2); const A2=a2.ctx;

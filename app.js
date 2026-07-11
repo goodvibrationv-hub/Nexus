@@ -95,6 +95,9 @@ const RECOVERY_CODE='Lavieaufreyche';   // code parent de secours (déblocage d'
 /* Accès par lien personnel : chaque compte s'active via un jeton unique (#acces=…).
    Seules les empreintes des jetons sont embarquées ici, jamais les jetons en clair. */
 const ACCESS_TOKENS=(typeof window!=='undefined'&&window.NEXUS_ACCESS)||{ mael:'pgvv7ji', alizee:'ppoljgc', lali:'p1sgjwz3' };
+/* Code de session pré-attribué à chaque compte (empreintes) : envoyé avec le lien.
+   Demandé dès la première connexion ; modifiable ensuite depuis l'accueil. */
+const PRESET_PINS=(typeof window!=='undefined'&&window.NEXUS_PRESET)||{ mael:'pyhu61a', alizee:'pyhwg87', lali:'pyhtehu' };
 function todayStr(){ return new Date().toISOString().slice(0,10); }
 function newStats(){ return { createdAt:Date.now(), lastSeen:0, reviews:0, sessions:0, days:[] }; }
 function initProfiles(){
@@ -307,9 +310,10 @@ function bootEntry(){
     if(r==='denied'){ const own=deviceOwner();
       renderActivate('Cet appareil est déjà lié au compte de '+STORE.profiles[own].name+'.'); return; }
     if(r){ const p=STORE.profiles[r];
-      if(!p.pin){ startSetPin(r, ()=>enterProfile(r));
-        if($('lockSub')) $('lockSub').textContent='Première connexion : choisis TON code à 4 chiffres. Ce compte est désormais le tien.'; }
-      else openProfile(r);
+      if(!p.pin && PRESET_PINS[r]){ p.pin=PRESET_PINS[r]; saveStore(); }   // code de session pré-attribué
+      if(p.pin){ startUnlock(r);
+        if($('lockSub')) $('lockSub').textContent='Première connexion : entre le code reçu avec ton lien. Ce compte est désormais le tien.'; }
+      else startSetPin(r, ()=>enterProfile(r));
       return; }
     renderActivate('Lien d’accès invalide.'); return;
   }

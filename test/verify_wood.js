@@ -147,5 +147,20 @@ const dh=env5.reg.wfBody.innerHTML;
 ok('Q11 — dossier planifié : compteur de quantité + retrait', /pq-in/.test(dh) && /Retirer cette construction/.test(dh) && /grume/.test(dh));
 c5.toggleWoodPlan('charpente');
 
+// ---- 10 nouvelles constructions : présence, dossiers complets, techniques anciennes ----
+const fitAll=c5.woodProjectFit();
+ok('N1 — 19 constructions au catalogue', fitAll.length===19);
+const newKeys=['barriere','ratelier','ruche','abribois','poulailler','portail','echelle','banc','tavaillon','passerelle'];
+ok('N2 — les 10 nouvelles sont présentes', newKeys.every(k=>fitAll.some(r=>r.p.k===k)));
+let renderErr=null;
+try{ fitAll.forEach(r=>c5.renderWoodProjectDoc(r.p.k)); }catch(e){ renderErr=e; }
+ok('N3 — chaque dossier se rend sans erreur', renderErr===null);
+c5.renderWoodProjectDoc('ruche');
+const rh=env5.reg.wfBody.innerHTML;
+ok('N4 — dossier ruche : techniques anciennes (ruche-tronc, flambage)', /Techniques anciennes/.test(rh) && /ruche-tronc/i.test(rh) && /Flambage|flambage/.test(rh));
+c5.renderWoodProjectDoc('echelle');
+ok('N5 — dossier échelle : fendu jamais scié + queue de renard/coin', /jamais sci/i.test(env5.reg.wfBody.innerHTML));
+ok('N6 — de nouvelles constructions sont réalisables avec le stock démo', newKeys.filter(k=>fitAll.find(r=>r.p.k===k).ok).length>=4);
+
 console.log('\n=== Bilan verif Projet Bois :', pass, 'réussis,', fail, 'échoués ===');
 process.exit(fail?1:0);

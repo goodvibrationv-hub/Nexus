@@ -2037,7 +2037,7 @@ function renderWoodProjectDoc(k,keep){
   bWrap.querySelectorAll('[data-qm]').forEach(x=>x.onclick=()=>{ setWoodQty(k, woodQty(k)-1); renderWoodProjectDoc(k,true); });
   bWrap.querySelectorAll('[data-qp]').forEach(x=>x.onclick=()=>{ setWoodQty(k, woodQty(k)+1); renderWoodProjectDoc(k,true); });
   bWrap.querySelectorAll('[data-qi]').forEach(x=>x.onchange=()=>{ setWoodQty(k, x.value); renderWoodProjectDoc(k,true); });
-  show('scWoodFlow',{accent:'#7C5A34',nav:'wood',noScroll:!!keep});
+  if(!keep) show('scWoodFlow',{accent:'#7C5A34',nav:'wood'});
 }
 
 /* ---- nouvelle grume : assistant photo → essence → mesure → stock ---- */
@@ -2261,7 +2261,7 @@ function panneVerdict(a){
 function renderPanneScreen(keep){
   mode='learn'; const P0=window.G270_PANNE; const S=g270S(); const PS=S.panne;
   $('atfTitle').textContent='Panne en cours';
-  if(!P0){ $('atfBody').innerHTML='<p class="atf-note">Diagnostic indisponible.</p>'; show('scAtelierFlow',{accent:'#8C4A4A',nav:'domains',noScroll:!!keep}); return; }
+  if(!P0){ $('atfBody').innerHTML='<p class="atf-note">Diagnostic indisponible.</p>'; if(!keep) show('scAtelierFlow',{accent:'#8C4A4A',nav:'domains'}); return; }
   const today=new Date().toISOString().slice(0,10);
   let h='<div class="panne-head"><span class="pan-badge'+(PS.resolved?' ok':'')+'">'+(PS.resolved?'Panne résolue':'Panne actuelle')+'</span><h2 class="pan-title">'+esc(P0.title)+'</h2></div>';
   if(PS.resolved) h+='<div class="pan-resolved">✓ Résolue le '+esc(PS.resolved.date||'')+(PS.resolved.cause?(' — cause : '+esc(PS.resolved.cause)):'')+'<button class="jr-del" id="panReopen">rouvrir</button></div>';

@@ -810,6 +810,26 @@
   .lockwrap.shake{ animation:shk .3s }
   @keyframes shk{ 0%,100%{transform:translateX(0)} 20%,60%{transform:translateX(-8px)} 40%,80%{transform:translateX(8px)} }
   .pcard .plock{ margin-left:6px; font-size:11px; opacity:.7 }
+  /* panne en cours : étapes cochables, tests, verdict, observations */
+  ol.tuto-steps.check>li{ display:flex; gap:11px; padding:11px 13px }
+  ol.tuto-steps.check>li::before{ display:none }
+  ol.tuto-steps.check>li.done{ background:linear-gradient(180deg,rgba(63,94,78,.06),var(--surf)); border-color:rgba(63,94,78,.3) }
+  .pan-chk{ flex:none; width:30px; height:30px; border-radius:9px; border:1.6px solid var(--line2); background:var(--surf); color:#fff; font-size:15px; cursor:pointer }
+  .pan-chk.on{ background:var(--forest); border-color:var(--forest) }
+  .pan-stx{ flex:1; min-width:0 }
+  .pan-tests{ display:flex; flex-direction:column; gap:8px }
+  .pan-q{ background:var(--surf); border:1px solid var(--line2); border-radius:11px; padding:11px 13px; display:flex; align-items:center; gap:10px; flex-wrap:wrap }
+  .pan-qt{ flex:1; min-width:180px; font-size:13px; line-height:1.45 }
+  .pan-qb{ display:flex; gap:7px }
+  .pan-ans{ border:1px solid var(--line2); background:var(--paper2); border-radius:20px; padding:7px 16px; font:inherit; font-size:13px; cursor:pointer }
+  .pan-ans.on{ background:#8C4A4A; border-color:#8C4A4A; color:#fff }
+  .pan-verdict{ margin-top:12px; border:1px solid rgba(140,74,74,.45); border-radius:13px; padding:13px 15px; background:linear-gradient(150deg,#fff6f2,rgba(140,74,74,.08)); display:flex; flex-direction:column; gap:5px }
+  .pan-verdict.empty{ border-style:dashed; background:var(--surf) }
+  .pv-t{ font-family:'Fraunces',serif; font-weight:600; font-size:15.5px; color:#9C3A2E }
+  .pv-d{ font-size:12.5px; line-height:1.5 }
+  .pan-badge.ok{ background:var(--forest) }
+  .pan-resolved{ display:flex; align-items:center; gap:8px; background:rgba(63,94,78,.08); border:1px solid rgba(63,94,78,.3); border-radius:11px; padding:10px 13px; font-size:13px; margin-bottom:10px; color:var(--forest) }
+  .pan-resolved .jr-del{ margin-left:auto }
   /* quantités par construction (bois) */
   .psel-body{ flex:1; min-width:0; display:flex; flex-direction:column; gap:8px }
   .psel-body .psel-main{ width:100% }

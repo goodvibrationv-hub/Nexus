@@ -49,6 +49,20 @@ const pan=R.atfBody.innerHTML;
 ok('A5c — panne : suspects + marche à suivre + électrovanne', /Marche à suivre/.test(pan)&&/électrovanne/.test(pan)&&/45/.test(pan));
 ok('A5d — panne : photo de la pompe d\'injection', /<img[^>]+data-lb/.test(pan)&&/src="data:image\/jpeg/.test(pan));
 
+// ---- panne interactive : verdict, étapes cochables, observations, résolution ----
+ok('AP1 — verdict : tension qui tombe → alimentation', /Alimentation/.test((c.panneVerdict({volt:'non'})||{}).t||''));
+ok('AP2 — verdict : 24 V maintenus + redémarre à froid → électrovanne HS', /défaillante/.test((c.panneVerdict({volt:'oui',cool:'oui'})||{}).t||''));
+ok('AP3 — verdict : purge améliore → prise d’air/colmatage', /Prise d’air/.test((c.panneVerdict({purge:'oui'})||{}).t||''));
+const PS=c.g270S().panne;
+PS.ans.volt='non'; PS.done.e0='2026-07-11'; PS.obs.push({id:'po_t',date:'2026-07-11',text:'calé à 40 s'});
+c.saveStore(); c.renderPanneScreen();
+const ph2=R.atfBody.innerHTML;
+ok('AP4 — écran : verdict affiché + étape cochée + observation listée', /Verdict le plus probable/.test(ph2) && /1 \/ 7 fait/.test(ph2) && /calé à 40 s/.test(ph2));
+ok('AP5 — état de la panne persisté', (()=>{ const st=store(env); return st.g270.panne.ans.volt==='non' && !!st.g270.panne.done.e0 && st.g270.panne.obs.some(o=>o.id==='po_t'); })());
+PS.resolved={date:'2026-07-11',cause:'test'}; c.renderPanneScreen();
+ok('AP6 — panne marquée résolue (badge)', /Panne résolue/.test(R.atfBody.innerHTML));
+delete PS.resolved;
+
 // ---- entretien ----
 c.renderAtelierFlow('entretien');
 const ent=R.atfBody.innerHTML;

@@ -117,5 +117,27 @@ c5.toggleWoodPlan('charpente');
 const D2=c5.woodDashboardData();
 ok('DB7 — décocher relibère tout le stock', D2.selCount===0 && D2.mobVol===0);
 
+// ---- quantités par construction : compteur, allocation au plus juste, dossier ----
+c5.toggleWoodPlan('charpente');                        // re-coche : qty par défaut = max
+const q0=c5.woodQty('charpente');
+ok('Q1 — quantité par défaut = max réalisable (>0)', q0>=1);
+const A0=c5.woodAllocation().alloc.charpente;
+ok('Q2 — allocation par défaut : pièces ≥ voulu ou stock épuisé', A0.got>=Math.min(A0.want,A0.got) && A0.logs.length>0 && A0.vol>0);
+c5.setWoodQty('charpente',1);                          // je ne veux qu'UNE pièce
+const A1=c5.woodAllocation().alloc.charpente;
+ok('Q3 — 1 pièce voulue : une seule grume réservée', A1.want===1 && A1.got>=1 && A1.logs.length===1);
+const Dq=c5.woodDashboardData();
+ok('Q4 — m³ mobilisés = volume des grumes réservées seulement', Math.abs(Dq.mobVol-A1.vol)<1e-9 && Dq.mobVol<Dq.totalVol);
+ok('Q5 — compteur affiché sur la carte cochée', /pq-in/.test((()=>{c5.renderWoodDashboard();return env5.reg.wfBody.innerHTML;})()));
+c5.setWoodQty('charpente',999);                        // plus que le stock
+const A2=c5.woodAllocation().alloc.charpente;
+ok('Q6 — quantité > stock : toutes les grumes adaptées, got < want', A2.got<A2.want && A2.logs.length>0);
+c5.renderWoodProjectDoc('charpente');
+const docH=env5.reg.wfBody.innerHTML;
+ok('Q7 — dossier : bloc « Ta construction » avec grumes réservées', /Ta construction/.test(docH) && /réservée/.test(docH));
+ok('Q8 — dossier : alerte stock insuffisant', /Stock insuffisant/.test(docH));
+c5.toggleWoodPlan('charpente');
+ok('Q9 — décocher efface la quantité', !(JSON.parse(env5.ls.get('nexus_stable')).woodPlan.qty||{}).charpente);
+
 console.log('\n=== Bilan verif Projet Bois :', pass, 'réussis,', fail, 'échoués ===');
 process.exit(fail?1:0);

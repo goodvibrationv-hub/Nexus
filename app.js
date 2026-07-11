@@ -1685,13 +1685,39 @@ function woodProjectFit(){
 }
 /* ---- tableau de bord (KPI + stock par essence + projets cochables) ---- */
 function woodPlanSet(){ return new Set((STORE.woodPlan&&STORE.woodPlan.selected)||[]); }
-function toggleWoodPlan(k){ const sel=woodPlanSet(); if(sel.has(k))sel.delete(k); else sel.add(k); STORE.woodPlan={selected:[...sel]}; saveStore(); }
+function woodQty(k){ const q=(STORE.woodPlan&&STORE.woodPlan.qty)||{}; return Math.max(1,q[k]||1); }
+function setWoodQty(k,n){ if(!STORE.woodPlan) STORE.woodPlan={selected:[]}; if(!STORE.woodPlan.qty) STORE.woodPlan.qty={};
+  STORE.woodPlan.qty[k]=Math.max(1,Math.min(999,parseInt(n,10)||1)); saveStore(); }
+function logPieces(k,l){ const doc=WOOD_DOC[k]; return doc?debitYield(doc.y.type,doc.y.params,l):0; }
+function toggleWoodPlan(k){ const sel=woodPlanSet(); const qty=(STORE.woodPlan&&STORE.woodPlan.qty)||{};
+  if(sel.has(k)){ sel.delete(k); delete qty[k]; }
+  else { sel.add(k);
+    if(!qty[k]){ const r=woodProjectFit().find(x=>x.p.k===k);   // défaut : le max réalisable
+      const max=(r?r.logs:[]).reduce((a,l)=>a+logPieces(k,l),0); qty[k]=Math.max(1,max); } }
+  STORE.woodPlan={selected:[...sel], qty}; saveStore(); }
+/* Allocation : chaque construction choisie réserve juste les grumes nécessaires
+   pour atteindre le nombre de pièces voulu (meilleur rendement d'abord). */
+function woodAllocation(fit){
+  fit=fit||woodProjectFit();
+  const sel=(STORE.woodPlan&&STORE.woodPlan.selected)||[];
+  const used=new Set(); const alloc={};
+  sel.forEach(k=>{ const r=fit.find(x=>x.p.k===k); if(!r) return;
+    const want=woodQty(k);
+    const cand=r.logs.filter(l=>!used.has(l.id)).map(l=>({l,y:logPieces(k,l)}))
+      .filter(c=>c.y>0).sort((a,b)=>b.y-a.y);
+    let got=0; const logs=[]; let vol=0;
+    for(const c of cand){ if(got>=want) break; logs.push(c); used.add(c.l.id); got+=c.y; vol+=c.l.volumeM3||0; }
+    const doc=WOOD_DOC[k];
+    alloc[k]={want, got, logs, vol, unit:(doc&&doc.y.unit)||'pièce'};
+  });
+  return {alloc, used};
+}
 function woodDashboardData(){
   const stock=STORE.woodStock||[];
   const fit=woodProjectFit();
   const sel=woodPlanSet();
-  const mob=new Set();                                   // grumes mobilisées par les projets choisis
-  fit.forEach(r=>{ if(sel.has(r.p.k)) r.logs.forEach(l=>mob.add(l.id)); });
+  const A=woodAllocation(fit);
+  const mob=A.used;                                      // grumes réservées par les constructions choisies
   const totalVol=stock.reduce((a,l)=>a+(l.volumeM3||0),0);
   const mobVol=stock.filter(l=>mob.has(l.id)).reduce((a,l)=>a+(l.volumeM3||0),0);
   const byE={};
@@ -1699,12 +1725,14 @@ function woodDashboardData(){
   const essences=Object.values(byE).sort((a,b)=>b.vol-a.vol);
   const rows=fit.map(r=>{ const selected=sel.has(r.p.k);
     const freeAdapted=r.logs.filter(l=>!mob.has(l.id));
-    let state, count, vol, species;
-    if(selected){ state='selected'; count=r.logs.length; vol=r.vol; species=r.species; }
+    let state, count, vol, species, al=null;
+    if(selected){ al=A.alloc[r.p.k]||{want:1,got:0,logs:[],vol:0,unit:'pièce'};
+      state='selected'; count=al.logs.length; vol=al.vol;
+      species=[...new Set(al.logs.map(c=>{const e=essenceByKey(c.l.speciesKey);return e?e.n:'';}).filter(Boolean))]; }
     else if(freeAdapted.length){ state='feasible'; count=freeAdapted.length; vol=freeAdapted.reduce((a,l)=>a+(l.volumeM3||0),0); species=[...new Set(freeAdapted.map(l=>{const e=essenceByKey(l.speciesKey);return e?e.n:'';}).filter(Boolean))]; }
     else if(r.logs.length){ state='blocked'; count=0; vol=0; species=[]; }
     else { state='none'; count=0; vol=0; species=[]; }
-    return {p:r.p, state, count, vol, species, hint:r.hint};
+    return {p:r.p, state, count, vol, species, hint:r.hint, al};
   });
   return { count:stock.length, totalVol, mobVol, freeVol:totalVol-mobVol, feasible:fit.filter(r=>r.ok).length, selCount:sel.size, essences, rows, maxVol:Math.max(0.001,...essences.map(e=>e.vol)), stillFeasible:rows.filter(r=>r.state==='feasible').length };
 }
@@ -1724,17 +1752,29 @@ function renderWoodDashboard(){
   // projets cochables
   html+='<div class="dash-h">Projets — coche ceux que tu veux réaliser</div><div class="psel">';
   d.rows.forEach(r=>{ const on=r.state==='selected';
-    let sub;
-    if(r.state==='selected') sub=r.count+' grume'+(r.count>1?'s':'')+' · '+r.vol.toFixed(2)+' m³ · '+esc(r.species.join(', '));
+    let sub, qtyBar='';
+    if(r.state==='selected'){ const al=r.al;
+      sub=r.count+' grume'+(r.count>1?'s':'')+' · '+r.vol.toFixed(2)+' m³ utilisés · '+esc(r.species.join(', '));
+      const short=al.got<al.want;
+      qtyBar='<div class="psel-qty"><button class="pq-btn" data-qm="'+r.p.k+'" aria-label="moins">−</button>'+
+        '<input class="pq-in" data-qi="'+r.p.k+'" type="number" inputmode="numeric" min="1" max="999" value="'+al.want+'">'+
+        '<button class="pq-btn" data-qp="'+r.p.k+'" aria-label="plus">+</button>'+
+        '<span class="pq-lbl">'+esc(al.unit)+(al.want>1?'s':'')+' voulue'+(al.want>1?'s':'')+'</span>'+
+        '<span class="pq-got'+(short?' warn':'')+'">'+(short?('stock : ≈ '+al.got+' max'):('≈ '+al.got+' possible'+(al.got>1?'s':'')))+'</span></div>';
+    }
     else if(r.state==='feasible') sub='Réalisable : '+r.count+' grume'+(r.count>1?'s':'')+' · '+r.vol.toFixed(2)+' m³ dispo';
-    else if(r.state==='blocked') sub='Grumes déjà mobilisées par ta sélection';
+    else if(r.state==='blocked') sub='Grumes déjà réservées par tes constructions';
     else sub=r.hint||'Aucune grume adaptée';
-    html+='<div class="psel-row '+r.state+'"><button class="psel-chk'+(on?' on':'')+'" data-sel="'+r.p.k+'" aria-label="choisir">'+(on?'✓':'')+'</button><button class="psel-main" data-proj="'+r.p.k+'"><span class="psel-ic">'+r.p.ic+'</span><span class="psel-mid"><span class="psel-n">'+esc(r.p.n)+'</span><span class="psel-s">'+esc(sub)+'</span></span><span class="pr-go">Dossier ›</span></button></div>';
+    html+='<div class="psel-row '+r.state+'"><button class="psel-chk'+(on?' on':'')+'" data-sel="'+r.p.k+'" aria-label="choisir">'+(on?'✓':'')+'</button>'+
+      '<div class="psel-body"><button class="psel-main" data-proj="'+r.p.k+'"><span class="psel-ic">'+r.p.ic+'</span><span class="psel-mid"><span class="psel-n">'+esc(r.p.n)+'</span><span class="psel-s">'+esc(sub)+'</span></span><span class="pr-go">Dossier ›</span></button>'+qtyBar+'</div></div>';
   });
   html+='</div>';
   b.innerHTML=html;
   b.querySelectorAll('[data-sel]').forEach(x=>x.onclick=()=>{ toggleWoodPlan(x.dataset.sel); renderWoodDashboard(); });
   b.querySelectorAll('[data-proj]').forEach(x=>x.onclick=()=>openWoodProjectDoc(x.dataset.proj));
+  b.querySelectorAll('[data-qm]').forEach(x=>x.onclick=()=>{ setWoodQty(x.dataset.qm, woodQty(x.dataset.qm)-1); renderWoodDashboard(); });
+  b.querySelectorAll('[data-qp]').forEach(x=>x.onclick=()=>{ setWoodQty(x.dataset.qp, woodQty(x.dataset.qp)+1); renderWoodDashboard(); });
+  b.querySelectorAll('[data-qi]').forEach(x=>x.onchange=()=>{ setWoodQty(x.dataset.qi, x.value); renderWoodDashboard(); });
 }
 /* ---- dossier projet : pièce visée, plan de coupe, rendement, guide ---- */
 const DEBIT_LBL={plots:'Sciage en plots (planches parallèles)',equarri:'Équarrissage (poutre carrée)',avive:'Avivé / délignage (sections)',fendage:'Fendage radial (à la masse)',buche:'Tronçonnage + fendage'};
@@ -1862,10 +1902,24 @@ function renderWoodProjectDoc(k){
   const yieldBox = row.ok
     ? '<div class="doc-yield"><span class="dy-n">≈ '+pieces+' '+doc.y.unit+(pieces>1?'s':'')+'</span><span class="dy-s">estimé depuis '+row.count+' grume'+(row.count>1?'s':'')+' adaptée'+(row.count>1?'s':'')+' ('+esc(row.species.join(', '))+')</span></div>'
     : '<div class="doc-yield warn"><span class="dy-n">Pas encore réalisable</span><span class="dy-s">'+esc(row.hint||'—')+'</span></div>';
+  /* construction planifiée : quantité voulue + grumes réservées */
+  let buildBox='';
+  if(woodPlanSet().has(k)){ const al=woodAllocation().alloc[k];
+    if(al){ const short=al.got<al.want;
+      const rowsL=al.logs.map(c=>{ const e=essenceByKey(c.l.speciesKey);
+        return '<tr><td>'+esc(e?e.n:(c.l.speciesName||'Grume'))+'</td><td>'+(c.l.lengthCm||0)+'×Ø'+(c.l.diamCm||0)+' cm</td><td>'+(c.l.volumeM3||0).toFixed(2)+' m³</td><td>≈ '+c.y+'</td></tr>'; }).join('');
+      buildBox='<div class="doc-build'+(short?' warn':'')+'"><div class="db-head"><b>'+al.want+' '+esc(al.unit)+(al.want>1?'s':'')+' voulue'+(al.want>1?'s':'')+'</b>'+
+        '<span>'+al.logs.length+' grume'+(al.logs.length>1?'s':'')+' réservée'+(al.logs.length>1?'s':'')+' · '+al.vol.toFixed(2)+' m³ · ≈ '+al.got+' '+esc(al.unit)+(al.got>1?'s':'')+' possible'+(al.got>1?'s':'')+'</span>'+
+        (short?'<span class="db-warn">⚠️ Stock insuffisant pour '+al.want+' : ajoute des grumes adaptées ou réduis la quantité.</span>':'')+'</div>'+
+        (rowsL?'<div class="tablewrap"><table class="cutlist"><thead><tr><th>Essence</th><th>Dimensions</th><th>Volume</th><th>Pièces</th></tr></thead><tbody>'+rowsL+'</tbody></table></div>':'')+
+        '</div>';
+    }
+  }
   const plan=WOOD_PLAN[k]||{};
   const cut=(plan.cutlist||[]).map(r=>'<tr><td>'+esc(r.p)+'</td><td>'+esc(r.sec)+'</td><td>'+esc(r.l)+'</td><td>'+esc(''+r.q)+'</td></tr>').join('');
   const prec=PRECISION_BASE.concat(plan.precision||[]);
   let html='<div class="doc-top"><span class="doc-ic">'+p.ic+'</span><div><div class="doc-intro">'+esc(doc.intro)+'</div></div></div>';
+  if(buildBox) html+=sec('Ta construction', buildBox);
   if(plan.plan){ html+=sec('Ce qu’on construit','<div class="planwrap"><div class="plan-t"><b>'+esc(plan.build)+'</b><span>'+esc(plan.dims)+'</span></div>'+plan.plan+'</div>'); }
   html+=sec('La pièce à sortir de la grume','<div class="efiche"><div class="ef-row"><span>Pièce</span><b>'+esc(doc.piece)+'</b></div><div class="ef-row"><span>Section / calibre</span><b>'+esc(doc.section)+'</b></div><div class="ef-row"><span>Longueur</span><b>'+esc(doc.long)+'</b></div><div class="ef-row"><span>Essences conseillées</span><b>'+esc(doc.essences)+'</b></div></div>');
   html+=sec('Plan de coupe de la grume','<div class="debitwrap">'+debitSVG(doc.debit)+'<div class="debit-cap"><b>'+esc(DEBIT_LBL[doc.debit])+'</b><span>Coupe transversale (● = cœur).</span></div></div>');

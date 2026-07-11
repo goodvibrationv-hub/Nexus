@@ -810,6 +810,23 @@
   .lockwrap.shake{ animation:shk .3s }
   @keyframes shk{ 0%,100%{transform:translateX(0)} 20%,60%{transform:translateX(-8px)} 40%,80%{transform:translateX(8px)} }
   .pcard .plock{ margin-left:6px; font-size:11px; opacity:.7 }
+  /* quantités par construction (bois) */
+  .psel-body{ flex:1; min-width:0; display:flex; flex-direction:column; gap:8px }
+  .psel-body .psel-main{ width:100% }
+  .psel-qty{ display:flex; align-items:center; gap:9px; flex-wrap:wrap; background:var(--surf); border:1px solid rgba(63,94,78,.35); border-radius:12px; padding:9px 12px }
+  .pq-btn{ width:38px; height:38px; border-radius:10px; border:1px solid var(--line2); background:var(--paper2); font:inherit; font-size:20px; font-weight:600; color:var(--forest); cursor:pointer }
+  .pq-btn:active{ transform:scale(.94) }
+  .pq-in{ width:64px; text-align:center; font:inherit; font-size:16px; font-weight:600; border:1px solid var(--line2); border-radius:10px; padding:8px 4px; background:#fff; color:inherit }
+  .pq-in:focus{ outline:none; border-color:var(--forest) }
+  .pq-lbl{ font-size:12px; color:var(--mut) }
+  .pq-got{ margin-left:auto; font-family:'JetBrains Mono',monospace; font-size:10.5px; color:var(--forest) }
+  .pq-got.warn{ color:#B4453A }
+  .doc-build{ border:1px solid rgba(63,94,78,.35); border-radius:13px; padding:13px 15px; background:linear-gradient(180deg,rgba(63,94,78,.05),var(--surf)) }
+  .doc-build.warn{ border-color:rgba(180,69,58,.45) }
+  .doc-build .db-head{ display:flex; flex-direction:column; gap:3px; margin-bottom:10px }
+  .doc-build .db-head b{ font-family:'Fraunces',serif; font-size:17px }
+  .doc-build .db-head span{ font-size:12px; color:var(--mut) }
+  .doc-build .db-warn{ color:#B4453A; font-size:12.5px }
   /* activation par lien personnel */
   #scActivate{ display:none }
   #scActivate.active{ display:flex; flex-direction:column; min-height:calc(100dvh - 30px) }

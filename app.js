@@ -139,14 +139,14 @@ function totalPct(){let m=0,t=0;for(const k in D.SKILLS){m+=mastered[k].size;t+=
 
 /* ====== screen mgmt ====== */
 let current=null,currentNode=null,currentSkillK=null,mode='landing';
-function show(screen,{accent='#3F5E4E',nav=''}={}){
+function show(screen,{accent='#3F5E4E',nav='',noScroll=false}={}){
   document.documentElement.style.setProperty('--forest',accent);
   ['scProfiles','scActivate','scLock','scVault','scLanding','scHome','scDetail','scCourse','scTest','scProgress','scStable','scGestion','scStableSection','scAnimal','scRevise','scWood','scWoodFlow','scAtelier','scAtelierFlow','scBackup','scEsprit','scYoga','scYogaFlow'].forEach(s=>$(s).classList.remove('active'));
   $(screen).classList.add('active');
   buildNav(nav);
   const bn=$('bottomnav'); if(bn) bn.style.display=(screen==='scProfiles'||screen==='scActivate'||screen==='scLock'||screen==='scVault'||screen==='scBackup')?'none':'';
   if(typeof stopYoga==='function' && screen!=='scYogaFlow') stopYoga();
-  window.scrollTo({top:0,behavior:'smooth'});
+  if(!noScroll) window.scrollTo({top:0,behavior:'smooth'});
 }
 
 /* ====== historique de navigation ======
@@ -1883,7 +1883,7 @@ const WOOD_PLAN={
     precision:['Calibre les bûches à la longueur du foyer avec une butée : rangement serré et combustion régulière.']}
 };
 function openWoodProjectDoc(k){ go(()=>renderWoodProjectDoc(k),'dossier'); }
-function renderWoodProjectDoc(k){
+function renderWoodProjectDoc(k,keep){
   mode='wood'; const p=WOOD_PROJECTS.find(x=>x.k===k), doc=WOOD_DOC[k], row=woodProjectFit().find(r=>r.p.k===k);
   $('wfTitle').textContent=p.n;
   const sec=(t,body)=>'<div class="doc-sec"><div class="doc-h">'+t+'</div>'+body+'</div>';
@@ -1931,12 +1931,12 @@ function renderWoodProjectDoc(k){
   $('wfBody').innerHTML=html;
   $('docBack').onclick=()=>doBack();
   const bWrap=$('wfBody');
-  const db=$('docBuild'); if(db) db.onclick=()=>{ toggleWoodPlan(k); renderWoodProjectDoc(k); };
-  const du=$('docUnbuild'); if(du) du.onclick=()=>{ toggleWoodPlan(k); renderWoodProjectDoc(k); };
-  bWrap.querySelectorAll('[data-qm]').forEach(x=>x.onclick=()=>{ setWoodQty(k, woodQty(k)-1); renderWoodProjectDoc(k); });
-  bWrap.querySelectorAll('[data-qp]').forEach(x=>x.onclick=()=>{ setWoodQty(k, woodQty(k)+1); renderWoodProjectDoc(k); });
-  bWrap.querySelectorAll('[data-qi]').forEach(x=>x.onchange=()=>{ setWoodQty(k, x.value); renderWoodProjectDoc(k); });
-  show('scWoodFlow',{accent:'#7C5A34',nav:'wood'});
+  const db=$('docBuild'); if(db) db.onclick=()=>{ toggleWoodPlan(k); renderWoodProjectDoc(k,true); };
+  const du=$('docUnbuild'); if(du) du.onclick=()=>{ toggleWoodPlan(k); renderWoodProjectDoc(k,true); };
+  bWrap.querySelectorAll('[data-qm]').forEach(x=>x.onclick=()=>{ setWoodQty(k, woodQty(k)-1); renderWoodProjectDoc(k,true); });
+  bWrap.querySelectorAll('[data-qp]').forEach(x=>x.onclick=()=>{ setWoodQty(k, woodQty(k)+1); renderWoodProjectDoc(k,true); });
+  bWrap.querySelectorAll('[data-qi]').forEach(x=>x.onchange=()=>{ setWoodQty(k, x.value); renderWoodProjectDoc(k,true); });
+  show('scWoodFlow',{accent:'#7C5A34',nav:'wood',noScroll:!!keep});
 }
 
 /* ---- nouvelle grume : assistant photo → essence → mesure → stock ---- */
@@ -2157,10 +2157,10 @@ function panneVerdict(a){
   if(a.volt==='oui') return {t:'Électrovanne ou alimentation en gasoil', d:'Le courant tient : reste l’électrovanne elle-même ou le gasoil (purge, filtre, reniflard). Fais les essais 3 et 4.'};
   return null;
 }
-function renderPanneScreen(){
+function renderPanneScreen(keep){
   mode='learn'; const P0=window.G270_PANNE; const S=g270S(); const PS=S.panne;
   $('atfTitle').textContent='Panne en cours';
-  if(!P0){ $('atfBody').innerHTML='<p class="atf-note">Diagnostic indisponible.</p>'; show('scAtelierFlow',{accent:'#8C4A4A',nav:'domains'}); return; }
+  if(!P0){ $('atfBody').innerHTML='<p class="atf-note">Diagnostic indisponible.</p>'; show('scAtelierFlow',{accent:'#8C4A4A',nav:'domains',noScroll:!!keep}); return; }
   const today=new Date().toISOString().slice(0,10);
   let h='<div class="panne-head"><span class="pan-badge'+(PS.resolved?' ok':'')+'">'+(PS.resolved?'Panne résolue':'Panne actuelle')+'</span><h2 class="pan-title">'+esc(P0.title)+'</h2></div>';
   if(PS.resolved) h+='<div class="pan-resolved">✓ Résolue le '+esc(PS.resolved.date||'')+(PS.resolved.cause?(' — cause : '+esc(PS.resolved.cause)):'')+'<button class="jr-del" id="panReopen">rouvrir</button></div>';
@@ -2196,17 +2196,17 @@ function renderPanneScreen(){
   if(P0.photoWanted) h+='<p class="atf-note">📸 '+esc(P0.photoWanted)+'</p>';
   if(!PS.resolved) h+='<button class="mnt-btn add" id="panResolve" style="width:100%">✓ Marquer la panne comme résolue</button>';
   $('atfBody').innerHTML=h; bindLb();
-  $('atfBody').querySelectorAll('[data-pstep]').forEach(b=>b.onclick=()=>{ const k='e'+b.dataset.pstep; if(PS.done[k]) delete PS.done[k]; else PS.done[k]=today; saveStore(); renderPanneScreen(); });
-  $('atfBody').querySelectorAll('[data-pq]').forEach(b=>b.onclick=()=>{ const k=b.dataset.pq,v=b.dataset.pv; PS.ans[k]=(PS.ans[k]===v?'':v); saveStore(); renderPanneScreen(); });
+  $('atfBody').querySelectorAll('[data-pstep]').forEach(b=>b.onclick=()=>{ const k='e'+b.dataset.pstep; if(PS.done[k]) delete PS.done[k]; else PS.done[k]=today; saveStore(); renderPanneScreen(true); });
+  $('atfBody').querySelectorAll('[data-pq]').forEach(b=>b.onclick=()=>{ const k=b.dataset.pq,v=b.dataset.pv; PS.ans[k]=(PS.ans[k]===v?'':v); saveStore(); renderPanneScreen(true); });
   const oa=$('panObsAdd'); if(oa) oa.onclick=()=>{ const t=($('panObsIn').value||'').trim(); if(!t) return;
-    PS.obs.push({id:'po_'+Date.now(),date:today,text:t}); if(!saveStoreOk()){ PS.obs.pop(); alert('Stockage plein.'); return; } renderPanneScreen(); };
-  $('atfBody').querySelectorAll('[data-pdel]').forEach(b=>b.onclick=()=>{ PS.obs=PS.obs.filter(o=>o.id!==b.dataset.pdel); saveStore(); renderPanneScreen(); });
+    PS.obs.push({id:'po_'+Date.now(),date:today,text:t}); if(!saveStoreOk()){ PS.obs.pop(); alert('Stockage plein.'); return; } renderPanneScreen(true); };
+  $('atfBody').querySelectorAll('[data-pdel]').forEach(b=>b.onclick=()=>{ PS.obs=PS.obs.filter(o=>o.id!==b.dataset.pdel); saveStore(); renderPanneScreen(true); });
   const pr=$('panResolve'); if(pr) pr.onclick=()=>{ const vd2=panneVerdict(PS.ans);
     const cause=(typeof prompt==='function')?(prompt('Cause trouvée ?', vd2?vd2.t:'')||''):(vd2?vd2.t:'');
     PS.resolved={date:today, cause:String(cause).trim()};
     S.journal.push({id:'jr_'+Date.now(), date:today, km:'', text:'Panne résolue — '+(PS.resolved.cause||'cause non précisée')});
-    saveStore(); renderPanneScreen(); };
-  const ro=$('panReopen'); if(ro) ro.onclick=()=>{ delete PS.resolved; saveStore(); renderPanneScreen(); };
+    saveStore(); renderPanneScreen(true); };
+  const ro=$('panReopen'); if(ro) ro.onclick=()=>{ delete PS.resolved; saveStore(); renderPanneScreen(true); };
   show('scAtelierFlow',{accent:'#8C4A4A',nav:'domains'});
 }
 function relDay(d){ if(!d) return 'jamais'; const t=Date.parse(d+'T00:00:00'); if(isNaN(t)) return d;

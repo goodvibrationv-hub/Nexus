@@ -32,10 +32,10 @@ const active=id=>R[id]&&R[id].classList.contains('active');
 const backLbl=()=>R.backLbl.textContent;
 const backShown=()=>R.backBtn.style.display==='flex';
 
-// au chargement : choix du profil (racine), puis accueil après sélection
-ok('N1 — démarre sur le choix de profil', active('scProfiles'));
+// au chargement (appareil non activé) : écran d'activation par lien personnel
+ok('N1 — démarre sur l’activation (appareil non lié)', active('scActivate'));
 c.activateProfile('mael'); c.goHome();
-ok('N2 — accueil après choix du profil, pas de retour', active('scLanding')&&!backShown());
+ok('N2 — accueil après activation, pas de retour', active('scLanding')&&!backShown());
 ok('N3 — barre du bas mode apprentissage a 4 onglets (Accueil inclus)', /Accueil/.test(R.bottomnav.innerHTML)&&/Explorer/.test(R.bottomnav.innerHTML)&&/Réviser/.test(R.bottomnav.innerHTML)&&/Progrès/.test(R.bottomnav.innerHTML));
 
 // accueil -> domaines

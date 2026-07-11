@@ -23,7 +23,8 @@ function loadStore(){
       if(d.daily) STORE.daily=d.daily;
       if(d.profiles){ STORE.profiles=d.profiles; STORE.currentProfile=d.currentProfile||'mael'; if(d.seedProfiles) STORE.seedProfiles=d.seedProfiles; }
       if(d.woodStock) STORE.woodStock=d.woodStock; if(d.woodPlan) STORE.woodPlan=d.woodPlan;
-      if(d.yoga) STORE.yoga=d.yoga; if(d.g270) STORE.g270=d.g270; }
+      if(d.yoga) STORE.yoga=d.yoga; if(d.g270) STORE.g270=d.g270;
+      if(d.deviceOwner) STORE.deviceOwner=d.deviceOwner; }
   }catch(e){ /* mémoire seule */ }
   Object.keys(D.SKILLS).forEach(k=>{ if(!STORE.mastered[k]) STORE.mastered[k]=[]; });
 }
@@ -91,6 +92,9 @@ if(localStorage.getItem(VAULT_KEY)){ cryptoOn=true; cryptoLocked=true; }   // co
    STORE.mastered / STORE.srs / STORE.hardMode pointent toujours sur le profil actif :
    persistMastered() et reviewCard() écrivent donc directement dans le bon profil. */
 const RECOVERY_CODE='Lavieaufreyche';   // code parent de secours (déblocage d'un profil dont le code est oublié)
+/* Accès par lien personnel : chaque compte s'active via un jeton unique (#acces=…).
+   Seules les empreintes des jetons sont embarquées ici, jamais les jetons en clair. */
+const ACCESS_TOKENS=(typeof window!=='undefined'&&window.NEXUS_ACCESS)||{ mael:'pgvv7ji', alizee:'ppoljgc', lali:'p1sgjwz3' };
 function todayStr(){ return new Date().toISOString().slice(0,10); }
 function newStats(){ return { createdAt:Date.now(), lastSeen:0, reviews:0, sessions:0, days:[] }; }
 function initProfiles(){
@@ -128,10 +132,10 @@ function totalPct(){let m=0,t=0;for(const k in D.SKILLS){m+=mastered[k].size;t+=
 let current=null,currentNode=null,currentSkillK=null,mode='landing';
 function show(screen,{accent='#3F5E4E',nav=''}={}){
   document.documentElement.style.setProperty('--forest',accent);
-  ['scProfiles','scLock','scVault','scLanding','scHome','scDetail','scCourse','scTest','scProgress','scStable','scGestion','scStableSection','scAnimal','scRevise','scWood','scWoodFlow','scAtelier','scAtelierFlow','scBackup','scEsprit','scYoga','scYogaFlow'].forEach(s=>$(s).classList.remove('active'));
+  ['scProfiles','scActivate','scLock','scVault','scLanding','scHome','scDetail','scCourse','scTest','scProgress','scStable','scGestion','scStableSection','scAnimal','scRevise','scWood','scWoodFlow','scAtelier','scAtelierFlow','scBackup','scEsprit','scYoga','scYogaFlow'].forEach(s=>$(s).classList.remove('active'));
   $(screen).classList.add('active');
   buildNav(nav);
-  const bn=$('bottomnav'); if(bn) bn.style.display=(screen==='scProfiles'||screen==='scLock'||screen==='scVault'||screen==='scBackup')?'none':'';
+  const bn=$('bottomnav'); if(bn) bn.style.display=(screen==='scProfiles'||screen==='scActivate'||screen==='scLock'||screen==='scVault'||screen==='scBackup')?'none':'';
   if(typeof stopYoga==='function' && screen!=='scYogaFlow') stopYoga();
   window.scrollTo({top:0,behavior:'smooth'});
 }
@@ -252,10 +256,10 @@ $('doorLearn').onclick=()=>go(rDomains,'domaines');
 $('doorStable').onclick=()=>navGo('stable');
 if($('doorWood')) $('doorWood').onclick=()=>navGo('wood');
 if($('doorEsprit')) $('doorEsprit').onclick=()=>navGo('esprit');
-if($('profileChip')) $('profileChip').onclick=()=>goProfiles();
+/* compte personnel : pas de changement d'utilisateur depuis l'app */
 if($('pinBtn')) $('pinBtn').onclick=()=>{ const id=STORE.currentProfile; if(id) startSetPin(id, goLanding); };
 
-/* ====== choix de profil (écran racine) ====== */
+/* ====== attribution du propriétaire de l'appareil (code parent uniquement) ====== */
 function goProfiles(){ mode='landing'; goRoot(renderProfiles,'profils'); }
 function renderProfiles(){
   const g=$('profileList'); if(!g) return; g.innerHTML='';
@@ -266,10 +270,51 @@ function renderProfiles(){
       '<span class="pmid"><span class="pnm">'+esc(p.name)+(p.pin?'<span class="plock">🔒</span>':'')+'</span>'+
       '<span class="psub">'+gp+'% de progression'+(p.stats&&p.stats.lastSeen?' · vu '+relDate(p.stats.lastSeen):'')+'</span></span>'+
       '<span class="parw">→</span>';
-    b.onclick=()=>openProfile(id);
+    b.onclick=()=>{ bindDevice(id); openProfile(id); };
     g.appendChild(b);
   });
   show('scProfiles',{accent:'#3F5E4E',nav:''});
+}
+
+/* ====== accès par lien personnel : un appareil = un compte ====== */
+function deviceOwner(){ const id=STORE.deviceOwner; return (id&&STORE.profiles&&STORE.profiles[id])?id:null; }
+function bindDevice(id){ if(!STORE.profiles[id]) return false;
+  STORE.deviceOwner=id;
+  if(!STORE.profiles[id].claimedAt) STORE.profiles[id].claimedAt=Date.now();
+  saveStore(); return true; }
+function accessTokenFromUrl(){ try{ const m=String(window.location.hash||'').match(/acces=([\w-]+)/i); return m?m[1]:null; }catch(e){ return null; } }
+function clearAccessHash(){ try{ history.replaceState(null,'',window.location.pathname+window.location.search); }catch(e){} }
+function claimFromToken(tok){ if(!tok) return null;
+  const h=hashPin(String(tok).trim());
+  const id=Object.keys(ACCESS_TOKENS).find(k=>ACCESS_TOKENS[k]===h);
+  if(!id||!STORE.profiles[id]) return null;
+  const cur=deviceOwner();
+  if(cur&&cur!==id) return 'denied';               // appareil déjà lié à un autre compte
+  bindDevice(id); clearAccessHash(); return id; }
+function renderActivate(msg){ mode='landing';
+  if($('actMsg')) $('actMsg').textContent=msg||'';
+  const b=$('actParent'); if(b) b.onclick=()=>{
+    const code=(typeof prompt==='function')?prompt('Code parent'):null;
+    if(code==null) return;
+    if(String(code).trim()===RECOVERY_CODE) goProfiles();
+    else if($('actMsg')) $('actMsg').textContent='Code parent incorrect.';
+  };
+  show('scActivate',{accent:'#3F5E4E',nav:''});
+}
+function bootEntry(){
+  const tok=accessTokenFromUrl();
+  if(tok){ const r=claimFromToken(tok);
+    if(r==='denied'){ const own=deviceOwner();
+      renderActivate('Cet appareil est déjà lié au compte de '+STORE.profiles[own].name+'.'); return; }
+    if(r){ const p=STORE.profiles[r];
+      if(!p.pin){ startSetPin(r, ()=>enterProfile(r));
+        if($('lockSub')) $('lockSub').textContent='Première connexion : choisis TON code à 4 chiffres. Ce compte est désormais le tien.'; }
+      else openProfile(r);
+      return; }
+    renderActivate('Lien d’accès invalide.'); return;
+  }
+  const own=deviceOwner();
+  if(own) openProfile(own); else renderActivate();
 }
 function globalPct(p){ let m=0,t=0; for(const k in D.SKILLS){ m+=(p.mastered[k]||[]).length; t+=D.SKILLS[k].nodes.length; } return t?Math.round(m/t*100):0; }
 function relDate(ts){ if(!ts) return 'jamais'; const d=Math.floor((Date.now()-ts)/86400000);
@@ -311,7 +356,7 @@ function startUnlock(id){ const p=STORE.profiles[id]; if(!p) return; lock={mode:
   if($('lockAv'))$('lockAv').textContent=profileAvatar(id); if($('lockTitle'))$('lockTitle').textContent=p.name;
   if($('lockSub'))$('lockSub').textContent='Entre ton code à 4 chiffres'; if($('lockMsg'))$('lockMsg').textContent='';
   const f=$('lockForgot'); if(f){ f.style.display='block'; f.textContent='Code oublié ?'; f.onclick=recoverPin; }
-  const c=$('lockCancel'); if(c) c.onclick=()=>goProfiles();
+  const c=$('lockCancel'); if(c){ if(deviceOwner()){ c.style.display='none'; c.onclick=null; } else { c.style.display='block'; c.onclick=()=>goProfiles(); } }
   renderKeypad(); lockDots(); show('scLock',{accent:'#3F5E4E',nav:''});
 }
 function startSetPin(id, cb){ const p=STORE.profiles[id]; if(!p) return; lock={mode:'set',profileId:id,buf:'',first:'',cb:cb};
@@ -1209,7 +1254,7 @@ async function vaultSubmit(){
     if(!pass){ vaultErr('Entre ta phrase.'); return; }
     if($('vaultGo')) $('vaultGo').textContent='…';
     const ok=await unlockVault(pass, vaultMode==='recover');
-    if(ok){ initProfiles(); activateProfile(STORE.currentProfile); goProfiles(); }
+    if(ok){ initProfiles(); activateProfile(STORE.currentProfile); bootEntry(); }
     else { vaultErr('Phrase incorrecte.'); if($('vaultGo')) $('vaultGo').textContent='Déverrouiller'; }
   }
 }
@@ -2108,4 +2153,4 @@ function openLightbox(src){
   ov.style.display='flex';
 }
 
-if(cryptoLocked) startVaultUnlock(); else goProfiles();
+if(cryptoLocked) startVaultUnlock(); else bootEntry();

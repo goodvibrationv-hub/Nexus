@@ -810,6 +810,9 @@
   .lockwrap.shake{ animation:shk .3s }
   @keyframes shk{ 0%,100%{transform:translateX(0)} 20%,60%{transform:translateX(-8px)} 40%,80%{transform:translateX(8px)} }
   .pcard .plock{ margin-left:6px; font-size:11px; opacity:.7 }
+  /* activation par lien personnel */
+  #scActivate{ display:none }
+  #scActivate.active{ display:flex; flex-direction:column; min-height:calc(100dvh - 30px) }
   /* coffre chiffré */
   #scVault{ display:none }
   #scVault.active{ display:flex; flex-direction:column; min-height:calc(100dvh - 30px) }
@@ -826,11 +829,22 @@
 <div class="app">
   <button class="backbtn" id="backBtn" style="display:none"><span>←</span><span class="lbl" id="backLbl">retour</span></button>
 
-  <!-- PROFILS : choix de l'utilisateur -->
-  <section class="screen active" id="scProfiles">
-    <h1 class="title">Qui utilise l'app ?</h1>
-    <p class="intro">Choisis ton profil. Chacun a sa propre progression.</p>
+  <!-- ATTRIBUTION (code parent) : à qui appartient cet appareil ? -->
+  <section class="screen" id="scProfiles">
+    <h1 class="title">À qui appartient cet appareil ?</h1>
+    <p class="intro">Choix réservé au parent. Le compte choisi devient LE compte de cet appareil.</p>
     <div class="profilepick" id="profileList"></div>
+  </section>
+
+  <!-- ACTIVATION : accès par lien personnel -->
+  <section class="screen active" id="scActivate">
+    <div class="lockwrap">
+      <span class="lock-av">✉️</span>
+      <h1 class="lock-title">Accès personnel</h1>
+      <p class="lock-sub">Cette application s'ouvre avec un lien personnel. Ouvre le lien d'accès qui t'a été envoyé pour activer ton compte sur cet appareil.</p>
+      <div class="lock-msg" id="actMsg"></div>
+      <button class="lock-2nd" id="actParent">Activer avec le code parent</button>
+    </div>
   </section>
 
   <!-- VERROU : code d'accès (PIN) -->
@@ -863,7 +877,7 @@
 
   <!-- LANDING : two doors -->
   <section class="screen" id="scLanding">
-    <button class="profilechip" id="profileChip"><span class="pc-av" id="chipAv">👤</span><span class="pc-nm" id="chipName">Profil</span><span class="pc-x">Changer</span></button>
+    <div class="profilechip" id="profileChip"><span class="pc-av" id="chipAv">👤</span><span class="pc-nm" id="chipName">Profil</span></div>
     <h1 class="title">Bienvenue</h1>
     <div class="homegrid">
       <button class="htile learn" id="doorLearn"><span class="ti">❦</span><h2>Apprendre</h2><span class="ts">Savoir-faire</span></button>

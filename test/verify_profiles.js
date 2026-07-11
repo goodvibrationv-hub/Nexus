@@ -56,25 +56,15 @@ const stM=L.profileStats(store(legacy).profiles.mael);
 ok('P12 — profileStats : niveau et % par profil', typeof stA.level==='string' && stM.masteredN>stA.masteredN);
 ok('P13 — profileStats expose lacunes (fragile/retard/weakest)', 'fragile' in stA && 'retard' in stA && 'weakest' in stA);
 
-// ---- verrou par code (PIN 4 chiffres, par profil) ----
+// ---- accès sans code : ouverture directe, anciens codes inertes ----
 const g=makeEnv({mastered:{}}); loadApp(g); const G=g.ctx, GR=g.reg;
 const feed=(digits)=>{ String(digits).split('').forEach(d=>G.pinPress(d)); G.pinComplete(); };
-ok('PIN1 — hashPin déterministe et distinctif', G.hashPin('1234')===G.hashPin('1234') && G.hashPin('1234')!==G.hashPin('0000'));
-G.startSetPin('alizee'); feed('1234'); feed('1234');   // choisir puis confirmer
-ok('PIN2 — code défini et empreinté (non en clair)', !!store(g).profiles.alizee.pin && store(g).profiles.alizee.pin!=='1234' && store(g).profiles.alizee.pin===G.hashPin('1234'));
+ok('PIN1 — hashPin déterministe et distinctif (jetons d’accès)', G.hashPin('1234')===G.hashPin('1234') && G.hashPin('1234')!==G.hashPin('0000'));
+G.bindDevice('alizee'); G.openProfile('alizee');
+ok('PIN2 — ouverture directe du compte, sans code', store(g).currentProfile==='alizee' && GR.scLanding.classList.contains('active'));
+G.startSetPin('alizee'); feed('1111'); feed('1111');   // un ancien code posé jadis…
 G.activateProfile('mael'); G.openProfile('alizee');
-ok('PIN3 — profil protégé : écran de code, pas d’entrée directe', GR.scLock.classList.contains('active') && store(g).currentProfile==='mael');
-feed('0000');
-ok('PIN4 — mauvais code refusé (on reste dehors)', store(g).currentProfile==='mael');
-G.startUnlock('alizee'); feed('1234');
-ok('PIN5 — bon code : profil ouvert', store(g).currentProfile==='alizee');
-G.startSetPin('alizee'); GR.lockForgot.onclick();     // depuis sa session : retirer le code
-ok('PIN6 — retrait du code', !store(g).profiles.alizee.pin);
-const r=makeEnv({mastered:{}}, 'Lavieaufreyche'); loadApp(r); const RC=r.ctx;
-const feedR=(digits)=>{ String(digits).split('').forEach(d=>RC.pinPress(d)); RC.pinComplete(); };
-RC.startSetPin('lali'); feedR('4321'); feedR('4321');
-RC.activateProfile('mael'); RC.startUnlock('lali'); RC.recoverPin();
-ok('PIN7 — code parent de secours débloque et retire le code', store(r).currentProfile==='lali' && !store(r).profiles.lali.pin);
+ok('PIN3 — un ancien code est ignoré (inerte)', store(g).currentProfile==='alizee');
 
 // ---- gestion des comptes ----
 ok('P16 — renommer un profil', G.renameProfile('lali','Lali B.') && store(g).profiles.lali.name==='Lali B.');

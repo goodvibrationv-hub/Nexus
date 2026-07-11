@@ -96,9 +96,7 @@ const RECOVERY_CODE='Lavieaufreyche';   // code parent de secours (déblocage d'
 /* Accès par lien personnel : chaque compte s'active via un jeton unique (#acces=…).
    Seules les empreintes des jetons sont embarquées ici, jamais les jetons en clair. */
 const ACCESS_TOKENS=(typeof window!=='undefined'&&window.NEXUS_ACCESS)||{ mael:'pgvv7ji', alizee:'ppoljgc', lali:'p1sgjwz3' };
-/* Code de session pré-attribué à chaque compte (empreintes) : envoyé avec le lien.
-   Demandé dès la première connexion ; modifiable ensuite depuis l'accueil. */
-const PRESET_PINS=(typeof window!=='undefined'&&window.NEXUS_PRESET)||{ mael:'pyhu61a', alizee:'pyhwg87', lali:'pyhtehu' };
+/* Accès sans code : le lien personnel suffit, l'appareil lié ouvre directement le compte. */
 function todayStr(){ return new Date().toISOString().slice(0,10); }
 function newStats(){ return { createdAt:Date.now(), lastSeen:0, reviews:0, sessions:0, days:[] }; }
 function initProfiles(){
@@ -259,7 +257,6 @@ function goLanding(){ mode='landing';
   const p=curProfile();
   if($('chipName')) $('chipName').textContent=p?p.name:'Profil';
   if($('chipAv')) $('chipAv').textContent=profileAvatar(STORE.currentProfile);
-  if($('pinBtn')) $('pinBtn').textContent=(p&&p.pin)?'🔒 Modifier / retirer le code':'🔒 Protéger ce profil par un code';
   show('scLanding',{accent:'#3F5E4E',nav:'landing'});
 }
 function goHome(){ goRoot(goLanding,'accueil'); }
@@ -268,7 +265,6 @@ $('doorStable').onclick=()=>navGo('stable');
 if($('doorWood')) $('doorWood').onclick=()=>navGo('wood');
 if($('doorEsprit')) $('doorEsprit').onclick=()=>navGo('esprit');
 /* compte personnel : pas de changement d'utilisateur depuis l'app */
-if($('pinBtn')) $('pinBtn').onclick=()=>{ const id=STORE.currentProfile; if(id) startSetPin(id, goLanding); };
 
 /* ====== attribution du propriétaire de l'appareil (code parent uniquement) ====== */
 function goProfiles(){ mode='landing'; goRoot(renderProfiles,'profils'); }
@@ -317,12 +313,7 @@ function bootEntry(){
   if(tok){ const r=claimFromToken(tok);
     if(r==='denied'){ const own=deviceOwner();
       renderActivate('Cet appareil est déjà lié au compte de '+STORE.profiles[own].name+'.'); return; }
-    if(r){ const p=STORE.profiles[r];
-      if(!p.pin && PRESET_PINS[r]){ p.pin=PRESET_PINS[r]; saveStore(); }   // code de session pré-attribué
-      if(p.pin){ startUnlock(r);
-        if($('lockSub')) $('lockSub').textContent='Première connexion : entre le code reçu avec ton lien. Ce compte est désormais le tien.'; }
-      else startSetPin(r, ()=>enterProfile(r));
-      return; }
+    if(r){ enterProfile(r); return; }
     renderActivate('Lien d’accès invalide.'); return;
   }
   const own=deviceOwner();
@@ -362,7 +353,7 @@ function pinComplete(){ if(!lock) return; const code=lock.buf; lock.buf='';
     if(code===lock.first){ const p=STORE.profiles[lock.profileId]; p.pin=hashPin(code); saveStore(); const cb=lock.cb; lock=null; (cb||goLanding)(); }
     else { lock.mode='set'; lock.first=''; if($('lockTitle'))$('lockTitle').textContent='Choisis un code'; lockShake('Les deux codes diffèrent'); } }
 }
-function openProfile(id){ const p=STORE.profiles[id]; if(!p) return; if(p.pin) startUnlock(id); else enterProfile(id); }
+function openProfile(id){ if(STORE.profiles[id]) enterProfile(id); }
 function enterProfile(id){ lock=null; activateProfile(id); goHome(); }
 function startUnlock(id){ const p=STORE.profiles[id]; if(!p) return; lock={mode:'unlock',profileId:id,buf:'',first:''};
   if($('lockAv'))$('lockAv').textContent=profileAvatar(id); if($('lockTitle'))$('lockTitle').textContent=p.name;

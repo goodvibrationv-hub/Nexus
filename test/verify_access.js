@@ -37,18 +37,11 @@ ok('X2 — aucun propriétaire lié', !store(v).deviceOwner);
 const a=makeEnv({mastered:{}}, {hash:'#acces='+TOK.alizee}); loadApp(a); const A=a.ctx;
 ok('X3 — lien d’Alizée : appareil lié à alizee', store(a).deviceOwner==='alizee');
 ok('X4 — date de première connexion enregistrée', !!store(a).profiles.alizee.claimedAt);
-ok('X5 — première connexion : code de session pré-attribué et demandé', a.reg.scLock.classList.contains('active') && store(a).profiles.alizee.pin===A.hashPin('2468'));
-feed(A,'0000');                                        // mauvais code refusé
-ok('X5b — mauvais code refusé', store(a).currentProfile!=='alizee');
-feed(A,'2468');                                        // code reçu avec le lien
-ok('X6 — bon code : session ouverte sur SON compte', store(a).currentProfile==='alizee' && a.reg.scLanding.classList.contains('active'));
+ok('X5 — première connexion : entrée directe, sans code', a.reg.scLanding.classList.contains('active') && store(a).currentProfile==='alizee');
 
-// ---- reboots suivants : direct sur SON compte, code exigé, pas de sélecteur ----
-const a2=makeEnv(store(a)); loadApp(a2); const A2=a2.ctx;
-ok('X7 — redémarrage : verrou du compte lié (pas de choix de compte)', a2.reg.scLock.classList.contains('active') && !a2.reg.scProfiles.classList.contains('active'));
-ok('X8 — bouton Retour du verrou masqué (appareil lié)', a2.reg.lockCancel.style.display==='none');
-feed(A2,'2468'); A2.pinComplete&&null;
-ok('X9 — bon code : ouvre le compte du propriétaire', store(a2).currentProfile==='alizee');
+// ---- reboots suivants : direct sur SON compte, pas de sélecteur ni de code ----
+const a2=makeEnv(store(a)); loadApp(a2);
+ok('X6 — redémarrage : ouverture directe du compte lié', store(a2).currentProfile==='alizee' && a2.reg.scLanding.classList.contains('active') && !a2.reg.scProfiles.classList.contains('active'));
 
 // ---- le lien d'un AUTRE compte est refusé sur un appareil déjà lié ----
 const b=makeEnv(store(a), {hash:'#acces='+TOK.lali}); loadApp(b);

@@ -35,7 +35,7 @@ const srs={};
 esc.slice(0,4).forEach(id=>srs[id]={s:30,d:5,due:now+30*DAY,reps:5});   // solides, à jour
 esc.slice(4,6).forEach(id=>srs[id]={s:3,d:8,due:now-2*DAY,reps:1});      // fragiles + en retard
 mec.slice(0,2).forEach(id=>srs[id]={s:2,d:9,due:now-5*DAY,reps:1});      // meca en retard (négligé)
-const seed={ mastered:{escalade:['e1','e2','e3','e4','e5','e6','e7','e8'], meca:['m1','m2']}, srs };
+const seed={ mastered:{escalade:['e1','e2','e3','e4','e5','e6','e7','e8'], meca:['m1','m2']}, srs, profilesReset1:true };
 
 // 2) recharge avec les données simulées et rend l'écran
 const env=makeEnv(seed); loadApp(env); const c=env.ctx;

@@ -34,7 +34,7 @@ const cardByStmt={}; probe.ctx.window.NEXUS_CARDS.forEach(c=>cardByStmt[c.stmt]=
 function dueOf(env,stmt){ const id=cardByStmt[stmt].id; const s=JSON.parse(env.ctx.localStorage.getItem('nexus_stable')).srs||{}; return s[id]?s[id].due:0; }
 
 // --- Mode difficile activé ---
-const env=makeEnv({hardMode:true, mastered:{}});
+const env=makeEnv({hardMode:true, mastered:{}, profilesReset1:true});
 loadApp(env); const c=env.ctx; const R=env.reg;
 c.renderRevise();
 ok('H1 — toggle reflète hardMode=true', R.hardToggle.checked===true);

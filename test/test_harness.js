@@ -59,7 +59,7 @@ ok('T1 offline : aucun appel réseau au chargement', env.netHit.n===0);
 
 /* T2 — rétro-compatibilité : ancienne sauvegarde sans srs + mastered conservé */
 { const e2=makeEnv();
-  const old={ horses:[{name:'x'}], tasks:[], mastered:{ escalade:['e1','e8'] } }; // pas de srs
+  const old={ horses:[{name:'x'}], tasks:[], mastered:{ escalade:['e1','e8'] }, profilesReset1:true }; // pas de srs
   let threw=false; try{ loadApp(e2, old); }catch(err){ threw=true; }
   ok('T2 ancienne sauvegarde (sans srs) charge sans erreur', !threw);
   ok('T2 migration srs -> {} (pas de perte)', JSON.stringify(srs(e2))==='{}');

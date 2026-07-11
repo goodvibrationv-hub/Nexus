@@ -27,7 +27,7 @@ const store=env=>JSON.parse(env.ls.get('nexus_stable'));
 const someCard=(()=>{ const probe=makeEnv({mastered:{}}); loadApp(probe); return probe.ctx.window.NEXUS_CARDS[0]; })();
 const drone=(()=>{ const probe=makeEnv({mastered:{}}); loadApp(probe); return probe.ctx.window.NEXUS_CARDS.find(c=>c.skill!==someCard.skill)||someCard; })();
 
-const legacy=makeEnv({ mastered:{ escalade:['e1'] }, srs:{ [someCard.id]:{s:30,d:5,due:Date.now()+9e9,reps:3} }, hardMode:true });
+const legacy=makeEnv({ mastered:{ escalade:['e1'] }, srs:{ [someCard.id]:{s:30,d:5,due:Date.now()+9e9,reps:3} }, hardMode:true, profilesReset1:true });
 loadApp(legacy); const L=legacy.ctx;
 let S=store(legacy);
 ok('P1 — 3 profils créés (mael/alizee/lali)', S.profiles && S.profiles.mael && S.profiles.alizee && S.profiles.lali);
@@ -91,6 +91,16 @@ ok('P20 — reset du profil actif vide aussi les Sets vivants', L.profileStats(s
 G.renameProfile('alizee','Zaza');
 const re=makeEnv(store(g)); loadApp(re);
 ok('P21 — profils persistés au rechargement', store(re).profiles.alizee.name==='Zaza' && store(re).profiles.lali.name==='Lali B.');
+
+// ---- remise à zéro générale (une fois par appareil) ----
+const w=makeEnv({ mastered:{}, deviceOwner:'mael',
+  profiles:{ mael:{name:'Maël',role:'admin',mastered:{escalade:['e1','e2']},srs:{c1:{s:9}},hardMode:true,pin:'pXYZ',claimedAt:123,stats:{reviews:9,sessions:2,days:['2026-01-01'],createdAt:1,lastSeen:2}},
+             alizee:{name:'Alizée',role:'user',mastered:{meca:['m1']},srs:{},pin:'pABC',stats:{reviews:3,sessions:1,days:[],createdAt:1,lastSeen:2}},
+             lali:{name:'Lali',role:'user',mastered:{},srs:{},stats:{reviews:0,sessions:0,days:[],createdAt:1,lastSeen:0}} } });
+loadApp(w); const WS=store(w);
+ok('Z1 — progression et stats remises à zéro', (WS.profiles.mael.mastered.escalade||[]).length===0 && Object.keys(WS.profiles.mael.srs).length===0 && WS.profiles.mael.stats.reviews===0 && (WS.profiles.alizee.mastered.meca||[]).length===0);
+ok('Z2 — codes et liaisons effacés', !WS.profiles.mael.pin && !WS.profiles.alizee.pin && !WS.profiles.mael.claimedAt && !WS.deviceOwner);
+ok('Z3 — remise à zéro une seule fois (flag posé)', WS.profilesReset1===true && WS.currentProfile==='mael');
 
 console.log('\n=== Bilan verif Profils & supervision :', pass, 'réussis,', fail, 'échoués ===');
 process.exit(fail?1:0);

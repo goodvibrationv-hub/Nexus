@@ -24,7 +24,8 @@ function loadStore(){
       if(d.profiles){ STORE.profiles=d.profiles; STORE.currentProfile=d.currentProfile||'mael'; if(d.seedProfiles) STORE.seedProfiles=d.seedProfiles; }
       if(d.woodStock) STORE.woodStock=d.woodStock; if(d.woodPlan) STORE.woodPlan=d.woodPlan;
       if(d.yoga) STORE.yoga=d.yoga; if(d.g270) STORE.g270=d.g270;
-      if(d.deviceOwner) STORE.deviceOwner=d.deviceOwner; }
+      if(d.deviceOwner) STORE.deviceOwner=d.deviceOwner;
+      if(d.profilesReset1) STORE.profilesReset1=d.profilesReset1; }
   }catch(e){ /* mémoire seule */ }
   Object.keys(D.SKILLS).forEach(k=>{ if(!STORE.mastered[k]) STORE.mastered[k]=[]; });
 }
@@ -108,6 +109,13 @@ function initProfiles(){
       lali:  { name:'Lali',   role:'user',  mastered:{}, srs:{}, hardMode:false, stats:newStats() }
     };
     STORE.currentProfile='mael'; STORE.seedProfiles=true;
+  }
+  /* Remise à zéro générale des profils (une seule fois par appareil) :
+     progression, stats, codes et liaison d'appareil effacés ; les données
+     communes (Domaine, Bois, Atelier G270, Yoga…) sont conservées. */
+  if(!STORE.profilesReset1){
+    Object.values(STORE.profiles).forEach(p=>{ p.mastered={}; p.srs={}; p.hardMode=false; p.stats=newStats(); delete p.pin; delete p.claimedAt; });
+    delete STORE.deviceOwner; STORE.currentProfile='mael'; STORE.profilesReset1=true;
   }
   Object.values(STORE.profiles).forEach(p=>{
     if(!p.mastered) p.mastered={}; if(!p.srs) p.srs={}; if(!p.stats) p.stats=newStats();

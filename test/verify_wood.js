@@ -139,5 +139,13 @@ ok('Q8 — dossier : alerte stock insuffisant', /Stock insuffisant/.test(docH));
 c5.toggleWoodPlan('charpente');
 ok('Q9 — décocher efface la quantité', !(JSON.parse(env5.ls.get('nexus_stable')).woodPlan.qty||{}).charpente);
 
+// ---- dossier : planification directe depuis le dossier ----
+c5.renderWoodProjectDoc('charpente');            // non cochée à ce stade
+ok('Q10 — dossier non planifié : bouton « Planifier cette construction »', /Planifier cette construction/.test(env5.reg.wfBody.innerHTML));
+c5.toggleWoodPlan('charpente'); c5.setWoodQty('charpente',2); c5.renderWoodProjectDoc('charpente');
+const dh=env5.reg.wfBody.innerHTML;
+ok('Q11 — dossier planifié : compteur de quantité + retrait', /pq-in/.test(dh) && /Retirer cette construction/.test(dh) && /grume/.test(dh));
+c5.toggleWoodPlan('charpente');
+
 console.log('\n=== Bilan verif Projet Bois :', pass, 'réussis,', fail, 'échoués ===');
 process.exit(fail?1:0);

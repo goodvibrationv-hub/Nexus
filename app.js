@@ -1895,16 +1895,20 @@ function renderWoodProjectDoc(k){
     : '<div class="doc-yield warn"><span class="dy-n">Pas encore réalisable</span><span class="dy-s">'+esc(row.hint||'—')+'</span></div>';
   /* construction planifiée : quantité voulue + grumes réservées */
   let buildBox='';
-  if(woodPlanSet().has(k)){ const al=woodAllocation().alloc[k];
+  const isSel=woodPlanSet().has(k);
+  if(isSel){ const al=woodAllocation().alloc[k];
     if(al){ const short=al.got<al.want;
       const rowsL=al.logs.map(c=>{ const e=essenceByKey(c.l.speciesKey);
         return '<tr><td>'+esc(e?e.n:(c.l.speciesName||'Grume'))+'</td><td>'+(c.l.lengthCm||0)+'×Ø'+(c.l.diamCm||0)+' cm</td><td>'+(c.l.volumeM3||0).toFixed(2)+' m³</td><td>≈ '+c.y+'</td></tr>'; }).join('');
       buildBox='<div class="doc-build'+(short?' warn':'')+'"><div class="db-head"><b>'+al.want+' '+esc(al.unit)+(al.want>1?'s':'')+' voulue'+(al.want>1?'s':'')+'</b>'+
         '<span>'+al.logs.length+' grume'+(al.logs.length>1?'s':'')+' réservée'+(al.logs.length>1?'s':'')+' · '+al.vol.toFixed(2)+' m³ · ≈ '+al.got+' '+esc(al.unit)+(al.got>1?'s':'')+' possible'+(al.got>1?'s':'')+'</span>'+
         (short?'<span class="db-warn">⚠️ Stock insuffisant pour '+al.want+' : ajoute des grumes adaptées ou réduis la quantité.</span>':'')+'</div>'+
+        '<div class="psel-qty"><button class="pq-btn" data-qm="'+k+'">−</button><input class="pq-in" data-qi="'+k+'" type="number" inputmode="numeric" min="1" max="999" value="'+al.want+'"><button class="pq-btn" data-qp="'+k+'">+</button><span class="pq-lbl">'+esc(al.unit)+(al.want>1?'s':'')+' voulue'+(al.want>1?'s':'')+'</span></div>'+
         (rowsL?'<div class="tablewrap"><table class="cutlist"><thead><tr><th>Essence</th><th>Dimensions</th><th>Volume</th><th>Pièces</th></tr></thead><tbody>'+rowsL+'</tbody></table></div>':'')+
-        '</div>';
+        '<button class="demolink del" id="docUnbuild">Retirer cette construction</button></div>';
     }
+  } else {
+    buildBox='<div class="doc-build off"><div class="db-head"><b>Pas encore planifiée</b><span>Choisis-la : les grumes nécessaires seront réservées et listées ici, avec la quantité de pièces que tu veux.</span></div><button class="mnt-btn add" id="docBuild" style="width:100%">🔨 Planifier cette construction</button></div>';
   }
   const plan=WOOD_PLAN[k]||{};
   const cut=(plan.cutlist||[]).map(r=>'<tr><td>'+esc(r.p)+'</td><td>'+esc(r.sec)+'</td><td>'+esc(r.l)+'</td><td>'+esc(''+r.q)+'</td></tr>').join('');
@@ -1926,6 +1930,12 @@ function renderWoodProjectDoc(k){
   html+='<div class="wnav"><button class="miniBtn" id="docBack">← Projets</button></div>';
   $('wfBody').innerHTML=html;
   $('docBack').onclick=()=>doBack();
+  const bWrap=$('wfBody');
+  const db=$('docBuild'); if(db) db.onclick=()=>{ toggleWoodPlan(k); renderWoodProjectDoc(k); };
+  const du=$('docUnbuild'); if(du) du.onclick=()=>{ toggleWoodPlan(k); renderWoodProjectDoc(k); };
+  bWrap.querySelectorAll('[data-qm]').forEach(x=>x.onclick=()=>{ setWoodQty(k, woodQty(k)-1); renderWoodProjectDoc(k); });
+  bWrap.querySelectorAll('[data-qp]').forEach(x=>x.onclick=()=>{ setWoodQty(k, woodQty(k)+1); renderWoodProjectDoc(k); });
+  bWrap.querySelectorAll('[data-qi]').forEach(x=>x.onchange=()=>{ setWoodQty(k, x.value); renderWoodProjectDoc(k); });
   show('scWoodFlow',{accent:'#7C5A34',nav:'wood'});
 }
 

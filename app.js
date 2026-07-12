@@ -24,6 +24,7 @@ function loadStore(){
       if(d.profiles){ STORE.profiles=d.profiles; STORE.currentProfile=d.currentProfile||'mael'; if(d.seedProfiles) STORE.seedProfiles=d.seedProfiles; }
       if(d.woodStock) STORE.woodStock=d.woodStock; if(d.woodPlan) STORE.woodPlan=d.woodPlan;
       if(d.yoga) STORE.yoga=d.yoga; if(d.g270) STORE.g270=d.g270;
+      if(d.amenagement) STORE.amenagement=d.amenagement;
       if(d.deviceOwner) STORE.deviceOwner=d.deviceOwner;
       if(d.profilesReset1) STORE.profilesReset1=d.profilesReset1; }
   }catch(e){ /* mémoire seule */ }
@@ -406,13 +407,18 @@ function resetProfile(id){ const p=STORE.profiles[id]; if(!p) return;
 /* ====== learning ====== */
 function renderHome(){
   const g=$('domainList'); g.innerHTML='';
-  const n=Object.keys(D.SKILLS).length;
+  const n=Object.keys(D.SKILLS).length+(window.AMENAGEMENT?1:0);
   if($('domainCount')) $('domainCount').textContent=n+' domaines';
   Object.entries(D.SKILLS).forEach(([k,s])=>{
     const b=document.createElement('button'); b.className='dtile'; b.style.setProperty('--c',s.color);
     b.innerHTML='<div class="top"><span class="ic">'+s.icon+'</span><h3>'+s.name+'</h3></div><div class="barwrap"><span class="bar"><i style="width:'+pct(k)+'%"></i></span><span class="pc">'+pct(k)+'%</span></div>';
     b.onclick=()=>openDomain(k); g.appendChild(b);
   });
+  if(window.AMENAGEMENT){ const A=window.AMENAGEMENT; const pr=amenProgress(); const p=pr.total?Math.round(pr.done*100/pr.total):0;
+    const b=document.createElement('button'); b.className='dtile'; b.style.setProperty('--c',A.color);
+    b.innerHTML='<div class="top"><span class="ic">'+A.icon+'</span><h3>'+A.name+'</h3></div><div class="barwrap"><span class="bar"><i style="width:'+p+'%"></i></span><span class="pc">'+p+'%</span></div>';
+    b.onclick=()=>openAmenagement(); g.appendChild(b);
+  }
 }
 function statusOf(k,n){ if(mastered[k].has(n.id))return 'mastered'; if(n.deps.every(d=>mastered[k].has(d)))return 'available'; return 'locked'; }
 function nameOf(k,id){ return D.SKILLS[k].nodes.find(x=>x.id===id).t; }
@@ -2198,6 +2204,68 @@ function renderElagGuide(){
   $('atfBody').innerHTML=h;
   show('scAtelierFlow',{accent:'#557A3C',nav:'domains'});
 }
+/* ====== Aménagement de camion : guide de chantier en modules (pas un cours) ====== */
+function amenS(){ if(!STORE.amenagement) STORE.amenagement={done:{}}; if(!STORE.amenagement.done) STORE.amenagement.done={}; return STORE.amenagement; }
+function amenProgress(){ const A=window.AMENAGEMENT; const st=amenS(); let t=0,d=0;
+  ((A&&A.modules)||[]).forEach(m=>{ m.etapes.forEach((e,i)=>{ t++; if(st.done[m.key+'_'+i]) d++; }); }); return {done:d,total:t}; }
+function openAmenagement(){ go(renderAmenHub,'aménagement'); }
+function renderAmenHub(){
+  mode='learn'; const A=window.AMENAGEMENT; const st=amenS();
+  $('atfTitle').textContent=A.name;
+  const nAst=(A.astuces||[]).reduce((a,g)=>a+g.items.length,0);
+  let h='<p class="atf-lead">'+esc(A.meta)+'. Pas un cours à valider : un guide de chantier — conseils, exemples et renvois vers les autres domaines, étape par étape.</p>';
+  h+='<button class="atelier-banner astuce" type="button" data-amast="1"><span class="ab-ic">💡</span><span class="ab-mid"><span class="ab-t">Meilleures astuces</span><span class="ab-s">'+nAst+' astuces : place, poids, budget, autonomie, hiver, pièges</span></span><span class="ab-go">Ouvrir ›</span></button>';
+  const pr=amenProgress();
+  h+='<div class="dep-cat">Les '+A.modules.length+' modules du chantier — '+pr.done+' / '+pr.total+' étapes faites</div>';
+  A.modules.forEach(m=>{ const d=m.etapes.filter((e,i)=>st.done[m.key+'_'+i]).length;
+    h+='<button class="mod-row'+(d===m.etapes.length?' full':'')+'" type="button" data-ammod="'+m.key+'"><span class="arb-ic">'+m.ic+'</span><span class="mod-mid"><span class="dep-s">'+esc(m.t)+'</span><span class="mod-s">'+esc(m.s)+'</span></span><span class="dep-c">'+d+' / '+m.etapes.length+'</span></button>'; });
+  h+='<p class="atf-note">L’ordre des modules suit l’ordre du vrai chantier : finis (ou au moins prépare) un module avant d’attaquer le suivant.</p>';
+  $('atfBody').innerHTML=h;
+  $('atfBody').querySelectorAll('[data-ammod]').forEach(b=>b.onclick=()=>openAmenModule(b.dataset.ammod));
+  const ab=$('atfBody').querySelector('[data-amast]'); if(ab) ab.onclick=()=>openAstuces();
+  show('scAtelierFlow',{accent:A.color,nav:'domains'});
+}
+function openAmenModule(key){ go(()=>renderAmenModule(key),'module'); }
+function renderAmenModule(key,keep){
+  mode='learn'; const A=window.AMENAGEMENT; const m=A.modules.find(x=>x.key===key); const st=amenS();
+  const today=new Date().toISOString().slice(0,10);
+  if(!m){ $('atfBody').innerHTML='<p class="atf-note">Module introuvable.</p>'; if(!keep) show('scAtelierFlow',{accent:A.color,nav:'domains'}); return; }
+  $('atfTitle').textContent=m.t;
+  const done=m.etapes.filter((e,i)=>st.done[key+'_'+i]).length;
+  let h='<p class="atf-lead">'+esc(m.s)+'</p>';
+  h+='<div class="dep-cat">Étapes — '+done+' / '+m.etapes.length+' faite'+(done>1?'s':'')+'</div><ol class="tuto-steps big check">';
+  m.etapes.forEach((e,i)=>{ const on=!!st.done[key+'_'+i];
+    h+='<li class="'+(on?'done':'')+'"><button class="pan-chk'+(on?' on':'')+'" data-amst="'+i+'" aria-label="fait">'+(on?'✓':'')+'</button><div class="pan-stx"><b>'+esc(e.t)+'.</b> '+esc(e.d);
+    if(e.conseils&&e.conseils.length) h+='<ul class="mod-tips">'+e.conseils.map(c=>'<li>'+esc(c)+'</li>').join('')+'</ul>';
+    if(e.ex) h+='<div class="mod-ex">'+esc(e.ex)+'</div>';
+    if(e.liens&&e.liens.length){ const chips=e.liens.filter(k=>D.SKILLS[k]).map(k=>'<button class="dom-chip" type="button" data-dom="'+k+'">'+D.SKILLS[k].icon+' '+D.SKILLS[k].name+'</button>').join('');
+      if(chips) h+='<div class="mod-links"><span class="mod-lk">Domaines liés :</span>'+chips+'</div>'; }
+    h+='</div></li>'; });
+  h+='</ol>';
+  const idx=A.modules.indexOf(m); const nx=A.modules[idx+1];
+  if(nx) h+='<button class="mod-row next" type="button" data-amnext="'+nx.key+'"><span class="arb-ic">'+nx.ic+'</span><span class="mod-mid"><span class="mod-s">Module suivant</span><span class="dep-s">'+esc(nx.t)+'</span></span><span class="ab-go">Ouvrir ›</span></button>';
+  else h+='<p class="atf-note">🏁 Dernier module : après l’essai longue durée, il ne reste qu’à prendre la route.</p>';
+  $('atfBody').innerHTML=h;
+  $('atfBody').querySelectorAll('[data-amst]').forEach(b=>b.onclick=()=>{ const k=key+'_'+b.dataset.amst;
+    if(st.done[k]) delete st.done[k]; else st.done[k]=today; saveStore(); renderAmenModule(key,true); });
+  $('atfBody').querySelectorAll('[data-dom]').forEach(b=>b.onclick=()=>openDomain(b.dataset.dom));
+  $('atfBody').querySelectorAll('[data-amnext]').forEach(b=>b.onclick=()=>openAmenModule(b.dataset.amnext));
+  if(!keep) show('scAtelierFlow',{accent:A.color,nav:'domains'});
+}
+function openAstuces(){ go(renderAstuces,'astuces'); }
+function renderAstuces(){
+  mode='learn'; const A=window.AMENAGEMENT;
+  $('atfTitle').textContent='Meilleures astuces — aménagement';
+  let h='<p class="atf-lead">Le concentré de ce qui marche vraiment sur les chantiers d’aménagement, classé par thème. Touche une astuce pour dérouler.</p>';
+  (A.astuces||[]).forEach(g=>{
+    h+='<div class="dep-cat">'+esc(g.cat)+' — '+g.items.length+'</div>';
+    g.items.forEach(a=>{ h+='<details class="dep-item arb"><summary><span class="arb-ic">'+(g.ic||'💡')+'</span><span class="dep-s">'+esc(a.t)+'</span></summary><div class="dep-k">'+esc(a.d)+'</div></details>'; });
+  });
+  h+='<p class="atf-note">Ces astuces complètent les modules du chantier — le détail pas-à-pas est dans chaque module.</p>';
+  $('atfBody').innerHTML=h;
+  show('scAtelierFlow',{accent:A.color,nav:'domains'});
+}
+
 function openAtelier(){ go(renderAtelierHub,'atelier'); }
 function renderAtelierHub(){
   mode='learn'; g270S();

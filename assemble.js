@@ -43,9 +43,10 @@ const appCode  = read('app.js');
 let photos = '';  try { photos  = read('g270_photos.js');  } catch { photos  = ''; }
 let atelier = ''; try { atelier = read('g270_atelier.js'); } catch { atelier = ''; }
 let elagGuide = ''; try { elagGuide = read('elagage_guide.js'); } catch { elagGuide = ''; }
+let amen = '';      try { amen      = read('amenagement.js');   } catch { amen      = ''; }
 
 /* ---- injection ---- */
-const dataBlock = [dataCore, content, cards, photos, atelier, elagGuide].join('\n');
+const dataBlock = [dataCore, content, cards, photos, atelier, elagGuide, amen].join('\n');
 
 const html = template
   .replace('/* {{DATA_INJECT}} */', dataBlock)

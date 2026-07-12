@@ -2138,9 +2138,8 @@ function saveWoodLog(){
    Données du camion stockées à la racine du STORE (un seul véhicule).
    ============================================================ */
 function g270S(){ if(!STORE.g270) STORE.g270={sheet:{},fait:{},journal:[]};
-  if(!STORE.g270.panne) STORE.g270.panne={done:{},ans:{},obs:[]};
-  if(!STORE.g270.panne.done) STORE.g270.panne.done={}; if(!STORE.g270.panne.ans) STORE.g270.panne.ans={};
-  if(!Array.isArray(STORE.g270.panne.obs)) STORE.g270.panne.obs=[];
+  if(!STORE.g270.pannes) STORE.g270.pannes={};
+  if(STORE.g270.panne){ if(!STORE.g270.pannes.demarrage) STORE.g270.pannes.demarrage=STORE.g270.panne; delete STORE.g270.panne; }
   if(!STORE.g270.sheet) STORE.g270.sheet={}; if(!STORE.g270.fait) STORE.g270.fait={};
   if(!Array.isArray(STORE.g270.journal)) STORE.g270.journal=[]; return STORE.g270; }
 
@@ -2184,11 +2183,12 @@ function renderAtelierHub(){
     {v:'reperage',  ic:'📸', t:'Repérage des organes', s:((window.G270_PHOTOS||[]).length||0)+' photos'}
   ];
   let html='';
-  if(window.G270_PANNE) html+='<button class="panne-banner" id="panneBtn"><span class="pb-ic">⚠️</span><span class="pb-mid"><span class="pb-t">Panne en cours — démarre puis cale à ~45 s</span><span class="pb-s">Diagnostic guidé pas à pas</span></span><span class="ab-go">Ouvrir ›</span></button>';
+  (window.G270_PANNES||(window.G270_PANNE?[window.G270_PANNE]:[])).forEach(pn=>{ const st=panneState(pn.key||'demarrage'); const res=!!st.resolved;
+    html+='<button class="panne-banner'+(res?' res':'')+'" data-panne="'+esc(pn.key||'demarrage')+'"><span class="pb-ic">'+(res?'✅':'⚠️')+'</span><span class="pb-mid"><span class="pb-t">'+esc(pn.short||pn.title||'Panne')+'</span><span class="pb-s">'+(res?'Résolue — dossier consultable':'Diagnostic guidé pas à pas')+'</span></span><span class="ab-go">Ouvrir ›</span></button>'; });
   html+=tiles.map(t=>'<button class="woodtile" data-av="'+t.v+'"><span class="wt-ic">'+t.ic+'</span><span class="wt-mid"><span class="wt-t">'+t.t+'</span><span class="wt-s">'+esc(t.s)+'</span></span><span class="chev">›</span></button>').join('');
   $('atelierTiles').innerHTML=html;
   $('atelierTiles').querySelectorAll('[data-av]').forEach(b=>b.onclick=()=>openAtelierView(b.dataset.av));
-  const pb=$('panneBtn'); if(pb) pb.onclick=()=>openPanne();
+  $('atelierTiles').querySelectorAll('[data-panne]').forEach(b=>b.onclick=()=>openPanne(b.dataset.panne));
   show('scAtelier',{accent:'#8C4A4A',nav:'domains'});
 }
 const ATELIER_LABEL={depannage:'dépannage',entretien:'entretien',fiche:'fiche',reperage:'repérage'};
@@ -2241,25 +2241,15 @@ function renderTutoScreen(id){
   show('scAtelierFlow',{accent:'#8C4A4A',nav:'domains'});
 }
 /* ---- diagnostic de la panne en cours ---- */
-function openPanne(){ go(renderPanneScreen,'panne'); }
-/* Tests clés → verdict automatique */
-const PANNE_TESTS=[
-  {k:'volt',    q:'Les ~24 V se maintiennent-ils à l’électrovanne au moment où ça cale ?'},
-  {k:'cool',    q:'Après avoir calé, redémarre-t-il après quelques minutes (refroidissement) ?'},
-  {k:'purge',   q:'Ça tient plus longtemps après une purge du circuit de gasoil ?'},
-  {k:'bouchon', q:'Ça va mieux avec le bouchon du réservoir desserré ?'}
-];
-function panneVerdict(a){
-  if(a.volt==='non') return {t:'Alimentation de l’électrovanne', d:'La tension ne se maintient pas quand ça cale : contacteur, relais, fil ou masse à contrôler et réparer. L’électrovanne elle-même est probablement bonne.'};
-  if(a.purge==='oui') return {t:'Prise d’air / colmatage du circuit de gasoil', d:'La purge améliore nettement : remplace le filtre à gasoil, purge le décanteur et traque la prise d’air (colliers, joints, durites).'};
-  if(a.bouchon==='oui') return {t:'Reniflard du réservoir bouché', d:'Le moteur respire mieux bouchon desserré : nettoie la mise à l’air du réservoir (ou perce/remplace le bouchon).'};
-  if(a.volt==='oui'&&a.cool==='oui') return {t:'Électrovanne d’arrêt défaillante', d:'Tension maintenue + redémarrage après refroidissement : bobine qui chauffe et lâche. Remplace l’électrovanne (SODEREP sur la pompe).'};
-  if(a.cool==='oui') return {t:'Électrovanne d’arrêt (à confirmer au multimètre)', d:'Le redémarrage après refroidissement pointe la bobine de l’électrovanne. Mesure les 24 V au moment où ça cale pour confirmer.'};
-  if(a.volt==='oui') return {t:'Électrovanne ou alimentation en gasoil', d:'Le courant tient : reste l’électrovanne elle-même ou le gasoil (purge, filtre, reniflard). Fais les essais 3 et 4.'};
-  return null;
-}
-function renderPanneScreen(keep){
-  mode='learn'; const P0=window.G270_PANNE; const S=g270S(); const PS=S.panne;
+function openPanne(key){ key=key||'demarrage'; go(()=>renderPanneScreen(key),'panne'); }
+/* multi-pannes : état par panne, verdict par règles (données g270_atelier.js) */
+function panneState(k){ const S=g270S(); if(!S.pannes[k]) S.pannes[k]={done:{},ans:{},obs:[]};
+  const st=S.pannes[k]; if(!st.done) st.done={}; if(!st.ans) st.ans={}; if(!Array.isArray(st.obs)) st.obs=[]; return st; }
+function panneByKey(k){ return (window.G270_PANNES||[]).find(p=>p.key===k) || window.G270_PANNE; }
+function panneVerdict(def,a){ if(!def||!def.verdicts) return null;
+  return def.verdicts.find(v=>Object.keys(v.when).every(kk=>a[kk]===v.when[kk]))||null; }
+function renderPanneScreen(key,keep){ key=key||'demarrage';
+  mode='learn'; const P0=panneByKey(key); const S=g270S(); const PS=panneState(key);
   $('atfTitle').textContent='Panne en cours';
   if(!P0){ $('atfBody').innerHTML='<p class="atf-note">Diagnostic indisponible.</p>'; if(!keep) show('scAtelierFlow',{accent:'#8C4A4A',nav:'domains'}); return; }
   const today=new Date().toISOString().slice(0,10);
@@ -2279,12 +2269,12 @@ function renderPanneScreen(keep){
   h+='</ol>';
   // tests clés → verdict
   h+='<div class="dep-cat">Tes résultats — le verdict s’affine</div><div class="pan-tests">';
-  PANNE_TESTS.forEach(t=>{ const v=PS.ans[t.k]||'';
+  (P0.tests||[]).forEach(t=>{ const v=PS.ans[t.k]||'';
     h+='<div class="pan-q"><span class="pan-qt">'+esc(t.q)+'</span><span class="pan-qb">'+
       ['oui','non'].map(o=>'<button class="pan-ans'+(v===o?' on':'')+'" data-pq="'+t.k+'" data-pv="'+o+'">'+o+'</button>').join('')+'</span></div>';
   });
   h+='</div>';
-  const vd=panneVerdict(PS.ans);
+  const vd=panneVerdict(P0,PS.ans);
   h+= vd ? '<div class="pan-verdict"><span class="pv-t">🎯 Verdict le plus probable : '+esc(vd.t)+'</span><span class="pv-d">'+esc(vd.d)+'</span></div>'
          : '<div class="pan-verdict empty"><span class="pv-d">Réponds aux questions ci-dessus au fil de tes essais : le verdict s’affichera ici.</span></div>';
   // observations datées
@@ -2297,17 +2287,17 @@ function renderPanneScreen(keep){
   if(P0.photoWanted) h+='<p class="atf-note">📸 '+esc(P0.photoWanted)+'</p>';
   if(!PS.resolved) h+='<button class="mnt-btn add" id="panResolve" style="width:100%">✓ Marquer la panne comme résolue</button>';
   $('atfBody').innerHTML=h; bindLb();
-  $('atfBody').querySelectorAll('[data-pstep]').forEach(b=>b.onclick=()=>{ const k='e'+b.dataset.pstep; if(PS.done[k]) delete PS.done[k]; else PS.done[k]=today; saveStore(); renderPanneScreen(true); });
-  $('atfBody').querySelectorAll('[data-pq]').forEach(b=>b.onclick=()=>{ const k=b.dataset.pq,v=b.dataset.pv; PS.ans[k]=(PS.ans[k]===v?'':v); saveStore(); renderPanneScreen(true); });
+  $('atfBody').querySelectorAll('[data-pstep]').forEach(b=>b.onclick=()=>{ const k='e'+b.dataset.pstep; if(PS.done[k]) delete PS.done[k]; else PS.done[k]=today; saveStore(); renderPanneScreen(key,true); });
+  $('atfBody').querySelectorAll('[data-pq]').forEach(b=>b.onclick=()=>{ const k=b.dataset.pq,v=b.dataset.pv; PS.ans[k]=(PS.ans[k]===v?'':v); saveStore(); renderPanneScreen(key,true); });
   const oa=$('panObsAdd'); if(oa) oa.onclick=()=>{ const t=($('panObsIn').value||'').trim(); if(!t) return;
-    PS.obs.push({id:'po_'+Date.now(),date:today,text:t}); if(!saveStoreOk()){ PS.obs.pop(); alert('Stockage plein.'); return; } renderPanneScreen(true); };
-  $('atfBody').querySelectorAll('[data-pdel]').forEach(b=>b.onclick=()=>{ PS.obs=PS.obs.filter(o=>o.id!==b.dataset.pdel); saveStore(); renderPanneScreen(true); });
-  const pr=$('panResolve'); if(pr) pr.onclick=()=>{ const vd2=panneVerdict(PS.ans);
+    PS.obs.push({id:'po_'+Date.now(),date:today,text:t}); if(!saveStoreOk()){ PS.obs.pop(); alert('Stockage plein.'); return; } renderPanneScreen(key,true); };
+  $('atfBody').querySelectorAll('[data-pdel]').forEach(b=>b.onclick=()=>{ PS.obs=PS.obs.filter(o=>o.id!==b.dataset.pdel); saveStore(); renderPanneScreen(key,true); });
+  const pr=$('panResolve'); if(pr) pr.onclick=()=>{ const vd2=panneVerdict(P0,PS.ans);
     const cause=(typeof prompt==='function')?(prompt('Cause trouvée ?', vd2?vd2.t:'')||''):(vd2?vd2.t:'');
     PS.resolved={date:today, cause:String(cause).trim()};
-    S.journal.push({id:'jr_'+Date.now(), date:today, km:'', text:'Panne résolue — '+(PS.resolved.cause||'cause non précisée')});
-    saveStore(); renderPanneScreen(true); };
-  const ro=$('panReopen'); if(ro) ro.onclick=()=>{ delete PS.resolved; saveStore(); renderPanneScreen(true); };
+    S.journal.push({id:'jr_'+Date.now(), date:today, km:'', text:'Panne résolue ('+(P0.short||'')+') — '+(PS.resolved.cause||'cause non précisée')});
+    saveStore(); renderPanneScreen(key,true); };
+  const ro=$('panReopen'); if(ro) ro.onclick=()=>{ delete PS.resolved; saveStore(); renderPanneScreen(key,true); };
   show('scAtelierFlow',{accent:'#8C4A4A',nav:'domains'});
 }
 function relDay(d){ if(!d) return 'jamais'; const t=Date.parse(d+'T00:00:00'); if(isNaN(t)) return d;

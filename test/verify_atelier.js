@@ -44,24 +44,39 @@ const tut=R.atfBody.innerHTML;
 ok('A5b — tuto : étapes numérotées + électrovanne + purge', /class="tuto-steps"/.test(tut)&&/électrovanne/.test(tut)&&/gasoil/.test(tut));
 
 // ---- diagnostic de la panne en cours ----
-c.openPanne();
+c.openPanne('demarrage');
 const pan=R.atfBody.innerHTML;
 ok('A5c — panne : suspects + marche à suivre + électrovanne', /Marche à suivre/.test(pan)&&/électrovanne/.test(pan)&&/45/.test(pan));
 ok('A5d — panne : photo de la pompe d\'injection', /<img[^>]+data-lb/.test(pan)&&/src="data:image\/jpeg/.test(pan));
 
 // ---- panne interactive : verdict, étapes cochables, observations, résolution ----
-ok('AP1 — verdict : tension qui tombe → alimentation', /Alimentation/.test((c.panneVerdict({volt:'non'})||{}).t||''));
-ok('AP2 — verdict : 24 V maintenus + redémarre à froid → électrovanne HS', /défaillante/.test((c.panneVerdict({volt:'oui',cool:'oui'})||{}).t||''));
-ok('AP3 — verdict : purge améliore → prise d’air/colmatage', /Prise d’air/.test((c.panneVerdict({purge:'oui'})||{}).t||''));
-const PS=c.g270S().panne;
+const PD=c.panneByKey('demarrage');
+ok('AP1 — verdict : tension qui tombe → alimentation', /Alimentation/.test((c.panneVerdict(PD,{volt:'non'})||{}).t||''));
+ok('AP2 — verdict : 24 V maintenus + redémarre à froid → électrovanne HS', /défaillante/.test((c.panneVerdict(PD,{volt:'oui',cool:'oui'})||{}).t||''));
+ok('AP3 — verdict : purge améliore → prise d’air/colmatage', /Prise d’air/.test((c.panneVerdict(PD,{purge:'oui'})||{}).t||''));
+const PS=c.panneState('demarrage');
 PS.ans.volt='non'; PS.done.e0='2026-07-11'; PS.obs.push({id:'po_t',date:'2026-07-11',text:'calé à 40 s'});
-c.saveStore(); c.renderPanneScreen();
+c.saveStore(); c.renderPanneScreen('demarrage');
 const ph2=R.atfBody.innerHTML;
 ok('AP4 — écran : verdict affiché + étape cochée + observation listée', /Verdict le plus probable/.test(ph2) && /1 \/ 7 fait/.test(ph2) && /calé à 40 s/.test(ph2));
-ok('AP5 — état de la panne persisté', (()=>{ const st=store(env); return st.g270.panne.ans.volt==='non' && !!st.g270.panne.done.e0 && st.g270.panne.obs.some(o=>o.id==='po_t'); })());
-PS.resolved={date:'2026-07-11',cause:'test'}; c.renderPanneScreen();
+ok('AP5 — état de la panne persisté', (()=>{ const st=store(env); return st.g270.pannes.demarrage.ans.volt==='non' && !!st.g270.pannes.demarrage.done.e0 && st.g270.pannes.demarrage.obs.some(o=>o.id==='po_t'); })());
+PS.resolved={date:'2026-07-11',cause:'test'}; c.renderPanneScreen('demarrage');
 ok('AP6 — panne marquée résolue (badge)', /Panne résolue/.test(R.atfBody.innerHTML));
 delete PS.resolved;
+
+// ---- 2e panne : pompe de cuve (camion de pompiers) ----
+const PP=c.panneByKey('pompe');
+ok('AP7 — panne pompe présente (PTO / prise de force)', !!PP && /prise de force/i.test(PP.resume));
+ok('AP8 — verdict pompe : pas d’air → pression insuffisante', /pression/i.test((c.panneVerdict(PP,{air:'non'})||{}).t||''));
+ok('AP9 — verdict pompe : clac audible → mécanique/crabot', /crabot|mécanique/i.test((c.panneVerdict(PP,{clac:'oui'})||{}).t||''));
+c.openPanne('pompe');
+const pp2=R.atfBody.innerHTML;
+ok('AP10 — écran pompe : étapes + photos PTO + questions', /distributeur/i.test(pp2) && /data-lb/.test(pp2) && /data-pq="clac"/.test(pp2));
+c.renderAtelierHub();
+ok('AP11 — le hub liste les 2 pannes', /data-panne="demarrage"/.test(R.atelierTiles.innerHTML) && /data-panne="pompe"/.test(R.atelierTiles.innerHTML));
+// migration : un ancien état single-panne est repris
+const mEnv=makeEnv({mastered:{}, g270:{sheet:{},fait:{},journal:[], panne:{done:{e0:'x'},ans:{volt:'non'},obs:[]}}}); loadApp(mEnv);
+ok('AP12 — migration ancienne panne → pannes.demarrage', mEnv.ctx.panneState('demarrage').ans.volt==='non');
 
 // ---- entretien ----
 c.renderAtelierFlow('entretien');

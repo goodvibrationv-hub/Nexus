@@ -217,3 +217,61 @@ window.G270_PANNE = {
   photos:[],
   photoWanted:"Sur tes photos, l'électrovanne d'arrêt est le solénoïde muni d'un fil, sur la pompe d'injection. Si tu veux, fais un gros plan bien net de ce solénoïde et de son fil : je pourrai l'annoter précisément pour ton camion."
 };
+
+/* ---- multi-pannes : la panne historique + la pompe de la cuve (camion de pompiers) ---- */
+window.G270_PANNE.key='demarrage';
+window.G270_PANNE.short='Démarre puis cale à ~45 s';
+window.G270_PANNE.tests=[
+  {k:'volt',    q:'Les ~24 V se maintiennent-ils à l’électrovanne au moment où ça cale ?'},
+  {k:'cool',    q:'Après avoir calé, redémarre-t-il après quelques minutes (refroidissement) ?'},
+  {k:'purge',   q:'Ça tient plus longtemps après une purge du circuit de gasoil ?'},
+  {k:'bouchon', q:'Ça va mieux avec le bouchon du réservoir desserré ?'}
+];
+window.G270_PANNE.verdicts=[
+  {when:{volt:'non'}, t:'Alimentation de l’électrovanne', d:'La tension ne se maintient pas quand ça cale : contacteur, relais, fil ou masse à contrôler et réparer. L’électrovanne elle-même est probablement bonne.'},
+  {when:{purge:'oui'}, t:'Prise d’air / colmatage du circuit de gasoil', d:'La purge améliore nettement : remplace le filtre à gasoil, purge le décanteur et traque la prise d’air (colliers, joints, durites).'},
+  {when:{bouchon:'oui'}, t:'Reniflard du réservoir bouché', d:'Le moteur respire mieux bouchon desserré : nettoie la mise à l’air du réservoir (ou perce/remplace le bouchon).'},
+  {when:{volt:'oui',cool:'oui'}, t:'Électrovanne d’arrêt défaillante', d:'Tension maintenue + redémarrage après refroidissement : bobine qui chauffe et lâche. Remplace l’électrovanne (SODEREP sur la pompe).'},
+  {when:{cool:'oui'}, t:'Électrovanne d’arrêt (à confirmer au multimètre)', d:'Le redémarrage après refroidissement pointe la bobine de l’électrovanne. Mesure les 24 V au moment où ça cale pour confirmer.'},
+  {when:{volt:'oui'}, t:'Électrovanne ou alimentation en gasoil', d:'Le courant tient : reste l’électrovanne elle-même ou le gasoil (purge, filtre, reniflard). Fais les essais 3 et 4.'}
+];
+window.G270_PANNES=[ window.G270_PANNE, {
+  key:'pompe', short:'La pompe de la cuve ne s’enclenche pas',
+  title:'La pompe à eau de la cuve ne s’enclenche pas',
+  resume:'Sur ce camion de pompiers, la pompe de la cuve est entraînée par la prise de force (PTO) montée sur la boîte de vitesses — celle qu’on voit sur tes photos (plaque PTO + distributeur pneumatique). Son crabotage se commande depuis la cabine et se fait à l’air comprimé, embrayage enfoncé. Si la pompe ne s’enclenche pas, c’est presque toujours la chaîne de commande (procédure, air, distributeur) avant la mécanique.',
+  suspects:[
+    {n:'Commande pneumatique de la prise de force', p:'très probable',
+     why:'L’enclenchement se fait par un vérin alimenté via le distributeur pneumatique de la boîte. Pression d’air trop basse, flexible fuyard, distributeur ou électrovanne de commande grippés : l’air n’arrive pas, le crabot ne bouge pas.'},
+    {n:'Procédure d’enclenchement non respectée', p:'probable',
+     why:'Une PTO s’enclenche véhicule À L’ARRÊT, embrayage ENFONCÉ à fond, moteur au ralenti. Trop de régime ou embrayage relâché : les dents refusent de craboter (c’est voulu).'},
+    {n:'Commande électrique (interrupteur, fusible, témoin)', p:'possible',
+     why:'Si la commande en cabine passe par une électrovanne : fusible, contacteur ou fil de masse peuvent couper l’ordre avant même l’air.'},
+    {n:'Crabot / fourchette PTO ou pompe grippée', p:'possible',
+     why:'L’air arrive (clac audible) mais rien ne tourne : fourchette usée, dents face à face, ou pompe bloquée (gel, corps étranger, joint grippé après hivernage).'}
+  ],
+  etapes:[
+    {t:'Sécurité', d:'Véhicule à l’arrêt, frein de parc serré, roues calées. On n’intervient jamais sous le camion pendant les essais d’enclenchement.'},
+    {t:'Procédure exacte', d:'Moteur au ralenti, embrayage ENFONCÉ À FOND, actionne la commande PTO, attends 3 secondes, puis relâche l’embrayage TRÈS lentement. Beaucoup de « pannes » de PTO sont des enclenchements trop rapides.'},
+    {t:'Pression d’air', d:'Regarde le manomètre : il faut le plein d’air (~8 bar). En dessous, le vérin de crabotage n’a pas la force d’enclencher. Laisse le compresseur remplir, réessaie.'},
+    {t:'Écoute le distributeur', d:'Une deuxième personne actionne la commande pendant que tu écoutes près de la boîte : un « clac / pshit » net doit venir du distributeur pneumatique. Pas de bruit = l’ordre n’arrive pas (électrique ou air).', photo:'trans'},
+    {t:'Commande & fusible', d:'Contrôle le voyant PTO en cabine, le fusible et le contacteur de la commande. Au multimètre : 24 V à l’électrovanne du distributeur quand on actionne.'},
+    {t:'Flexible et vérin', d:'Suis le flexible d’air de la commande jusqu’au vérin de la prise de force sur la boîte : fuite audible, flexible pincé, raccord déboîté ? Savonne pour voir les bulles.', photo:'pto'},
+    {t:'Mécanique en dernier', d:'Moteur COUPÉ, essaie d’enclencher : si le crabot entre moteur arrêté, les dents étaient face à face (réessaie moteur tournant en relâchant une seconde l’embrayage). Vérifie aussi que l’arbre de la pompe tourne à la main — une pompe hivernée peut être grippée ou gelée.'}
+  ],
+  tests:[
+    {k:'proc',   q:'Tu enclenches bien à l’arrêt, embrayage à fond, moteur au ralenti ?'},
+    {k:'air',    q:'La pression d’air est au maximum (~8 bar) au moment de l’essai ?'},
+    {k:'clac',   q:'Un « clac » d’air se fait entendre au distributeur quand tu actionnes ?'},
+    {k:'temoin', q:'Le voyant / témoin PTO s’allume en cabine ?'}
+  ],
+  verdicts:[
+    {when:{proc:'non'}, t:'Procédure d’enclenchement', d:'Refais l’essai dans les règles : arrêt complet, ralenti, embrayage enfoncé à fond, commande, 3 secondes, relâcher lentement. La plupart des PTO « en panne » s’enclenchent parfaitement ainsi.'},
+    {when:{air:'non'}, t:'Pression d’air insuffisante', d:'Le crabotage est pneumatique : sans le plein d’air il ne bougera pas. Refais 8 bar moteur tournant ; si la pression ne monte pas, traite d’abord cette panne-là (compresseur/fuite).'},
+    {when:{clac:'non',temoin:'non'}, t:'Commande électrique coupée', d:'Ni voyant ni clac : l’ordre n’arrive pas. Fusible, interrupteur de commande, masse — contrôle 24 V à l’électrovanne du distributeur.'},
+    {when:{clac:'non',air:'oui'}, t:'Distributeur / électrovanne pneumatique', d:'L’air est là mais le distributeur ne bascule pas : électrovanne grippée ou HS (celle de tes photos, sur la boîte). Démonte, nettoie, remplace si besoin.'},
+    {when:{clac:'oui'}, t:'Crabotage mécanique ou pompe grippée', d:'L’air arrive mais rien ne s’entraîne : dents face à face (relâche l’embrayage une seconde et réessaie), fourchette PTO usée, ou pompe bloquée — vérifie que son arbre tourne à la main, moteur coupé.'}
+  ],
+  note:'Après un long hivernage, pense simple : une pompe qui n’a pas tourné depuis des mois peut être simplement grippée ou gelée, et un flexible d’air poreux. Fais les essais dans l’ordre : procédure → air → clac → mécanique.',
+  photos:['trans','pto'],
+  photoWanted:'Envoie-moi dans la discussion (je n’ai pas accès à ta galerie) : 1) la COMMANDE PTO en cabine (levier/bouton + voyant), 2) la POMPE sous/derrière la cuve avec son arbre, 3) la prise de force sur la boîte côté flexible d’air. Je les annoterai et les ajouterai aux étapes.'
+} ];

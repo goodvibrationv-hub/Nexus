@@ -283,3 +283,21 @@ window.G270_PANNES=[ window.G270_PANNE, {
   photos:['trans','pto'],
   photoWanted:'Il me manque encore : 1) la COMMANDE PTO en cabine (levier/bouton + voyant), 2) la POMPE elle-même sous/derrière la cuve avec son arbre. Envoie-les dans la discussion et je les intégrerai.'
 } ];
+
+/* ---- consommables : catalogue des pièces d'usure (réfs + liste de courses) ---- */
+window.G270_CONSO=[
+  {k:'pompe_gavage', t:'Pompe de gavage 24 V', hint:'Type Facet « cube » ou équivalent — à remplacer lundi'},
+  {k:'filtre_go',    t:'Filtre à gasoil', hint:'Cartouche vissée (voir photo repérage)'},
+  {k:'joint_decant', t:'Joint / bol de décanteur', hint:'À changer si fendu ou suintant'},
+  {k:'filtre_huile', t:'Filtre à huile moteur', hint:'À chaque vidange'},
+  {k:'huile_moteur', t:'Huile moteur 15W-40', hint:'Minérale poids lourd — volume : voir fiche du camion'},
+  {k:'filtre_air',   t:'Cartouche de filtre à air', hint:'Contrôle à contre-jour, remplace si encrassée'},
+  {k:'assecheur',    t:'Cartouche d’assécheur d’air', hint:'Vissée comme un filtre (circuit de freinage)'},
+  {k:'huile_boite',  t:'Huile de boîte / ponts 80W-90', hint:'Niveaux aux bouchons (voir dossier PTO)'},
+  {k:'ldr',          t:'Liquide de refroidissement', hint:'Antigel poids lourd, jamais d’eau pure'},
+  {k:'graisse',      t:'Graisse multi-usages + pompe', hint:'Croisillons, graisseurs, axes'},
+  {k:'courroies',    t:'Courroies (alternateur / compresseur)', hint:'Relever les longueurs sur les anciennes'},
+  {k:'durites',      t:'Colliers & durites gasoil', hint:'Ø durite d’alimentation — anti prise d’air'},
+  {k:'fusibles',     t:'Fusibles + cosses 24 V', hint:'Assortiment, graisse diélectrique'},
+  {k:'ampoules',     t:'Ampoules 24 V', hint:'Phares, feux — TOUJOURS en 24 V, pas 12 V'}
+];

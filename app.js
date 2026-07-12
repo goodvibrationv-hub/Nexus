@@ -2140,6 +2140,9 @@ function saveWoodLog(){
 function g270S(){ if(!STORE.g270) STORE.g270={sheet:{},fait:{},journal:[]};
   if(!STORE.g270.pannes) STORE.g270.pannes={};
   if(STORE.g270.panne){ if(!STORE.g270.pannes.demarrage) STORE.g270.pannes.demarrage=STORE.g270.panne; delete STORE.g270.panne; }
+  if(!STORE.g270.conso) STORE.g270.conso={refs:{},buy:{},custom:[]};
+  if(!STORE.g270.conso.refs) STORE.g270.conso.refs={}; if(!STORE.g270.conso.buy) STORE.g270.conso.buy={};
+  if(!Array.isArray(STORE.g270.conso.custom)) STORE.g270.conso.custom=[];
   if(!STORE.g270.sheet) STORE.g270.sheet={}; if(!STORE.g270.fait) STORE.g270.fait={};
   if(!Array.isArray(STORE.g270.journal)) STORE.g270.journal=[]; return STORE.g270; }
 
@@ -2180,7 +2183,8 @@ function renderAtelierHub(){
     {v:'depannage', ic:'🩺', t:'Aide-mémoire dépannage', s:'Touche un symptôme → tuto pas-à-pas'},
     {v:'entretien', ic:'🔧', t:'Carnet d\'entretien', s:nb?(nb+' intervention'+(nb>1?'s':'')+' notée'+(nb>1?'s':'')):'Checklist + journal'},
     {v:'fiche',     ic:'📋', t:'Fiche de mon camion', s:filled?(filled+' champ'+(filled>1?'s':'')+' rempli'+(filled>1?'s':'')):'Références & réglages'},
-    {v:'reperage',  ic:'📸', t:'Repérage des organes', s:((window.G270_PHOTOS||[]).length||0)+' photos'}
+    {v:'reperage',  ic:'📸', t:'Repérage des organes', s:((window.G270_PHOTOS||[]).length||0)+' photos'},
+    {v:'conso',     ic:'🛒', t:'Consommables', s:(function(){ const n=Object.values(STORE.g270.conso.buy).filter(Boolean).length+STORE.g270.conso.custom.filter(x=>x.buy).length; return n?(n+' article'+(n>1?'s':'')+' à acheter'):'Réfs & liste de courses'; })()}
   ];
   let html='';
   (window.G270_PANNES||(window.G270_PANNE?[window.G270_PANNE]:[])).forEach(pn=>{ const st=panneState(pn.key||'demarrage'); const res=!!st.resolved;
@@ -2191,7 +2195,7 @@ function renderAtelierHub(){
   $('atelierTiles').querySelectorAll('[data-panne]').forEach(b=>b.onclick=()=>openPanne(b.dataset.panne));
   show('scAtelier',{accent:'#8C4A4A',nav:'domains'});
 }
-const ATELIER_LABEL={depannage:'dépannage',entretien:'entretien',fiche:'fiche',reperage:'repérage'};
+const ATELIER_LABEL={depannage:'dépannage',entretien:'entretien',fiche:'fiche',reperage:'repérage',conso:'consommables'};
 function openAtelierView(v){ go(()=>renderAtelierFlow(v), ATELIER_LABEL[v]||'atelier'); }
 function renderAtelierFlow(v){
   mode='learn'; g270S();
@@ -2199,6 +2203,7 @@ function renderAtelierFlow(v){
   else if(v==='entretien'){ $('atfTitle').textContent='Carnet d\'entretien'; renderEntretien(); }
   else if(v==='fiche'){ $('atfTitle').textContent='Fiche de mon camion'; renderFiche(); }
   else if(v==='reperage'){ $('atfTitle').textContent='Repérage des organes'; renderReperage(); }
+  else if(v==='conso'){ $('atfTitle').textContent='Consommables'; renderConso(); }
   show('scAtelierFlow',{accent:'#8C4A4A',nav:'domains'});
 }
 function renderDepannage(){
@@ -2341,6 +2346,34 @@ function renderFiche(){
     S.sheet[el.dataset.fk]=el.value; if(saveStoreOk()){ const s=$('ficheSaved'); if(s){ s.textContent='✓ Enregistré'; setTimeout(()=>{ if(s) s.textContent='Enregistré automatiquement.'; },1500); } }
     else alert('Stockage plein — modification non enregistrée.');
   }; });
+}
+function renderConso(){
+  const S=g270S(); const C=S.conso; const cat=(window.G270_CONSO||[]);
+  const nBuy=Object.values(C.buy).filter(Boolean).length + C.custom.filter(x=>x.buy).length;
+  let h='<p class="atf-lead">Les pièces d’usure du camion. Note la référence une fois pour toutes, coche « à acheter » pour faire ta liste de courses.</p>';
+  if(nBuy) h+='<div class="atf-key">🛒 '+nBuy+' article'+(nBuy>1?'s':'')+' à acheter.</div>';
+  h+='<div class="mnt-list">';
+  cat.forEach(it=>{ const buy=!!C.buy[it.k]; const ref=esc(C.refs[it.k]||'');
+    h+='<div class="mnt-row conso'+(buy?' tobuy':'')+'"><span class="mnt-mid"><span class="mnt-t">'+esc(it.t)+'</span><span class="mnt-f">'+esc(it.hint)+'</span>'+
+       '<input class="conso-ref" data-cref="'+it.k+'" type="text" placeholder="réf. / dimension…" value="'+ref+'"></span>'+
+       '<button class="mnt-btn'+(buy?' buy':'')+'" data-cbuy="'+it.k+'">'+(buy?'🛒 à acheter':'Acheter ?')+'</button></div>';
+  });
+  C.custom.forEach(x=>{ const buy=!!x.buy;
+    h+='<div class="mnt-row conso'+(buy?' tobuy':'')+'"><span class="mnt-mid"><span class="mnt-t">'+esc(x.t)+'</span>'+
+       '<input class="conso-ref" data-xref="'+x.id+'" type="text" placeholder="réf. / dimension…" value="'+esc(x.ref||'')+'"></span>'+
+       '<button class="mnt-btn'+(buy?' buy':'')+'" data-xbuy="'+x.id+'">'+(buy?'🛒 à acheter':'Acheter ?')+'</button><button class="jr-del" data-xdel="'+x.id+'">✕</button></div>';
+  });
+  h+='</div><div class="jr-add" style="margin-top:12px"><input id="consoNew" type="text" placeholder="Autre article…"><button id="consoAdd" class="mnt-btn add">Ajouter</button></div>';
+  $('atfBody').innerHTML=h;
+  const b=$('atfBody');
+  b.querySelectorAll('[data-cbuy]').forEach(x=>x.onclick=()=>{ C.buy[x.dataset.cbuy]=!C.buy[x.dataset.cbuy]; saveStore(); renderConso(); });
+  b.querySelectorAll('[data-cref]').forEach(x=>x.onchange=()=>{ C.refs[x.dataset.cref]=x.value; saveStore(); });
+  b.querySelectorAll('[data-xbuy]').forEach(x=>x.onclick=()=>{ const it=C.custom.find(y=>y.id===x.dataset.xbuy); if(it){ it.buy=!it.buy; saveStore(); renderConso(); } });
+  b.querySelectorAll('[data-xref]').forEach(x=>x.onchange=()=>{ const it=C.custom.find(y=>y.id===x.dataset.xref); if(it){ it.ref=x.value; saveStore(); } });
+  b.querySelectorAll('[data-xdel]').forEach(x=>x.onclick=()=>{ C.custom=C.custom.filter(y=>y.id!==x.dataset.xdel); saveStore(); renderConso(); });
+  const ca=$('consoAdd'); if(ca) ca.onclick=()=>{ const t=($('consoNew').value||'').trim(); if(!t) return;
+    C.custom.push({id:'cs_'+Date.now(), t, ref:'', buy:true});
+    if(!saveStoreOk()){ C.custom.pop(); alert('Stockage plein.'); return; } renderConso(); };
 }
 function renderReperage(){
   const ph=(window.G270_PHOTOS||[]);

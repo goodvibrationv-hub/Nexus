@@ -812,6 +812,12 @@
   .lockwrap.shake{ animation:shk .3s }
   @keyframes shk{ 0%,100%{transform:translateX(0)} 20%,60%{transform:translateX(-8px)} 40%,80%{transform:translateX(8px)} }
   .pcard .plock{ margin-left:6px; font-size:11px; opacity:.7 }
+  /* consommables */
+  .mnt-row.conso{ align-items:flex-start }
+  .mnt-row.conso.tobuy{ border-color:rgba(140,74,74,.45); background:linear-gradient(150deg,#fff6f2,var(--surf)) }
+  .conso-ref{ margin-top:7px; width:100%; font:inherit; font-size:13px; border:1px solid var(--line2); border-radius:9px; padding:8px 11px; background:#fff; color:inherit }
+  .conso-ref:focus{ outline:none; border-color:#8C4A4A }
+  .mnt-btn.buy{ border-color:#8C4A4A; color:#8C4A4A; background:rgba(140,74,74,.07) }
   /* panne en cours : étapes cochables, tests, verdict, observations */
   ol.tuto-steps.check>li{ display:flex; gap:11px; padding:11px 13px }
   ol.tuto-steps.check>li::before{ display:none }

@@ -102,6 +102,20 @@ const ph=env.ctx.window.G270_PHOTOS||[];
 ok('A11 — 22 photos embarquées', ph.length===22);
 ok('A12 — chaque photo = data URI JPEG + libellé + description', ph.every(p=>/^data:image\/jpeg;base64,/.test(p.img)&&p.label&&p.desc&&p.cat));
 
+// ---- consommables ----
+c.renderAtelierHub();
+ok('C1 — le hub propose Consommables', /Consommables/.test(R.atelierTiles.innerHTML));
+c.renderAtelierFlow('conso');
+const co=R.atfBody.innerHTML;
+ok('C2 — catalogue : pompe de gavage + filtres + assécheur', /Pompe de gavage 24 V/.test(co) && /Filtre à gasoil/.test(co) && /assécheur/i.test(co));
+const CC=c.g270S().conso;
+CC.refs.filtre_go='WK 723'; CC.buy.pompe_gavage=true; CC.custom.push({id:'cs_t',t:'Chevilles bois',ref:'',buy:true});
+c.saveStore(); c.renderAtelierFlow('conso');
+ok('C3 — réf. enregistrée + articles à acheter affichés', /WK 723/.test(R.atfBody.innerHTML) && /2 articles à acheter/.test(R.atfBody.innerHTML));
+const env3=makeEnv(store(env)); loadApp(env3);
+const CC2=env3.ctx.g270S().conso;
+ok('C4 — consommables persistés au rechargement', CC2.refs.filtre_go==='WK 723' && CC2.buy.pompe_gavage===true && CC2.custom.some(x=>x.id==='cs_t'));
+
 // ---- repérage ----
 c.renderAtelierFlow('reperage');
 const rep=R.atfBody.innerHTML;

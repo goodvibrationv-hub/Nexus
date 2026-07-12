@@ -31,11 +31,11 @@ window.G270_TUTO = {
     outils:["Multimètre","Brosse métallique","Jeu de clés"],
     etapes:[
       "Vérifie que le coupe-batterie est bien enclenché.",
-      "Contrôle les deux batteries : environ 24 V au repos, cosses propres et bien serrées.",
+      {d:"Contrôle les deux batteries : environ 24 V au repos, cosses propres et bien serrées.", photo:"batteries"},
       "Nettoie et resserre les masses (moteur et châssis) : une masse corrodée empêche le démarreur de tourner.",
       "Contact mis, écoute le démarreur : un simple « clic » sans rotation oriente vers batteries faibles, masses, ou démarreur usé.",
       "Si batterie et masses sont bonnes, suspecte le contacteur à clé puis le démarreur." ],
-    securite:"Coupe le coupe-batterie avant de toucher aux câbles ; un court-circuit 24 V fait fondre outils et bagues.", photos:[] },
+    securite:"Coupe le coupe-batterie avant de toucher aux câbles ; un court-circuit 24 V fait fondre outils et bagues.", photos:["coffret_elec"] },
   dep_nopart:{ title:"Il lance mais le moteur ne part pas", cause:"Gasoil / compression",
     outils:["Clé de purge","Multimètre"],
     etapes:[
@@ -207,7 +207,7 @@ window.G270_PANNE = {
   etapes:[
     {t:"Sécurité", d:"Frein de parking serré, roues calées, boîte au point mort. On ne cherche pas une fuite de gasoil à la main."},
     {t:"Gasoil visible", d:"Niveau suffisant ; filtre et décanteur : purge l'eau et guette des bulles d'air dans le bol. Un filtre très encrassé se remplace.", photo:"filtre_go1"},
-    {t:"Test du reniflard", d:"Quand le moteur cale (ou avant un nouvel essai), desserre le bouchon du réservoir. S'il repart ou tient mieux, la mise à l'air est bouchée."},
+    {t:"Test du reniflard", d:"Quand le moteur cale (ou avant un nouvel essai), desserre le bouchon du réservoir. S'il repart ou tient mieux, la mise à l'air est bouchée.", photo:"bouchon_go"},
     {t:"Purge du circuit de gasoil", d:"Desserre la vis de purge du filtre/pompe, actionne la pompe d'amorçage jusqu'à ce que le gasoil sorte sans bulles, resserre, relance. Si ça tient plus longtemps, c'était une prise d'air."},
     {t:"Écoute l'électrovanne", d:"Sur la pompe d'injection, repère l'électrovanne (petit solénoïde avec un fil). Contact mis puis coupé, on doit sentir/entendre un léger « clac ».", photo:"inj_elec"},
     {t:"Mesure sa tension", d:"Multimètre aux bornes de l'électrovanne, contact en position « marche » : on attend environ 24 V, et surtout que la tension SE MAINTIENNE pendant les 45 s et au moment où ça cale.", photo:"pompe_inj"},
@@ -252,9 +252,9 @@ window.G270_PANNES=[ window.G270_PANNE, {
   etapes:[
     {t:'Sécurité', d:'Véhicule à l’arrêt, frein de parc serré, roues calées. On n’intervient jamais sous le camion pendant les essais d’enclenchement.'},
     {t:'Procédure exacte', d:'Moteur au ralenti, embrayage ENFONCÉ À FOND, actionne la commande PTO, attends 3 secondes, puis relâche l’embrayage TRÈS lentement. Beaucoup de « pannes » de PTO sont des enclenchements trop rapides.'},
-    {t:'Pression d’air', d:'Regarde le manomètre : il faut le plein d’air (~8 bar). En dessous, le vérin de crabotage n’a pas la force d’enclencher. Laisse le compresseur remplir, réessaie.'},
+    {t:'Pression d’air', d:'Regarde le manomètre : il faut le plein d’air (~8 bar). En dessous, le vérin de crabotage n’a pas la force d’enclencher. Laisse le compresseur remplir, réessaie.', photo:'distrib_air'},
     {t:'Écoute le distributeur', d:'Une deuxième personne actionne la commande pendant que tu écoutes près de la boîte : un « clac / pshit » net doit venir du distributeur pneumatique. Pas de bruit = l’ordre n’arrive pas (électrique ou air).', photo:'trans'},
-    {t:'Commande & fusible', d:'Contrôle le voyant PTO en cabine, le fusible et le contacteur de la commande. Au multimètre : 24 V à l’électrovanne du distributeur quand on actionne.'},
+    {t:'Commande & fusible', d:'Contrôle le voyant PTO en cabine, le fusible et le contacteur de la commande. Au multimètre : 24 V à l’électrovanne du distributeur quand on actionne.', photo:'coffret_elec'},
     {t:'Flexible et vérin', d:'Suis le flexible d’air de la commande jusqu’au vérin de la prise de force sur la boîte : fuite audible, flexible pincé, raccord déboîté ? Savonne pour voir les bulles.', photo:'pto'},
     {t:'Mécanique en dernier', d:'Moteur COUPÉ, essaie d’enclencher : si le crabot entre moteur arrêté, les dents étaient face à face (réessaie moteur tournant en relâchant une seconde l’embrayage). Vérifie aussi que l’arbre de la pompe tourne à la main — une pompe hivernée peut être grippée ou gelée.'}
   ],
@@ -273,5 +273,5 @@ window.G270_PANNES=[ window.G270_PANNE, {
   ],
   note:'Après un long hivernage, pense simple : une pompe qui n’a pas tourné depuis des mois peut être simplement grippée ou gelée, et un flexible d’air poreux. Fais les essais dans l’ordre : procédure → air → clac → mécanique.',
   photos:['trans','pto'],
-  photoWanted:'Envoie-moi dans la discussion (je n’ai pas accès à ta galerie) : 1) la COMMANDE PTO en cabine (levier/bouton + voyant), 2) la POMPE sous/derrière la cuve avec son arbre, 3) la prise de force sur la boîte côté flexible d’air. Je les annoterai et les ajouterai aux étapes.'
+  photoWanted:'Il me manque encore : 1) la COMMANDE PTO en cabine (levier/bouton + voyant), 2) la POMPE elle-même sous/derrière la cuve avec son arbre. Envoie-les dans la discussion et je les intégrerai.'
 } ];

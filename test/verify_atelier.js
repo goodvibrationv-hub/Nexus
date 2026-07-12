@@ -99,7 +99,7 @@ ok('A10 — journal persisté', (S2.journal||[]).some(e=>e.id==='jr_x'&&e.text==
 
 // ---- photos embarquées ----
 const ph=env.ctx.window.G270_PHOTOS||[];
-ok('A11 — 15 photos embarquées', ph.length===15);
+ok('A11 — 22 photos embarquées', ph.length===22);
 ok('A12 — chaque photo = data URI JPEG + libellé + description', ph.every(p=>/^data:image\/jpeg;base64,/.test(p.img)&&p.label&&p.desc&&p.cat));
 
 // ---- repérage ----

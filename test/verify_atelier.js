@@ -58,7 +58,7 @@ const PS=c.panneState('demarrage');
 PS.ans.volt='non'; PS.done.e0='2026-07-11'; PS.obs.push({id:'po_t',date:'2026-07-11',text:'calé à 40 s'});
 c.saveStore(); c.renderPanneScreen('demarrage');
 const ph2=R.atfBody.innerHTML;
-ok('AP4 — écran : verdict affiché + étape cochée + observation listée', /Verdict le plus probable/.test(ph2) && /1 \/ 7 fait/.test(ph2) && /calé à 40 s/.test(ph2));
+ok('AP4 — écran : verdict affiché + étape cochée + observation listée', /Verdict le plus probable/.test(ph2) && /1 \/ 8 fait/.test(ph2) && /calé à 40 s/.test(ph2));
 ok('AP5 — état de la panne persisté', (()=>{ const st=store(env); return st.g270.pannes.demarrage.ans.volt==='non' && !!st.g270.pannes.demarrage.done.e0 && st.g270.pannes.demarrage.obs.some(o=>o.id==='po_t'); })());
 PS.resolved={date:'2026-07-11',cause:'test'}; c.renderPanneScreen('demarrage');
 ok('AP6 — panne marquée résolue (badge)', /Panne résolue/.test(R.atfBody.innerHTML));

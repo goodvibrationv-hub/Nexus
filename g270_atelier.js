@@ -235,6 +235,14 @@ window.G270_PANNE.verdicts=[
   {when:{cool:'oui'}, t:'Électrovanne d’arrêt (à confirmer au multimètre)', d:'Le redémarrage après refroidissement pointe la bobine de l’électrovanne. Mesure les 24 V au moment où ça cale pour confirmer.'},
   {when:{volt:'oui'}, t:'Électrovanne ou alimentation en gasoil', d:'Le courant tient : reste l’électrovanne elle-même ou le gasoil (purge, filtre, reniflard). Fais les essais 3 et 4.'}
 ];
+/* Info terrain : le petit moteur démonté serait la pompe électrique de gavage
+   (alimentation du filtre à gasoil). S'il est HS, il explique parfaitement le
+   « démarre, cale à 45 s, ne réamorce plus ». Suspect n°1. */
+window.G270_PANNE.suspects.unshift({n:'Pompe électrique de gavage HS (le petit moteur démonté)', p:'très probable',
+  why:'D’après toi, ce moteur alimente le filtre à gasoil. Démonté et rouillé, il ne pousse plus rien : le moteur démarre sur le gasoil présent dans le filtre, le vide en ~45 s, cale, et ne peut plus réamorcer seul. Le symptôme complet, à lui tout seul.'});
+window.G270_PANNE.etapes.splice(2,0,{t:'Pompe de gavage', d:'Contact mis, écoute près du filtre à gasoil : la pompe électrique doit bourdonner quelques secondes. Silence = pas d’alimentation. La tienne est démontée et rouillée : remplace-la (pompe de gavage 24 V type Facet, peu coûteuse) ou repose-la après essai direct sur batterie, puis purge le circuit.', photo:'moteur_aux'});
+window.G270_PANNE.tests.unshift({k:'gav', q:'La pompe de gavage bourdonne-t-elle au contact (près du filtre) ?'});
+window.G270_PANNE.verdicts.unshift({when:{gav:'non'}, t:'Pompe électrique de gavage HS', d:'Pas de bourdonnement : le gasoil n’est plus poussé vers le filtre. Teste le moteur en direct sur la batterie ; s’il ne tourne pas (le tien est rouillé), remplace la pompe (gavage 24 V), repose, purge le circuit et réessaie.'});
 window.G270_PANNES=[ window.G270_PANNE, {
   key:'pompe', short:'La pompe de la cuve ne s’enclenche pas',
   title:'La pompe à eau de la cuve ne s’enclenche pas',

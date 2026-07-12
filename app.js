@@ -2272,6 +2272,14 @@ function renderPanneScreen(key,keep){ key=key||'demarrage';
     if(e.photo){ const p=phList.find(x=>x.key===e.photo); if(p) h+='<figure class="step-ph"><img src="'+p.img+'" data-lb="1" alt="'+esc(p.label)+'"><figcaption>'+esc(p.label)+'</figcaption></figure>'; }
     h+='</div></li>'; });
   h+='</ol>';
+  // check-list d'intervention (si définie)
+  if(P0.checklist&&P0.checklist.items&&P0.checklist.items.length){
+    const ck=P0.checklist; const dn=ck.items.filter((x,i)=>PS.done['r'+i]).length;
+    h+='<div class="dep-cat">'+esc(ck.t)+' — '+dn+' / '+ck.items.length+'</div><ol class="tuto-steps big check">';
+    ck.items.forEach((x,i)=>{ const on=!!PS.done['r'+i];
+      h+='<li class="'+(on?'done':'')+'"><button class="pan-chk'+(on?' on':'')+'" data-pchk="'+i+'">'+(on?'✓':'')+'</button><div class="pan-stx">'+esc(x)+'</div></li>'; });
+    h+='</ol>';
+  }
   // tests clés → verdict
   h+='<div class="dep-cat">Tes résultats — le verdict s’affine</div><div class="pan-tests">';
   (P0.tests||[]).forEach(t=>{ const v=PS.ans[t.k]||'';
@@ -2293,6 +2301,7 @@ function renderPanneScreen(key,keep){ key=key||'demarrage';
   if(!PS.resolved) h+='<button class="mnt-btn add" id="panResolve" style="width:100%">✓ Marquer la panne comme résolue</button>';
   $('atfBody').innerHTML=h; bindLb();
   $('atfBody').querySelectorAll('[data-pstep]').forEach(b=>b.onclick=()=>{ const k='e'+b.dataset.pstep; if(PS.done[k]) delete PS.done[k]; else PS.done[k]=today; saveStore(); renderPanneScreen(key,true); });
+  $('atfBody').querySelectorAll('[data-pchk]').forEach(b=>b.onclick=()=>{ const k='r'+b.dataset.pchk; if(PS.done[k]) delete PS.done[k]; else PS.done[k]=today; saveStore(); renderPanneScreen(key,true); });
   $('atfBody').querySelectorAll('[data-pq]').forEach(b=>b.onclick=()=>{ const k=b.dataset.pq,v=b.dataset.pv; PS.ans[k]=(PS.ans[k]===v?'':v); saveStore(); renderPanneScreen(key,true); });
   const oa=$('panObsAdd'); if(oa) oa.onclick=()=>{ const t=($('panObsIn').value||'').trim(); if(!t) return;
     PS.obs.push({id:'po_'+Date.now(),date:today,text:t}); if(!saveStoreOk()){ PS.obs.pop(); alert('Stockage plein.'); return; } renderPanneScreen(key,true); };
@@ -2378,11 +2387,16 @@ function renderConso(){
 function renderReperage(){
   const ph=(window.G270_PHOTOS||[]);
   if(!ph.length){ $('atfBody').innerHTML='<p class="atf-note">Aucune photo embarquée.</p>'; return; }
-  let h='<p class="atf-lead">Tes photos annotées, pour identifier chaque organe sous le camion. Touche une image pour l\'agrandir.</p><div class="repgal">';
-  ph.forEach((p,i)=>{
-    h+='<figure class="repcard"><img src="'+p.img+'" alt="'+esc(p.label)+'" data-rep="'+i+'" loading="lazy"><figcaption><span class="rep-cat">'+esc(p.cat)+'</span><span class="rep-l">'+esc(p.label)+'</span><span class="rep-d">'+esc(p.desc)+'</span></figcaption></figure>';
+  const ORDER=['Repère annoté','Moteur','Gasoil','Électricité','Pneumatique','Freinage','Transmission','Entretien','Identification','Châssis','Vue d\'ensemble'];
+  const cats=[...new Set([...ORDER.filter(c=>ph.some(p=>p.cat===c)), ...ph.map(p=>p.cat)])];
+  let h='<p class="atf-lead">'+ph.length+' photos du camion, classées par système. Touche une image pour l\'agrandir.</p>';
+  cats.forEach(cat=>{ const list=ph.filter(p=>p.cat===cat); if(!list.length) return;
+    h+='<div class="dep-cat">'+esc(cat)+' — '+list.length+'</div><div class="repgal">';
+    list.forEach(p=>{ const i=ph.indexOf(p);
+      h+='<figure class="repcard"><img src="'+p.img+'" alt="'+esc(p.label)+'" data-rep="'+i+'" loading="lazy"><figcaption><span class="rep-cat">'+esc(cat)+'</span><span class="rep-l">'+esc(p.label)+'</span><span class="rep-d">'+esc(p.desc)+'</span></figcaption></figure>';
+    });
+    h+='</div>';
   });
-  h+='</div>';
   $('atfBody').innerHTML=h;
   $('atfBody').querySelectorAll('[data-rep]').forEach(img=>img.onclick=()=>openLightbox(img.src));
 }

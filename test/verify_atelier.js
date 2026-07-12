@@ -102,6 +102,17 @@ const ph=env.ctx.window.G270_PHOTOS||[];
 ok('A11 — 22 photos embarquées', ph.length===22);
 ok('A12 — chaque photo = data URI JPEG + libellé + description', ph.every(p=>/^data:image\/jpeg;base64,/.test(p.img)&&p.label&&p.desc&&p.cat));
 
+// ---- check-list d'intervention + repérage groupé ----
+c.renderPanneScreen('demarrage');
+const ck=R.atfBody.innerHTML;
+ok('K1 — check-list remplacement pompe affichée et cochable', /Check-list — remplacement de la pompe/.test(ck) && /data-pchk="0"/.test(ck) && /bon sens|BON SENS/i.test(ck));
+c.panneState('demarrage').done.r0='2026-07-12'; c.saveStore(); c.renderPanneScreen('demarrage');
+ok('K2 — item de check-list coché persisté et compté', /1 \/ 6/.test(R.atfBody.innerHTML) && !!store(env).g270.pannes.demarrage.done.r0);
+c.renderAtelierFlow('reperage');
+const rg=R.atfBody.innerHTML;
+ok('K3 — repérage groupé par système', /Repère annoté — /.test(rg) && /Électricité — /.test(rg) && /Gasoil — /.test(rg));
+ok('K4 — la pompe de gavage bien étiquetée dans Gasoil', /Pompe de gavage démontée/.test(rg));
+
 // ---- consommables ----
 c.renderAtelierHub();
 ok('C1 — le hub propose Consommables', /Consommables/.test(R.atelierTiles.innerHTML));

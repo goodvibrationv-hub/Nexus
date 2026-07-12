@@ -243,6 +243,15 @@ window.G270_PANNE.suspects.unshift({n:'Pompe électrique de gavage HS (le petit 
 window.G270_PANNE.etapes.splice(2,0,{t:'Pompe de gavage', d:'Contact mis, écoute près du filtre à gasoil : la pompe électrique doit bourdonner quelques secondes. Silence = pas d’alimentation. La tienne est démontée et rouillée : remplace-la (pompe de gavage 24 V type Facet, peu coûteuse) ou repose-la après essai direct sur batterie, puis purge le circuit.', photo:'moteur_aux'});
 window.G270_PANNE.tests.unshift({k:'gav', q:'La pompe de gavage bourdonne-t-elle au contact (près du filtre) ?'});
 window.G270_PANNE.verdicts.unshift({when:{gav:'non'}, t:'Pompe électrique de gavage HS', d:'Pas de bourdonnement : le gasoil n’est plus poussé vers le filtre. Teste le moteur en direct sur la batterie ; s’il ne tourne pas (le tien est rouillé), remplace la pompe (gavage 24 V), repose, purge le circuit et réessaie.'});
+/* Check-list d'intervention : remplacement de la pompe de gavage (lundi). */
+window.G270_PANNE.checklist={t:'Check-list — remplacement de la pompe de gavage', items:[
+  'Coupe-batterie COUPÉ avant de toucher au circuit.',
+  'Pompe neuve montée dans le BON SENS : flèche de débit vers le filtre.',
+  'Colliers neufs, durites bien engagées : c’est là que naissent les prises d’air.',
+  'Purge du circuit : vis de purge desserrée, contact (la pompe bourdonne), gasoil SANS bulles, resserrer.',
+  'Essai long : 5 minutes au ralenti sans caler (la panne se déclarait à ~45 s).',
+  'Si ça tient : réponds « oui » à la question pompe ci-dessous et marque la panne résolue.'
+]};
 window.G270_PANNES=[ window.G270_PANNE, {
   key:'pompe', short:'La pompe de la cuve ne s’enclenche pas',
   title:'La pompe à eau de la cuve ne s’enclenche pas',

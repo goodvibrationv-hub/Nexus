@@ -431,6 +431,13 @@ function renderTree(){
     at.onclick=()=>openAtelier();
     tree.appendChild(at);
   }
+  if(k==='elagage'&&window.ELAG_GUIDE){
+    const gb=document.createElement('button'); gb.className='atelier-banner guide'; gb.type='button';
+    const nA=window.ELAG_GUIDE.reduce((a,g)=>a+g.arbres.length,0);
+    gb.innerHTML='<span class="ab-ic">🌳</span><span class="ab-mid"><span class="ab-t">Guide d’élagage par arbre</span><span class="ab-s">'+nA+' arbres · périodes, méthodes et pièges par essence</span></span><span class="ab-go">Ouvrir ›</span>';
+    gb.onclick=()=>openElagGuide();
+    tree.appendChild(gb);
+  }
   TIERS.forEach((label,ti)=>{
     const tn=s.nodes.filter(n=>n.tier===ti); if(!tn.length)return;
     const wrap=document.createElement('div'); wrap.className='tier';
@@ -2173,6 +2180,24 @@ const G270_FIELDS=[
   {key:'notes',   t:'Notes', big:true}
 ];
 
+function openElagGuide(){ go(renderElagGuide,'guide arbres'); }
+function renderElagGuide(){
+  mode='learn';
+  $('atfTitle').textContent='Guide d’élagage par arbre';
+  let h='<p class="atf-lead">Chaque arbre a ses règles : sa période, sa tolérance à la taille, ses méthodes et ses pièges. Touche un arbre pour dérouler.</p>';
+  (window.ELAG_GUIDE||[]).forEach(g=>{
+    h+='<div class="dep-cat">'+esc(g.cat)+' — '+g.arbres.length+'</div>';
+    g.arbres.forEach(a=>{
+      h+='<details class="dep-item arb"><summary><span class="arb-ic">'+a.ic+'</span><span class="dep-s">'+esc(a.n)+'</span><span class="dep-c">'+esc(a.tol)+'</span></summary>'+
+        '<div class="dep-k"><div class="arb-row"><b>📅 Période :</b> '+esc(a.per)+'</div>'+
+        '<div class="arb-row"><b>✂️ Méthodes :</b><ul class="arb-ul">'+a.meth.map(m=>'<li>'+esc(m)+'</li>').join('')+'</ul></div>'+
+        '<div class="arb-warn">⚠️ '+esc(a.warn)+'</div></div></details>';
+    });
+  });
+  h+='<p class="atf-note">Rappels transversaux : coupe en 3 temps, au col de branche, sections petites, outils propres — voir les cours du domaine.</p>';
+  $('atfBody').innerHTML=h;
+  show('scAtelierFlow',{accent:'#557A3C',nav:'domains'});
+}
 function openAtelier(){ go(renderAtelierHub,'atelier'); }
 function renderAtelierHub(){
   mode='learn'; g270S();

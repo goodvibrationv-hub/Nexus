@@ -295,7 +295,7 @@ window.G270_PANNES=[ window.G270_PANNE, {
 
 /* ---- consommables : catalogue des pièces d'usure (réfs + liste de courses) ---- */
 window.G270_CONSO=[
-  {k:'pompe_gavage', t:'Pompe de gavage 24 V', hint:'Type Facet « cube » ou équivalent — à remplacer lundi'},
+  {k:'pompe_gavage', t:'Pompe de gavage 24 V', hint:'Réf. : Facet Cube 40164 (ou Gold-Flo 477003E) · Hardi 18824 · HEP-02A 24 V (budget, même format que l\u2019ancienne) — basse pression 0,2–0,5 bar, débit ≥ 60 l/h, compatible gasoil, raccords Ø 8 mm'},
   {k:'filtre_go',    t:'Filtre à gasoil', hint:'Cartouche vissée (voir photo repérage)'},
   {k:'joint_decant', t:'Joint / bol de décanteur', hint:'À changer si fendu ou suintant'},
   {k:'filtre_huile', t:'Filtre à huile moteur', hint:'À chaque vidange'},

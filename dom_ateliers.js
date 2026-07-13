@@ -1,0 +1,277 @@
+/* Ateliers par domaine — aide pratique qui reste avec les cours (comme l'Atelier G270).
+   Un atelier par domaine (sauf g270 qui a le sien) : sections type 'check' (cochable,
+   persistée, réutilisable), 'memo' (aide-mémoire dépliable) et 'tips' (réflexes).
+   Injecté par assemble.js ; rendu par renderDomAtelier() dans app.js. */
+window.DOM_ATELIERS={
+escalade:{ short:'Check partenaire · aide-mémoire nœuds · réflexes qui sauvent', sub:'À dérouler avant et pendant la grimpe : le check à deux, les nœuds à retrouver vite, et les réflexes de sécurité.', sections:[
+ {k:'pcheck', type:'check', t:'Check partenaire — avant CHAQUE montée', items:[
+  'Baudrier : sanglé au-dessus des hanches, boucles repassées (si non automatiques)',
+  'Nœud de huit : bien tressé, ravalé, dans les DEUX points d’encordement',
+  'Assureur : mousqueton verrouillé, corde passée dans le bon sens dans l’appareil',
+  'Corde : assez longue pour la voie, nœud en bout de corde',
+  'Casque ajusté pour les deux',
+  'Annonces convenues : « départ », « sec », « mou », « vaché »',
+  'Zone de chute et de retombée dégagée']},
+ {k:'noeuds', type:'memo', ic:'🪢', t:'Aide-mémoire nœuds', items:[
+  {q:'Huit tressé', a:'L’encordement de référence. Se vérifie d’un coup d’œil : 5 paires de brins parallèles. Toujours ravalé, jamais de mou dans le tressage.'},
+  {q:'Cabestan', a:'Se vacher au relais : réglable d’une main sans se dévacher. Se fait sur mousqueton à vis, le brin qui travaille côté doigt du mousqueton.'},
+  {q:'Demi-cabestan', a:'Assurage ou descente de secours si tu perds ton appareil : freine dans les deux sens sur un mousqueton HMS.'},
+  {q:'Machard / autobloquant', a:'Contre-assurage du rappel (SOUS le descendeur) : 3–4 tours de cordelette, doit coulisser à la main et bloquer en charge.'},
+  {q:'Nœud d’arrêt (double pêcheur)', a:'En bout de corde en moulinette ou rappel : il empêche la corde de traverser l’appareil. Le réflexe qui coûte 5 secondes et sauve des vies.'},
+  {q:'Queue de vache', a:'Relier ou raccourcir rapidement ; facile à défaire même après charge. Pas pour s’encorder.'}]},
+ {k:'reflexes', type:'tips', t:'Réflexes qui sauvent', items:[
+  'Le check partenaire se fait À CHAQUE montée, même la dixième de la journée : la routine tue la vigilance.',
+  'La main aval ne lâche JAMAIS la corde à l’assurage — tout le reste peut se rattraper, pas ça.',
+  'Un doute au relais = on s’arrête et on vérifie ; un relais se contrôle avant de se vacher dessus.',
+  'Fatigue, vent, précipitation : les accidents arrivent à la descente et en fin de journée.',
+  'En moulinette sur maillon inconnu : contrôle l’usure (gorge creusée = danger).']}]},
+meca:{ short:'Sécurité avant intervention · pannes courantes · couples & astuces', sub:'Le compagnon d’atelier : la mise en sécurité avant de toucher, les pannes classiques et les bons gestes.', sections:[
+ {k:'secu', type:'check', t:'Avant d’intervenir sur le véhicule', items:[
+  'Frein à main serré + vitesse engagée (ou P), roues calées côté opposé',
+  'Levage : cric sur point renforcé, puis CHANDELLES — jamais rester sous un cric seul',
+  'Batterie débranchée (borne − d’abord) pour toute intervention électrique',
+  'Moteur froid pour toucher au circuit de refroidissement',
+  'Lunettes + gants adaptés, cheveux/manches loin des pièces tournantes',
+  'Éclairage correct et outils regroupés avant de commencer']},
+ {k:'pannes', type:'memo', ic:'🩺', t:'Aide-mémoire pannes courantes', items:[
+  {q:'Ne démarre pas, « clac-clac » rapide', a:'Batterie déchargée ou cosses/masses corrodées. Serre et nettoie les cosses, teste la tension (12,4 V mini au repos), essaie avec des pinces.'},
+  {q:'Voyant d’huile allumé moteur tournant', a:'ARRÊT IMMÉDIAT. Niveau d’huile, puis pression (capteur ou pompe). Rouler sans pression détruit le moteur en minutes.'},
+  {q:'Surchauffe (aiguille au rouge)', a:'Stoppe, laisse refroidir, NE JAMAIS ouvrir à chaud. Ensuite : niveau, fuites, thermostat, ventilateur qui s’enclenche.'},
+  {q:'Volant qui vibre au freinage', a:'Disques voilés ou plaquettes usées irrégulièrement. Contrôle épaisseur et voile des disques.'},
+  {q:'Fumée : bleue / noire / blanche', a:'Bleue = huile brûlée (usure, turbo). Noire = trop de carburant / filtre à air. Blanche persistante = eau (joint de culasse suspect).'},
+  {q:'Sifflement aigu au démarrage', a:'Courroie accessoire détendue ou glacée. Contrôle tension et état ; une courroie qui casse = plus de charge ni de refroidissement.'}]},
+ {k:'astuces', type:'tips', t:'Couples & bons gestes', items:[
+  'Photographie AVANT de démonter : branchements, cheminement des durites, ordre des pièces.',
+  'Serrage des roues en étoile, au couple (souvent 90–120 N·m voiture) — jamais à la clé à choc en finition.',
+  'Filtre à huile : huiler le joint neuf, serrer à la main puis ¾ de tour.',
+  'Un boulon gripé se travaille au dégrippant + patience, pas à la rallonge : le goujon cassé coûte dix fois plus cher.',
+  'Range les vis par sous-ensemble (boîtes ou aimants étiquetés) : le remontage se joue là.']}]},
+survie:{ short:'Check sac 72 h · règle de 3 · réflexes terrain', sub:'La liste du sac qui part toujours prêt, les priorités quand ça se gâte, et les réflexes de terrain.', sections:[
+ {k:'sac', type:'check', t:'Sac 72 h — check avant de partir', items:[
+  'Eau : gourde pleine + moyen de purifier (filtre, pastilles ou récipient pour bouillir)',
+  'Feu ×3 : briquet + allumettes étanches + pierre à feu',
+  'Couteau fixe ou solide + petit kit réparation (cordelette, scotch, fil de fer)',
+  'Abri : bâche ou poncho + couverture de survie',
+  'Couchage adapté à la saison (le duvet trop léger ne pardonne pas)',
+  'Trousse de secours complète et vérifiée (dates, pansement compressif)',
+  'Carte papier + boussole (le téléphone n’est pas un plan A)',
+  'Lampe frontale + piles de rechange',
+  'Vivres sans cuisson pour 72 h',
+  'Quelqu’un prévenu : itinéraire + heure de retour']},
+ {k:'regle3', type:'memo', ic:'⏱️', t:'Règle de 3 — les priorités dans l’ordre', items:[
+  {q:'3 minutes sans air / hémorragie massive', a:'Le médical d’abord, toujours : voies aériennes, compression d’une hémorragie. Rien d’autre ne compte avant.'},
+  {q:'3 heures sans abri (par mauvais temps)', a:'L’hypothermie tue plus vite que la soif : coupe le vent, isole-toi du sol (l’essentiel des pertes), reste sec.'},
+  {q:'3 jours sans eau', a:'Économise ta transpiration avant de chercher l’eau. Eau trouvée = préfiltrer (tissu) puis purifier (ébullition 1 min ou pastilles).'},
+  {q:'3 semaines sans nourriture', a:'La faim est inconfortable, pas urgente. Ne mange jamais une plante ou un champignon douteux : le risque dépasse largement le gain.'},
+  {q:'Signes d’hypothermie', a:'Frissons violents puis QUI CESSENT, confusion, gestes maladroits, discours pâteux : réchauffer immédiatement (sec, isolé, boisson chaude sucrée).'}]},
+ {k:'terrain', type:'tips', t:'Réflexes terrain', items:[
+  'Perdu ? STOP : S’asseoir, boire, réfléchir, observer, puis décider. La panique fait tourner en rond.',
+  'Le camp se monte AVANT la nuit : une heure de jour vaut trois heures de nuit.',
+  'Bois mort SUR PIED ou suspendu = sec ; au sol = humide. Prépare 3 fois plus de petit bois que tu crois.',
+  'Suis l’eau vers l’aval en dernier recours : elle mène souvent aux habitations, mais coûte cher en terrain.',
+  'Économise la lampe et le téléphone dès le premier soir : mode avion, une seule source de lumière.']}]},
+apiculture:{ short:'Check visite · calendrier du rucher · réflexes', sub:'La visite qui ne rate rien, le calendrier de l’année apicole et les réflexes du rucher.', sections:[
+ {k:'visite', type:'check', t:'Visite de colonie — check', items:[
+  'Météo : > 15 °C, sans vent fort ni orage, en journée quand les butineuses volent',
+  'Enfumoir allumé, combustible pour tenir toute la visite, fumée froide',
+  'Tenue complète fermée (poignets, chevilles), gants propres',
+  'Lève-cadre en main, gestes lents, jamais dans l’axe de vol',
+  'Reine vue OU œufs frais (= présente il y a moins de 3 jours)',
+  'Couvain : compact, operculé régulier, pas d’odeur ni d’aspect suspect',
+  'Réserves : miel et pollen en couronne, assez pour la semaine',
+  'Comptage/contrôle varroa fait ou planifié',
+  'Notes au registre : force, humeur, réserves, à refaire']},
+ {k:'calendrier', type:'memo', ic:'📅', t:'Calendrier du rucher', items:[
+  {q:'Fin d’hiver (février–mars)', a:'Contrôle du poids (soupeser), candi si léger, premier vol de propreté observé. On n’ouvre pas encore en dessous de 15 °C.'},
+  {q:'Printemps (avril–mai)', a:'Visite de reprise complète, agrandissement (cires neuves), surveillance essaimage : cellules royales = décision dans la semaine.'},
+  {q:'Été (juin–août)', a:'Pose et suivi des hausses, récolte quand les cadres sont operculés aux ¾, eau à disposition en canicule.'},
+  {q:'Fin d’été (août–septembre)', a:'LE moment clé : traitement varroa dès la récolte, nourrissement au sirop lourd pour préparer les abeilles d’hiver.'},
+  {q:'Automne–hiver', a:'Réduction des entrées (frelons, souris), on ne dérange plus. Contrôles extérieurs : poids, activité les jours doux.'}]},
+ {k:'reflexes', type:'tips', t:'Réflexes du rucher', items:[
+  'Une colonie agressive d’un coup = souvent orpheline ou dérangée (odeurs, orage) : referme et reviens un autre jour.',
+  'Jamais de cadre secoué au-dessus du couvain ; la reine peut être n’importe où.',
+  'Le varroa ne se voit pas à l’œil sur les abeilles : compte (langes, sucre glace) au lieu de deviner.',
+  'Piqûre : retire le dard en GRATTANT (pas en pinçant), enfume l’endroit pour masquer la phéromone d’alerte.',
+  'Tout ce qui entre au rucher (cire, essaim, matériel d’occasion) peut apporter une maladie : quarantaine et prudence.']}]},
+bois:{ short:'Check machine · assemblages & colles · affûtage', sub:'Avant de lancer une machine, choisir le bon assemblage et la bonne colle, garder le fil tranchant.', sections:[
+ {k:'machine', type:'check', t:'Avant de lancer une machine', items:[
+  'Lame/fraise adaptée au travail, propre et AFFÛTÉE (l’outil émoussé force et brûle)',
+  'Réglages faits machine DÉBRANCHÉE (profondeur, guide, équerrage)',
+  'Pièce bridée ou en appui sûr — jamais tenue à main nue près de la lame',
+  'Poussoir à portée de main pour tout ce qui approche à moins de 15 cm',
+  'Lunettes + protection auditive + pas de gants près des lames tournantes',
+  'Manches serrées, pas de bijoux, cheveux attachés',
+  'Zone dégagée : chutes, câble, personne dans l’axe de rejet']},
+ {k:'assemblages', type:'memo', ic:'🪵', t:'Aide-mémoire assemblages & colles', items:[
+  {q:'Tenon-mortaise', a:'LA référence pour les cadres et structures (portes, tables) : grande surface de collage, reprend les efforts dans tous les sens.'},
+  {q:'Queue d’aronde', a:'Tiroirs et caissons sollicités en traction : indémontable mécaniquement, même sans colle. Se taille gras puis s’ajuste.'},
+  {q:'Tourillons / dominos / lamelles', a:'Rapides et invisibles pour caissons et panneaux : la précision du perçage fait tout.'},
+  {q:'Colle vinylique (blanche/D3)', a:'L’usage courant bois sur bois : joint plus fort que le bois si serrage correct. D3 pour l’humidité, 30 min de serrage utile.'},
+  {q:'Colle polyuréthane (PU)', a:'Extérieur et bois gras/exotiques : mousse en séchant (combler léger), colle aussi sur métal et pierre. Gants obligatoires.'},
+  {q:'Époxy', a:'Réparations, collages difficiles, joints épais : structurelle, étanche, chère. Respecter le dosage résine/durcisseur au gramme.'},
+  {q:'Le sens du fil', a:'Raboter et poncer DANS le sens du fil ; un assemblage bois de bout ne colle presque rien — c’est pour ça qu’on taille des tenons.'}]},
+ {k:'affutage', type:'tips', t:'Affûtage & précision', items:[
+  'Un ciseau affûté se teste sur l’ongle ou le papier : s’il glisse, il déchirera le bois.',
+  'Pierre ou guide : garde TOUJOURS le même angle (25–30°), c’est la constance qui fait le tranchant.',
+  'Trace au trusquin ou au couteau plutôt qu’au crayon pour les assemblages : le trait coupé ne ment pas.',
+  'Mesure deux fois, coupe une fois — et coupe toujours du côté chute du trait.',
+  'Fais un essai de réglage dans une chute AVANT la pièce finale, à chaque changement de réglage.']}]},
+cheval:{ short:'Check avant séance · signaux du cheval · timing', sub:'Préparer chaque séance, lire le cheval en continu, et récompenser au bon moment.', sections:[
+ {k:'seance', type:'check', t:'Avant une séance', items:[
+  'État général observé : yeux, naseaux, aplombs, appétit, attitude au pré',
+  'Zone de travail sécurisée : sol correct, clôture, pas d’objets traînants',
+  'Licol et longe en bon état, ajustés',
+  'Récompenses préparées (petites, faciles à donner vite)',
+  'UN objectif simple défini pour la séance (pas trois)',
+  'Durée courte prévue (5–15 min) : finir sur une réussite',
+  'Toi : calme, disponible, pas pressé — le cheval le sent avant toi']},
+ {k:'signaux', type:'memo', ic:'🐴', t:'Aide-mémoire signaux', items:[
+  {q:'Oreilles plaquées en arrière', a:'Menace ou douleur : augmente la distance, cherche la cause (inconfort, ressource défendue). Différent des oreilles simplement tournées vers un son.'},
+  {q:'Queue qui fouaille sans mouches', a:'Agacement, inconfort. Si ça arrive pendant l’exercice : demande trop forte ou trop longue, redescends d’un cran.'},
+  {q:'Mâchouillement, léchage, soupir', a:'Relâchement après une tension : bon signe, laisse une pause — c’est souvent là que l’apprentissage s’imprime.'},
+  {q:'Encolure basse, hanche au repos', a:'Détente. C’est l’état dans lequel on peut apprendre ; un cheval en alerte n’apprend rien de bon.'},
+  {q:'Blanc de l’œil visible, corps figé', a:'Alerte forte : ne pousse pas. Recule d’un pas dans la difficulté (approche-retraite) avant l’explosion.'},
+  {q:'Bâillements répétés pendant le travail', a:'Décharge de stress ou inconfort, pas de l’ennui : questionne la pression exercée.'}]},
+ {k:'timing', type:'tips', t:'Timing & récompense', items:[
+  'Le clic (ou le mot marqueur) tombe PENDANT le bon comportement, la récompense dans la seconde qui suit.',
+  'Découpe : si le cheval échoue deux fois de suite, l’étape est trop grande — redescends.',
+  'Termine chaque séance sur une réussite facile, même minuscule.',
+  'La friandise se donne bras tendu, main plate, loin de tes poches : ça évite le cheval fouilleur.',
+  'Note chaque séance (objectif, réussite, humeur) : c’est le journal qui montre la progression réelle.']}]},
+guitare:{ short:'Routine 20 min · aide-mémoire accords · sonner propre', sub:'Une routine qui fait progresser, les accords à retrouver vite, et les astuces pour sonner propre.', sections:[
+ {k:'routine', type:'check', t:'Routine d’entraînement — 20 min', items:[
+  'Accordage (2 min) — toujours, l’oreille se forme là',
+  'Échauffement doigts (3 min) : chromatismes lents, sans douleur',
+  'Accords du moment (5 min) : chaque doigt posé propre, corde par corde',
+  'Changements chronométrés (5 min) : 60 s, compte les allers-retours entre 2 accords',
+  'Rythme au métronome (3 min) : lent mais RÉGULIER bat rapide et sale',
+  'Plaisir (2 min) : le morceau que tu aimes, même imparfait',
+  'Note d’une phrase : ce qui a progressé aujourd’hui']},
+ {k:'accords', type:'memo', ic:'🎸', t:'Aide-mémoire accords ouverts', items:[
+  {q:'Mi mineur (Em)', a:'2 doigts : cordes 5 et 4 en case 2. Le plus simple — toutes les cordes sonnent. Piège : doigts trop à plat qui étouffent.'},
+  {q:'La mineur (Am)', a:'Corde 2 case 1, cordes 4 et 3 case 2. On ne joue PAS la 6e corde. Sonne comme le début de mille chansons.'},
+  {q:'Do majeur (C)', a:'Corde 2 case 1, corde 4 case 2, corde 5 case 3. Pas de 6e corde. Piège : le doigt 1 qui touche la corde 1.'},
+  {q:'Sol majeur (G)', a:'Corde 5 case 2, corde 6 case 3, corde 1 case 3. Toutes les cordes. Le changement C→G est LE passage à travailler.'},
+  {q:'Ré majeur (D)', a:'Triangle sur les 3 premières cordes (cases 2-3-2). On ne joue que 4 cordes. Piège : gratter la 5e ou 6e corde.'},
+  {q:'Mi majeur (E) et La majeur (A)', a:'E : comme Em + corde 3 case 1. A : 3 doigts serrés case 2 (cordes 4-3-2). Les deux piliers du blues et du rock.'}]},
+ {k:'propre', type:'tips', t:'Sonner propre', items:[
+  'Doigts juste DERRIÈRE la frette (pas dessus, pas loin) : moins de force, plus de son.',
+  'Un accord qui frise : joue les cordes UNE PAR UNE pour trouver le doigt coupable, corrige, recommence.',
+  'Le pouce derrière le manche (pas par-dessus) pour les accords ouverts : les doigts tombent à la verticale.',
+  'Mieux vaut 10 minutes par jour que 2 heures le dimanche : les doigts apprennent en dormant.',
+  'La douleur du bout des doigts est normale 2–3 semaines ; une douleur au poignet ne l’est pas — corrige la posture.']}]},
+soudure:{ short:'Check avant d’amorcer · défauts → remèdes · réglages', sub:'La mise en sécurité avant l’arc, le diagnostic des défauts de cordon, et les réglages de base.', sections:[
+ {k:'avant', type:'check', t:'Avant d’amorcer', items:[
+  'Ventilation ou aspiration en route (les fumées de soudage sont toxiques)',
+  'Rien d’inflammable à moins de 5 m ; extincteur à portée',
+  'Masque : teinte adaptée (9–13 selon procédé et intensité), pas de peau nue',
+  'Gants croûte + manches longues + chaussures fermées (les projections trouvent tout)',
+  'Pièce dégraissée, meulée au métal nu sur la zone de soudure',
+  'Pince de masse sur métal NU, près de la soudure',
+  'Personnes autour prévenues (coup d’arc = brûlure des yeux, même en regardant de loin)',
+  '30 min de surveillance après le dernier point (feu couvant)']},
+ {k:'defauts', type:'memo', ic:'🔍', t:'Défauts : symptôme → remède', items:[
+  {q:'Collage (le cordon se décolle)', a:'Pas de fusion réelle : intensité trop faible ou avance trop rapide. Monte l’ampérage, ralentis, garde l’arc court.'},
+  {q:'Caniveaux (sillons creusés au bord du cordon)', a:'Trop chaud ou trop rapide : baisse l’intensité, ralentis, et cible le milieu du joint.'},
+  {q:'Soufflures (trous, porosités)', a:'Humidité ou gras : électrodes stockées au sec (étuvage si besoin), pièce dégraissée, gaz de protection suffisant à l’abri du vent.'},
+  {q:'L’électrode colle à la pièce', a:'Intensité trop basse ou amorçage hésitant : gratte comme une allumette, décolle vite, monte un peu l’ampérage.'},
+  {q:'Cordon trop bombé / trop creux', a:'Bombé = trop froid ou trop lent. Creux/percé = trop chaud ou tôle trop fine : baisse l’intensité ou soude par points.'},
+  {q:'La pièce se déforme', a:'Trop de chaleur au même endroit : pointe d’abord, soude par petits segments alternés, laisse refroidir entre les passes.'}]},
+ {k:'reglages', type:'tips', t:'Réglages de base (MMA)', items:[
+  'Règle d’or : ~30 à 40 A par millimètre de diamètre d’électrode (Ø 2,5 mm ≈ 80–90 A).',
+  'Longueur d’arc ≈ diamètre de l’électrode : trop long = projections et soufflures.',
+  'Tôle fine = électrode fine et petites intensités ; mieux vaut deux passes qu’un trou.',
+  'Entraîne-toi sur des chutes du MÊME métal et de la même épaisseur avant la vraie pièce.',
+  'Un bon cordon s’entend : friture régulière de bacon — apprends le son autant que l’image.']}]},
+drone:{ short:'Check avant vol · pannes courantes · LiPo', sub:'Le rituel d’avant-vol qui évite la casse, les pannes FPV classiques et le soin des LiPo.', sections:[
+ {k:'prevol', type:'check', t:'Avant chaque vol FPV', items:[
+  'ANTENNE VTX VISSÉE avant de brancher la LiPo (sinon le VTX grille)',
+  'Hélices : bon sens, serrées, sans fissures',
+  'Visserie et frame : rien de desserré après le dernier crash',
+  'LiPo chargée (4,2 V/S) et sanglée, connecteur propre',
+  'Radio allumée AVANT le drone, bon modèle sélectionné, interrupteurs en position sûre',
+  'Failsafe testé (radio éteinte = moteurs coupés)',
+  'Zone dégagée, personne dans l’axe, spotter si possible',
+  'Armement : loin de toi, jamais le drone à la main']},
+ {k:'pannes', type:'memo', ic:'🩺', t:'Pannes courantes', items:[
+  {q:'Le drone dérive tout seul (drift)', a:'En Angle : calibre l’accéléromètre à plat. En Acro : le drift est normal, c’est toi qui pilotes l’assiette.'},
+  {q:'Vidéo brouillée / neige', a:'Antenne(s) desserrée ou canal saturé : vérifie le vissage, change de canal, éloigne-toi des autres pilotes en fréquence.'},
+  {q:'Tourne sur lui-même à l’armement (toilet bowl / flip)', a:'Ordre des moteurs ou sens des hélices inversé : re-vérifie le mapping moteurs dans Betaflight et le sens de chaque hélice.'},
+  {q:'Ne s’arme pas', a:'Regarde le motif de la LED / l’OSD : angle trop fort (redresse-le), throttle pas à zéro, ou switch d’armement mal assigné.'},
+  {q:'Vibrations dans l’image / oscillations', a:'Hélice abîmée d’abord (change-la), moteur voilé ensuite, filtres/PID en dernier : le matériel avant le logiciel.'},
+  {q:'Portée radio faible', a:'Antennes radio ET récepteur bien orientées (pas dans l’axe l’une de l’autre), antenne RX dégagée du carbone.'}]},
+ {k:'lipo', type:'tips', t:'LiPo & longévité', items:[
+  'Stockage à 3,8 V/S dès que tu ne voles pas sous 2–3 jours : c’est ce qui double la vie des packs.',
+  'Atterris à 3,5 V/S sous charge : descendre plus bas tue la batterie (et le drone en vol).',
+  'Une LiPo gonflée, percée ou tombée dans l’eau ne se recharge PAS : décharge complète et recyclage.',
+  'Charge toujours surveillée, sac LiPo, jamais sur la moquette.',
+  'L’hiver : garde les packs au chaud (poche intérieure) jusqu’au vol, la capacité chute avec le froid.']}]},
+camdrone:{ short:'Check décollage · réglages caméra · images ciné', sub:'Le check DJI avant décollage, les réglages caméra selon la lumière, et les habitudes qui font les belles images.', sections:[
+ {k:'decollage', type:'check', t:'Avant décollage', items:[
+  'Zone autorisée vérifiée (carte Géoportail « restrictions drones »)',
+  'Batteries drone + radio chargées, batterie bien clipsée',
+  'Carte SD présente, vide, rapide',
+  'Protection de nacelle RETIRÉE, objectif propre',
+  'GPS : attendre le signal correct ET le Home Point enregistré (annonce vocale)',
+  'Altitude de RTH réglée AU-DESSUS de tout obstacle du secteur',
+  'Vent estimé en altitude (rafales = images gâchées + retour difficile)',
+  'Décollage : stationnaire 10 s à 2 m — contrôle stabilité avant de partir']},
+ {k:'camera', type:'memo', ic:'🎥', t:'Réglages caméra express', items:[
+  {q:'Plein soleil', a:'ISO 100 verrouillé, filtre ND16–ND32 pour garder la vitesse à 2× la cadence (1/50 s pour 25 fps) : c’est le flou de mouvement naturel.'},
+  {q:'Coucher / lever de soleil', a:'ISO 100–400, ND léger ou aucun, expose sur le ciel (les ombres se récupèrent, un ciel cramé jamais). D-Log si tu étalonnes.'},
+  {q:'Ciel couvert', a:'Sans ND souvent : vitesse au double de la cadence, balance des blancs FIXE (pas auto, elle dérive en vol).'},
+  {q:'Photo', a:'RAW + JPEG, mode bracketing (AEB) pour les scènes contrastées, horizon vérifié à la grille.'},
+  {q:'Le réglage à ne jamais oublier', a:'Tout en manuel ou verrouillé AVANT le décollage : une exposition qui « pompe » en plein travelling ruine le plan.'}]},
+ {k:'cine', type:'tips', t:'Des images plus ciné', items:[
+  'Un mouvement = une idée : lent, régulier, et qui RÉVÈLE quelque chose (un sujet, un paysage derrière la crête).',
+  'Vitesse de déplacement constante ; en mode Ciné, les manches se caressent, ne se poussent pas.',
+  'Tourne chaque plan 5 s de plus que prévu : le montage a besoin de gras.',
+  'Deux passages du même plan (un large, un serré) valent mieux que dix plans différents ratés.',
+  'La lumière fait 80 % de l’image : l’heure dorée récompense toujours le réveil.']}]},
+cordiste:{ short:'Contrôle EPI quotidien · nœuds & manips · règles d’or', sub:'Le contrôle croisé des EPI, les nœuds et manœuvres à connaître par cœur, et les règles non négociables.', sections:[
+ {k:'epi', type:'check', t:'EPI — contrôle avant chaque poste', items:[
+  'Cordes : gaine (peluchage, brûlures, hernies), âme au toucher sur toute la longueur',
+  'Harnais : sangles, coutures de sécurité, points d’attache, boucles',
+  'Connecteurs : verrouillage fonctionne, pas de jeu ni d’usure de gorge',
+  'Descendeur : usure des flasques et de la poulie, came franche',
+  'Antichute et bloqueurs : ressorts, gâchettes, dents propres',
+  'Longes et absorbeur : coutures témoins intactes',
+  'Casque jugulaire ajustée ; gants ; chaussures',
+  'Contrôle CROISÉ avec le binôme + fiche de suivi à jour']},
+ {k:'manips', type:'memo', ic:'🪢', t:'Nœuds & manœuvres', items:[
+  {q:'Huit / huit double', a:'Encordements et ancrages : se vérifie visuellement en un regard. Le double (oreilles) répartit sur deux points d’ancrage.'},
+  {q:'Cabestan', a:'Réglage fin aux ancrages et au poste : ajustable sous tension d’une seule main.'},
+  {q:'Machard tressé', a:'L’autobloquant de la corde de sécurité : doit coulisser librement ET bloquer franc — testé à chaque poste.'},
+  {q:'Conversion montée → descente', a:'LA manœuvre à maîtriser les yeux fermés : descendeur posé et verrouillé sous les bloqueurs AVANT de retirer quoi que ce soit.'},
+  {q:'Fractionnement', a:'Passage d’un ancrage intermédiaire : toujours longé pendant la manœuvre, jamais moins de deux points de contact.'},
+  {q:'Clé d’arrêt sur descendeur', a:'Toute intervention des deux mains au poste = clé d’arrêt faite. Systématique, même pour « juste 10 secondes ».'}]},
+ {k:'regles', type:'tips', t:'Règles d’or', items:[
+  'DEUX cordes, toujours : une de travail, une de sécurité, sur deux ancrages distincts.',
+  'Jamais seul sur cordes : le binôme est un équipement de sécurité, pas une compagnie.',
+  'Suspendu immobile = danger (syndrome du harnais) : un équipier inerte se décroche en MINUTES, pédale de délestage en attendant.',
+  'Un EPI qui a subi une chute ou un doute = retiré du service, point.',
+  'Météo : le vent se lève plus fort là-haut qu’en bas — on renonce tôt, pas trop tard.']}]},
+elagage:{ short:'Check tronçonneuse · pannes machine · chantier propre', sub:'Le check avant de lancer la machine, les pannes classiques de tronçonneuse et les réflexes de chantier.', sections:[
+ {k:'tronco', type:'check', t:'Avant de démarrer la tronçonneuse', items:[
+  'EPI complet : pantalon anti-coupure, casque forestier (visière + antibruit), gants, chaussures coquées',
+  'Chaîne : affûtée, tendue (se soulève de 3–4 mm sans sortir du rail), frein fonctionnel',
+  'Pleins faits MOTEUR FROID, à 3 m du point de démarrage, bouchons serrés',
+  'Démarrage machine AU SOL, pied dans la poignée — jamais à la volée',
+  'Zone de danger : 2× la hauteur de l’arbre, personne dedans, échappatoires repérées',
+  'Lignes électriques repérées (distance de sécurité, sinon on n’y touche pas)',
+  'Trousse de secours avec pansement compressif SUR le chantier, téléphone chargé',
+  'Jamais seul pour l’abattage ou la grimpe']},
+ {k:'pannes', type:'memo', ic:'🔧', t:'Pannes tronçonneuse', items:[
+  {q:'Ne démarre pas', a:'Dans l’ordre : carburant frais (le mélange vieillit en 1 mois), interrupteur, starter, bougie (noyée → sécher, laisser reposer). Trop de lanceur au starter = noyage.'},
+  {q:'Démarre puis cale à l’accélération', a:'Filtre à air encrassé ou carburateur (gicleur) : nettoie le filtre d’abord, c’est 80 % des cas.'},
+  {q:'La chaîne ne tourne pas', a:'Frein de chaîne engagé (le levier avant) — le classique. Sinon : pignon ou embrayage.'},
+  {q:'Coupe en biais', a:'Affûtage inégal (les gouges d’un côté plus courtes) ou guide usé asymétriquement : réaffûte de façon égale, retourne le guide régulièrement.'},
+  {q:'Fume / manque de puissance', a:'Mélange trop riche en huile ou filtre à air sale ; échappement encrassé sur les vieilles machines.'},
+  {q:'Chaîne qui chauffe et fume', a:'Manque de lubrification : réservoir d’huile de chaîne, sortie d’huile bouchée (sciure), tension trop forte.'}]},
+ {k:'chantier', type:'tips', t:'Chantier propre', items:[
+  'Affûte à CHAQUE plein : 2 minutes de lime = une machine qui coupe droit sans forcer.',
+  'La coupe en 3 temps sur toute branche de plus de 5 cm : c’est elle qui évite les arrachements d’écorce.',
+  'Purge les tensions AVANT de billonner : lis de quel côté le bois va s’ouvrir ou pincer.',
+  'Range le bois au fur et à mesure : un chantier encombré fait trébucher avec une machine en main.',
+  'Fatigue = pause. La plupart des accidents de tronçonneuse arrivent en fin de journée.']}]}
+};

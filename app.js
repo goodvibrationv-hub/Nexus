@@ -25,6 +25,7 @@ function loadStore(){
       if(d.woodStock) STORE.woodStock=d.woodStock; if(d.woodPlan) STORE.woodPlan=d.woodPlan;
       if(d.yoga) STORE.yoga=d.yoga; if(d.g270) STORE.g270=d.g270;
       if(d.amenagement) STORE.amenagement=d.amenagement;
+      if(d.domAteliers) STORE.domAteliers=d.domAteliers;
       if(d.deviceOwner) STORE.deviceOwner=d.deviceOwner;
       if(d.profilesReset1) STORE.profilesReset1=d.profilesReset1; }
   }catch(e){ /* mémoire seule */ }
@@ -436,6 +437,13 @@ function renderTree(){
     at.innerHTML='<span class="ab-ic">🧰</span><span class="ab-mid"><span class="ab-t">Atelier — aide pratique</span><span class="ab-s">Dépannage · entretien · fiche du camion · repérage photos</span></span><span class="ab-go">Ouvrir ›</span>';
     at.onclick=()=>openAtelier();
     tree.appendChild(at);
+  }
+  if(k!=='g270'&&window.DOM_ATELIERS&&window.DOM_ATELIERS[k]){
+    const da=window.DOM_ATELIERS[k];
+    const ab=document.createElement('button'); ab.className='atelier-banner'; ab.type='button';
+    ab.innerHTML='<span class="ab-ic">🧰</span><span class="ab-mid"><span class="ab-t">Atelier — aide pratique</span><span class="ab-s">'+da.short+'</span></span><span class="ab-go">Ouvrir ›</span>';
+    ab.onclick=()=>openDomAtelier(k);
+    tree.appendChild(ab);
   }
   if(k==='elagage'&&window.ELAG_GUIDE){
     const gb=document.createElement('button'); gb.className='atelier-banner guide'; gb.type='button';
@@ -2204,6 +2212,39 @@ function renderElagGuide(){
   $('atfBody').innerHTML=h;
   show('scAtelierFlow',{accent:'#557A3C',nav:'domains'});
 }
+/* ====== Ateliers par domaine : aide pratique qui reste avec les cours (patron G270) ====== */
+function domAtelierS(k){ if(!STORE.domAteliers) STORE.domAteliers={}; if(!STORE.domAteliers[k]) STORE.domAteliers[k]={done:{}}; if(!STORE.domAteliers[k].done) STORE.domAteliers[k].done={}; return STORE.domAteliers[k]; }
+function openDomAtelier(k){ go(()=>renderDomAtelier(k),'atelier'); }
+function renderDomAtelier(k,keep){
+  mode='learn'; const A=(window.DOM_ATELIERS||{})[k]; const s=D.SKILLS[k]; const st=domAtelierS(k);
+  const today=new Date().toISOString().slice(0,10);
+  if(!A||!s){ $('atfBody').innerHTML='<p class="atf-note">Atelier indisponible.</p>'; if(!keep) show('scAtelierFlow',{accent:'#8C4A4A',nav:'domains'}); return; }
+  $('atfTitle').textContent='Atelier — '+s.name.replace(/&amp;/g,'&');
+  let h='<p class="atf-lead">'+esc(A.sub)+'</p>';
+  A.sections.forEach(sec=>{
+    if(sec.type==='check'){
+      const dn=sec.items.filter((x,i)=>st.done[sec.k+'_'+i]).length;
+      h+='<div class="dep-cat">'+esc(sec.t)+' — '+dn+' / '+sec.items.length+'</div><ol class="tuto-steps big check">';
+      sec.items.forEach((x,i)=>{ const on=!!st.done[sec.k+'_'+i];
+        h+='<li class="'+(on?'done':'')+'"><button class="pan-chk'+(on?' on':'')+'" data-dchk="'+sec.k+'_'+i+'" aria-label="fait">'+(on?'✓':'')+'</button><div class="pan-stx">'+esc(x)+'</div></li>'; });
+      h+='</ol>';
+      if(dn) h+='<button class="mnt-btn" data-dreset="'+sec.k+'">↺ Tout décocher — réutiliser la liste</button>';
+    } else if(sec.type==='memo'){
+      h+='<div class="dep-cat">'+esc(sec.t)+'</div>';
+      sec.items.forEach(it=>{ h+='<details class="dep-item arb"><summary><span class="arb-ic">'+(sec.ic||'📌')+'</span><span class="dep-s">'+esc(it.q)+'</span></summary><div class="dep-k">'+esc(it.a)+'</div></details>'; });
+    } else {
+      h+='<div class="dep-cat">'+esc(sec.t)+'</div><ul class="arb-ul dat-tips">'+sec.items.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul>';
+    }
+  });
+  h+='<p class="atf-note">Cette aide reste disponible à côté des cours — le pourquoi et le détail sont dans les cours du domaine.</p>';
+  $('atfBody').innerHTML=h;
+  $('atfBody').querySelectorAll('[data-dchk]').forEach(b=>b.onclick=()=>{ const kk=b.dataset.dchk;
+    if(st.done[kk]) delete st.done[kk]; else st.done[kk]=today; saveStore(); renderDomAtelier(k,true); });
+  $('atfBody').querySelectorAll('[data-dreset]').forEach(b=>b.onclick=()=>{ const p=b.dataset.dreset+'_';
+    Object.keys(st.done).forEach(x=>{ if(x.indexOf(p)===0) delete st.done[x]; }); saveStore(); renderDomAtelier(k,true); });
+  if(!keep) show('scAtelierFlow',{accent:s.color,nav:'domains'});
+}
+
 /* ====== Aménagement de camion : guide de chantier en modules (pas un cours) ====== */
 function amenS(){ if(!STORE.amenagement) STORE.amenagement={done:{}}; if(!STORE.amenagement.done) STORE.amenagement.done={}; return STORE.amenagement; }
 function amenProgress(){ const A=window.AMENAGEMENT; const st=amenS(); let t=0,d=0;

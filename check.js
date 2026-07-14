@@ -4,7 +4,7 @@
  * Usage: node check.js
  *
  * Vérifie :
- * - 96 nœuds (72 course + 24 safety) répartis dans 13 domaines
+ * - 103 nœuds (79 course + 24 safety) répartis dans 14 domaines
  * - Chaque nœud a un contenu dans NEXUS_CONTENT
  * - Chaque nœud a au moins 10 questions dans NEXUS_CARDS
  * - Les deps référencent des ids existants
@@ -48,8 +48,8 @@ const courses  = allNodes.filter(n => n.kind === 'course');
 const safety   = allNodes.filter(n => n.kind === 'safety');
 
 ok(`Nœuds total : ${allNodes.length} (${courses.length} course, ${safety.length} safety)`);
-if (allNodes.length !== 96)  err(`Attendu 96 nœuds, trouvé ${allNodes.length}`);
-if (courses.length  !== 72)  err(`Attendu 72 'course', trouvé ${courses.length}`);
+if (allNodes.length !== 103) err(`Attendu 103 nœuds, trouvé ${allNodes.length}`);
+if (courses.length  !== 79)  err(`Attendu 79 'course', trouvé ${courses.length}`);
 if (safety.length   !== 24)  err(`Attendu 24 'safety', trouvé ${safety.length}`);
 
 /* ---- deps ---- */

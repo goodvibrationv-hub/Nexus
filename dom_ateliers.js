@@ -3,6 +3,29 @@
    persistée, réutilisable), 'memo' (aide-mémoire dépliable) et 'tips' (réflexes).
    Injecté par assemble.js ; rendu par renderDomAtelier() dans app.js. */
 window.DOM_ATELIERS={
+occitan:{ short:'Phrases de survie · sons clés · réflexes pour progresser', sub:'De quoi se lancer tout de suite : les phrases à cocher quand on les maîtrise, les sons qui piègent, et comment faire vivre la langue.', sections:[
+ {k:'frases', type:'check', t:'Phrases de survie — je sais les dire', items:[
+  'Adieu ! / Bonjorn ! (salut / bonjour)',
+  'Cossí va ? — Va plan, mercé ! (comment ça va ? — bien, merci)',
+  'Me disi… , soi de Pàmias. (je m’appelle…, je suis de Pamiers)',
+  'Se vos plai / Mercé plan / De ren (s’il vous plaît / merci / de rien)',
+  'Quant còsta ? (combien ça coûte ?)',
+  'Ont es… ? (où est… ?)',
+  'Compreni pas — mai doçament, se vos plai (je ne comprends pas — plus doucement)',
+  'A reveire ! / Bon vent ! (au revoir / bonne route)']},
+ {k:'sons', type:'memo', ic:'🔤', t:'Les sons qui piègent', items:[
+  {q:'La lettre « o »', a:'Se prononce « ou » [u] : « occitan » = « outsita », « polida » = « poulido ».'},
+  {q:'Le « -a » final', a:'Non accentué, il se dit « o » [ɔ] : « una taula » ≈ « uno taoulo ».'},
+  {q:'Le « ò » accentué', a:'Se dit [ɔ], « o » ouvert (pas « ou ») : « òc » = « ò », « òme » = « òme ».'},
+  {q:'La lettre « v »', a:'En languedocien, se prononce « b » : « vin » ≈ « bi ».'},
+  {q:'« lh » et « nh »', a:'« lh » = « ill » de fille [ʎ] (« filha ») ; « nh » = « gn » de montagne [ɲ] (« montanha »).'},
+  {q:'Le « -r » des infinitifs', a:'Muet : « parlar » se dit « par-la », « minjar » = « min-ja ».'}]},
+ {k:'reflexes', type:'tips', t:'Réflexes pour progresser', items:[
+  'Parle, même mal : un « adieu ! » au marché de Pàmias vaut dix leçons.',
+  'Trois réflexes de lecture : o→« ou », -a final→« o », v→« b ».',
+  'Un mot nouveau par jour, noté puis réutilisé dans la journée.',
+  'Lis les panneaux bilingues et les noms de lieux (Pàmias, Foish, Sant Guironç).',
+  'Écoute des chansons occitanes (Se canta) : l’oreille apprend les sons toute seule.']}]},
 escalade:{ short:'Check partenaire · aide-mémoire nœuds · réflexes qui sauvent', sub:'À dérouler avant et pendant la grimpe : le check à deux, les nœuds à retrouver vite, et les réflexes de sécurité.', sections:[
  {k:'pcheck', type:'check', t:'Check partenaire — avant CHAQUE montée', items:[
   'Baudrier : sanglé au-dessus des hanches, boucles repassées (si non automatiques)',

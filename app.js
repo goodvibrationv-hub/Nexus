@@ -445,6 +445,13 @@ function renderTree(){
     ab.onclick=()=>openDomAtelier(k);
     tree.appendChild(ab);
   }
+  if(k==='occitan'&&window.OCCITAN_PHRASES){
+    const pb=document.createElement('button'); pb.className='atelier-banner guide'; pb.type='button';
+    const nP=window.OCCITAN_PHRASES.reduce((a,g)=>a+g.items.length,0);
+    pb.innerHTML='<span class="ab-ic">📖</span><span class="ab-mid"><span class="ab-t">Dictionnaire de phrases</span><span class="ab-s">'+nP+' phrases occitan → français, par thème, avec recherche</span></span><span class="ab-go">Ouvrir ›</span>';
+    pb.onclick=()=>openOccitanPhrases();
+    tree.appendChild(pb);
+  }
   if(k==='elagage'&&window.ELAG_GUIDE){
     const gb=document.createElement('button'); gb.className='atelier-banner guide'; gb.type='button';
     const nA=window.ELAG_GUIDE.reduce((a,g)=>a+g.arbres.length,0);
@@ -2305,6 +2312,34 @@ function renderAstuces(){
   h+='<p class="atf-note">Ces astuces complètent les modules du chantier — le détail pas-à-pas est dans chaque module.</p>';
   $('atfBody').innerHTML=h;
   show('scAtelierFlow',{accent:A.color,nav:'domains'});
+}
+
+/* ====== Occitan : dictionnaire de phrases (recherche) ====== */
+let _occQ='';
+function occNorm(s){ return (s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,''); }
+function occPhrasesHTML(){
+  const q=occNorm(_occQ); let h='', n=0;
+  (window.OCCITAN_PHRASES||[]).forEach(g=>{
+    const items=g.items.filter(it=>!q||occNorm(it.o+' '+it.f).includes(q));
+    if(!items.length) return; n+=items.length;
+    h+='<div class="dep-cat">'+esc((g.ic?g.ic+' ':'')+g.cat)+' — '+items.length+'</div>';
+    items.forEach(it=>{ h+='<div class="phr-row"><span class="phr-o">'+esc(it.o)+'</span><span class="phr-f">'+esc(it.f)+'</span></div>'; });
+  });
+  if(!n) h='<p class="atf-note">Cap de frasa trobada — assaja un autre mot.</p>';
+  return h;
+}
+function openOccitanPhrases(){ _occQ=''; go(renderOccitanPhrases,'dictionnaire'); }
+function renderOccitanPhrases(keep){
+  mode='learn';
+  $('atfTitle').textContent='Dictionnaire de phrases';
+  const nP=(window.OCCITAN_PHRASES||[]).reduce((a,g)=>a+g.items.length,0);
+  let h='<p class="atf-lead">'+nP+' phrases utiles, occitan (languedocien) → français, classées par thème. Tape un mot pour filtrer (en français ou en occitan).</p>';
+  h+='<input id="occSearch" class="occ-search" type="text" placeholder="🔎 Rechercher… (ex : bonjour, mercé, marché)" value="'+esc(_occQ)+'">';
+  h+='<div id="occList">'+occPhrasesHTML()+'</div>';
+  h+='<p class="atf-note">Languedocien standard (norma classica). Des variantes locales existent autour de Pàmias — l’essentiel est de se lancer.</p>';
+  $('atfBody').innerHTML=h;
+  const s=$('occSearch'); if(s) s.oninput=()=>{ _occQ=s.value; const l=$('occList'); if(l) l.innerHTML=occPhrasesHTML(); };
+  if(!keep) show('scAtelierFlow',{accent:'#B23A2E',nav:'domains'});
 }
 
 function openAtelier(){ go(renderAtelierHub,'atelier'); }

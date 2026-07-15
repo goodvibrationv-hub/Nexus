@@ -45,9 +45,10 @@ let atelier = ''; try { atelier = read('g270_atelier.js'); } catch { atelier = '
 let elagGuide = ''; try { elagGuide = read('elagage_guide.js'); } catch { elagGuide = ''; }
 let amen = '';      try { amen      = read('amenagement.js');   } catch { amen      = ''; }
 let domAt = '';     try { domAt     = read('dom_ateliers.js');  } catch { domAt     = ''; }
+let occPhr = '';    try { occPhr    = read('occitan_phrases.js'); } catch { occPhr   = ''; }
 
 /* ---- injection ---- */
-const dataBlock = [dataCore, content, cards, photos, atelier, elagGuide, amen, domAt].join('\n');
+const dataBlock = [dataCore, content, cards, photos, atelier, elagGuide, amen, domAt, occPhr].join('\n');
 
 const html = template
   .replace('/* {{DATA_INJECT}} */', dataBlock)

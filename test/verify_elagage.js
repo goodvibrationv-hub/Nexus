@@ -32,5 +32,11 @@ const g=R.atfBody.innerHTML;
 ok('E7 — guide rendu : groupes + arbres dépliables', /Feuillus durs — /.test(g) && /Résineux — /.test(g) && /dep-item arb/.test(g));
 ok('E8 — fiche arbre : période, méthodes, piège', /Période/.test(g) && /Méthodes/.test(g) && /arb-warn/.test(g));
 ok('E9 — pièges spécifiques présents (bouleau pleureur, cerisier été)', /saigne|pleureur/i.test(g) && /gommose/i.test(g));
+ok('E10 — plus de 10 fruitiers dans le guide', c.window.ELAG_GUIDE.find(x=>/Fruitiers/.test(x.cat)).arbres.length>=10);
+// calendrier de taille du verger
+ok('E11 — calendrier : 12 mois complets', Array.isArray(c.window.ELAG_CALENDAR) && c.window.ELAG_CALENDAR.length===12 && c.window.ELAG_CALENDAR.every(mo=>mo.m&&mo.sais&&mo.taille.length&&mo.a.length&&mo.evit));
+c.renderElagCalendar();
+const cal=R.atfBody.innerHTML;
+ok('E12 — calendrier rendu : mois + « Tailler » + « éviter » + mois courant', /Janvier/.test(cal)&&/Août/.test(cal)&&/Tailler/.test(cal)&&/cal now/.test(cal)&&/ce mois-ci/.test(cal));
 console.log('\n=== Bilan verif Cordiste & Élagage :', pass, 'réussis,', fail, 'échoués ===');
 process.exit(fail?1:0);

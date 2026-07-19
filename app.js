@@ -458,6 +458,12 @@ function renderTree(){
     gb.innerHTML='<span class="ab-ic">🌳</span><span class="ab-mid"><span class="ab-t">Guide d’élagage par arbre</span><span class="ab-s">'+nA+' arbres · périodes, méthodes et pièges par essence</span></span><span class="ab-go">Ouvrir ›</span>';
     gb.onclick=()=>openElagGuide();
     tree.appendChild(gb);
+    if(window.ELAG_CALENDAR){
+      const cb=document.createElement('button'); cb.className='atelier-banner guide'; cb.type='button';
+      cb.innerHTML='<span class="ab-ic">📅</span><span class="ab-mid"><span class="ab-t">Calendrier de taille du verger</span><span class="ab-s">Mois par mois : quoi tailler, quoi faire, quoi éviter</span></span><span class="ab-go">Ouvrir ›</span>';
+      cb.onclick=()=>openElagCalendar();
+      tree.appendChild(cb);
+    }
   }
   TIERS.forEach((label,ti)=>{
     const tn=s.nodes.filter(n=>n.tier===ti); if(!tn.length)return;
@@ -2340,6 +2346,24 @@ function renderOccitanPhrases(keep){
   $('atfBody').innerHTML=h;
   const s=$('occSearch'); if(s) s.oninput=()=>{ _occQ=s.value; const l=$('occList'); if(l) l.innerHTML=occPhrasesHTML(); };
   if(!keep) show('scAtelierFlow',{accent:'#B23A2E',nav:'domains'});
+}
+
+function openElagCalendar(){ go(renderElagCalendar,'calendrier'); }
+function renderElagCalendar(){
+  mode='learn';
+  $('atfTitle').textContent='Calendrier de taille du verger';
+  const cur=new Date().getMonth();
+  let h='<p class="atf-lead">Mois par mois : ce qu’on taille, les autres travaux, et ce qu’on évite. Le mois en cours est mis en avant. Règle d’or : à pépins l’hiver hors gel, à noyau l’été au sec.</p>';
+  (window.ELAG_CALENDAR||[]).forEach((mo,i)=>{
+    const open=(i===cur)?' open':'';
+    h+='<details class="dep-item arb cal'+(i===cur?' now':'')+'"'+open+'><summary><span class="arb-ic">'+mo.ic+'</span><span class="dep-s">'+esc(mo.m)+(i===cur?' · ce mois-ci':'')+'</span><span class="dep-c">'+esc(mo.sais)+'</span></summary>'+
+      '<div class="dep-k"><div class="arb-row"><b>✂️ Tailler :</b><ul class="arb-ul">'+mo.taille.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul></div>'+
+      '<div class="arb-row"><b>🧺 Aussi :</b><ul class="arb-ul">'+mo.a.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul></div>'+
+      '<div class="arb-warn">⚠️ '+esc(mo.evit)+'</div></div></details>';
+  });
+  h+='<p class="atf-note">Repères pour un climat tempéré (Ariège / piémont pyrénéen) : décale d’1–2 semaines selon l’altitude et l’année. Le détail par essence est dans le Guide par arbre.</p>';
+  $('atfBody').innerHTML=h;
+  show('scAtelierFlow',{accent:'#557A3C',nav:'domains'});
 }
 
 function openAtelier(){ go(renderAtelierHub,'atelier'); }

@@ -38,5 +38,10 @@ ok('E11 — calendrier : 12 mois complets', Array.isArray(c.window.ELAG_CALENDAR
 c.renderElagCalendar();
 const cal=R.atfBody.innerHTML;
 ok('E12 — calendrier rendu : mois + « Tailler » + « éviter » + mois courant', /Janvier/.test(cal)&&/Août/.test(cal)&&/Tailler/.test(cal)&&/cal now/.test(cal)&&/ce mois-ci/.test(cal));
+// variétés locales d'Ariège
+ok('E13 — variétés locales : liste + conservatoires', c.window.ELAG_VARIETES && c.window.ELAG_VARIETES.varietes.length>=6 && c.window.ELAG_VARIETES.conservatoires.some(x=>/Atout Fruit/i.test(x.n)));
+c.renderElagVarietes();
+const va=R.atfBody.innerHTML;
+ok('E14 — variétés rendues (Reinette de l’Ariège, Guin noir, conservatoires)', /Reinette de l’Ariège/.test(va)&&/Guin noir/.test(va)&&/conservatoires/i.test(va));
 console.log('\n=== Bilan verif Cordiste & Élagage :', pass, 'réussis,', fail, 'échoués ===');
 process.exit(fail?1:0);

@@ -102,3 +102,27 @@ window.ELAG_CALENDAR=[
  {m:'Novembre', ic:'🌧️', sais:'Entrée en repos', taille:['Après la chute des feuilles : reprise possible de la taille des à PÉPINS si temps doux','Recépage des petits fruits'], a:['Plantation (« à la Sainte-Catherine, tout bois prend racine », 25 nov.)','Badigeon des troncs'], evit:'Ne pas tailler les à noyau ni par temps de gel.'},
  {m:'Décembre', ic:'⛄', sais:'Repos', taille:['Taille d’hiver des à PÉPINS et de la VIGNE, dès qu’il ne gèle pas','Kiwi en fin de mois'], a:['Entretien et affûtage des outils','Vérifier tuteurs et attaches'], evit:'Par gel fort, on range les sécateurs : le bois gelé éclate et cicatrise mal.'}
 ];
+
+/* Variétés fruitières locales de l'Ariège / piémont pyrénéen.
+   Sélection documentée (associations & conservatoires locaux) — liste non exhaustive. */
+window.ELAG_VARIETES={
+ intro:'L’Ariège garde un beau patrimoine fruitier, mais dispersé de vallée en vallée. Voici quelques variétés documentées et, surtout, les conservatoires qui les sauvegardent — la vraie référence si tu cherches un plant greffé du pays.',
+ varietes:[
+  {n:'Reinette de l’Ariège', ic:'🍎', type:'Pomme locale', desc:'Pomme assez grosse, juteuse, acidulée, bien sucrée et parfumée. À couteau comme en cuisine, se garde bien l’hiver.'},
+  {n:'Pomme de Pouzac', ic:'🍎', type:'Pomme du piémont pyrénéen', desc:'Originaire de Pouzac (piémont, Hautes-Pyrénées) mais présente dans tout le Massif : chair dense, croquante, très sucrée et parfumée. Excellente pomme à couteau.'},
+  {n:'Guin noir d’Ariège', ic:'🍒', type:'Guigne / cerise noire', desc:'Petite cerise (guigne) noire ariégeoise, sucrée. À déguster, en confiture et en eau-de-vie.'},
+  {n:'Reinettes de pays (grise, clochard…)', ic:'🍏', type:'Pommes de garde', desc:'Vieilles reinettes rustiques du piémont : chair ferme, acidulée, parfumée, excellente conservation. Le cœur des vergers d’autrefois.'},
+  {n:'Pommes à jus & à cidre', ic:'🧃', type:'Pommes rustiques', desc:'Variétés rustiques pressées en jus fermier (fermes de Foix, du Couserans). Souvent acidulées ou amères, parfaites en assemblage.'},
+  {n:'Poires à cuire anciennes', ic:'🍐', type:'Poires de conservation', desc:'Poires fermes d’hiver, à pocher ou en compote, qui se gardent longtemps au fruitier. Nombreuses variétés locales.'},
+  {n:'Prunes du pays (reine-claude, prune d’ente)', ic:'🫐', type:'Prunes locales', desc:'Prunes rustiques pour la table, la confiture et le séchage (pruneaux). Le prunier se ressème et se transmet de jardin en jardin.'},
+  {n:'Figuiers de pays', ic:'🌿', type:'Figues des jardins', desc:'Vieux figuiers des jardins ariégeois abrités, souvent bifères (figues-fleurs en été, figues d’automne). Bouturés de voisin à voisin.'}
+ ],
+ conservatoires:[
+  {n:'Atout Fruit', lieu:'Vallée de l’Hers (Léran, 09)', quoi:'Étude, sauvegarde et greffons des variétés locales ; chantiers de taille douce. LA référence du secteur.'},
+  {n:'Apiun e Coutera', lieu:'Couserans (09)', quoi:'Conservation et valorisation des fruitiers locaux du Couserans.'},
+  {n:'Ferme de Bacala', lieu:'Ariège', quoi:'Pépinière de fruitiers anciens, souvent pyrénéens (pommiers, pruniers, abricotiers, amandiers).'},
+  {n:'Nature et Verger', lieu:'Haute-Ariège', quoi:'Pépinière fruitière de variétés anciennes et rustiques d’altitude.'},
+  {n:'Les Jardins du Terroir', lieu:'Mercenac (09)', quoi:'Verger conservatoire (une trentaine de variétés de pommes anciennes et locales).'},
+  {n:'Ferme de Mailhac', lieu:'Foix (09)', quoi:'Vergers de pommes anciennes en bio, jus de fruits fermier.'}
+ ]
+};

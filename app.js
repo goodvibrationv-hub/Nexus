@@ -464,6 +464,12 @@ function renderTree(){
       cb.onclick=()=>openElagCalendar();
       tree.appendChild(cb);
     }
+    if(window.ELAG_VARIETES){
+      const vb=document.createElement('button'); vb.className='atelier-banner guide'; vb.type='button';
+      vb.innerHTML='<span class="ab-ic">🍎</span><span class="ab-mid"><span class="ab-t">Variétés locales d’Ariège</span><span class="ab-s">Fruitiers du pays &amp; conservatoires où les trouver</span></span><span class="ab-go">Ouvrir ›</span>';
+      vb.onclick=()=>openElagVarietes();
+      tree.appendChild(vb);
+    }
   }
   TIERS.forEach((label,ti)=>{
     const tn=s.nodes.filter(n=>n.tier===ti); if(!tn.length)return;
@@ -2362,6 +2368,25 @@ function renderElagCalendar(){
       '<div class="arb-warn">⚠️ '+esc(mo.evit)+'</div></div></details>';
   });
   h+='<p class="atf-note">Repères pour un climat tempéré (Ariège / piémont pyrénéen) : décale d’1–2 semaines selon l’altitude et l’année. Le détail par essence est dans le Guide par arbre.</p>';
+  $('atfBody').innerHTML=h;
+  show('scAtelierFlow',{accent:'#557A3C',nav:'domains'});
+}
+
+function openElagVarietes(){ go(renderElagVarietes,'variétés'); }
+function renderElagVarietes(){
+  mode='learn'; const V=window.ELAG_VARIETES;
+  $('atfTitle').textContent='Variétés locales d’Ariège';
+  let h='<p class="atf-lead">'+esc(V.intro)+'</p>';
+  h+='<div class="dep-cat">Quelques variétés du pays</div>';
+  (V.varietes||[]).forEach(a=>{
+    h+='<details class="dep-item arb"><summary><span class="arb-ic">'+a.ic+'</span><span class="dep-s">'+esc(a.n)+'</span><span class="dep-c">'+esc(a.type)+'</span></summary>'+
+       '<div class="dep-k">'+esc(a.desc)+'</div></details>';
+  });
+  h+='<div class="dep-cat">Où les trouver — conservatoires &amp; pépinières</div>';
+  (V.conservatoires||[]).forEach(c=>{
+    h+='<div class="phr-row"><span class="phr-o">'+esc(c.n)+' · <span style="font-weight:400;color:var(--mut)">'+esc(c.lieu)+'</span></span><span class="phr-f">'+esc(c.quoi)+'</span></div>';
+  });
+  h+='<p class="atf-note">Liste non exhaustive, tenue honnête : le patrimoine ariégeois est vaste et surtout gardé par ces associations. Tu connais des variétés de ta vallée (Pàmias, Pays d’Olmes, vallée de l’Hers) ? Dis-les-moi, je les ajoute ici.</p>';
   $('atfBody').innerHTML=h;
   show('scAtelierFlow',{accent:'#557A3C',nav:'domains'});
 }

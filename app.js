@@ -26,6 +26,7 @@ function loadStore(){
       if(d.yoga) STORE.yoga=d.yoga; if(d.g270) STORE.g270=d.g270;
       if(d.amenagement) STORE.amenagement=d.amenagement;
       if(d.domAteliers) STORE.domAteliers=d.domAteliers;
+      if(d.domainOrder) STORE.domainOrder=d.domainOrder;
       if(d.deviceOwner) STORE.deviceOwner=d.deviceOwner;
       if(d.profilesReset1) STORE.profilesReset1=d.profilesReset1; }
   }catch(e){ /* mémoire seule */ }
@@ -406,20 +407,94 @@ function resetProfile(id){ const p=STORE.profiles[id]; if(!p) return;
 }
 
 /* ====== learning ====== */
+function homeKeys(){ const keys=Object.keys(D.SKILLS); if(window.AMENAGEMENT) keys.push('amenagement'); return keys; }
+function homeOrder(){
+  const keys=homeKeys();
+  const saved=(STORE.domainOrder||[]).filter(k=>keys.includes(k));
+  keys.forEach(k=>{ if(!saved.includes(k)) saved.push(k); }); // nouveaux domaines à la fin
+  return saved;
+}
+function tileInfo(k){
+  if(k==='amenagement'){ const A=window.AMENAGEMENT; const pr=amenProgress(); const p=pr.total?Math.round(pr.done*100/pr.total):0;
+    return {color:A.color, icon:A.icon, name:A.name, pc:p, open:()=>openAmenagement()}; }
+  const s=D.SKILLS[k]; return {color:s.color, icon:s.icon, name:s.name, pc:pct(k), open:()=>openDomain(k)};
+}
+function makeTile(k){
+  const t=tileInfo(k);
+  const b=document.createElement('button'); b.className='dtile'; b.style.setProperty('--c',t.color); b.dataset.key=k;
+  b.title='Appuie longuement pour déplacer';
+  b.innerHTML='<div class="top"><span class="ic">'+t.icon+'</span><h3>'+t.name+'</h3></div><div class="barwrap"><span class="bar"><i style="width:'+t.pc+'%"></i></span><span class="pc">'+t.pc+'%</span></div>';
+  b.onclick=()=>{ if(Date.now()<_dragSuppressClick) return; t.open(); };
+  attachTileDrag(b);
+  return b;
+}
 function renderHome(){
   const g=$('domainList'); g.innerHTML='';
   const n=Object.keys(D.SKILLS).length+(window.AMENAGEMENT?1:0);
   if($('domainCount')) $('domainCount').textContent=n+' domaines';
-  Object.entries(D.SKILLS).forEach(([k,s])=>{
-    const b=document.createElement('button'); b.className='dtile'; b.style.setProperty('--c',s.color);
-    b.innerHTML='<div class="top"><span class="ic">'+s.icon+'</span><h3>'+s.name+'</h3></div><div class="barwrap"><span class="bar"><i style="width:'+pct(k)+'%"></i></span><span class="pc">'+pct(k)+'%</span></div>';
-    b.onclick=()=>openDomain(k); g.appendChild(b);
-  });
-  if(window.AMENAGEMENT){ const A=window.AMENAGEMENT; const pr=amenProgress(); const p=pr.total?Math.round(pr.done*100/pr.total):0;
-    const b=document.createElement('button'); b.className='dtile'; b.style.setProperty('--c',A.color);
-    b.innerHTML='<div class="top"><span class="ic">'+A.icon+'</span><h3>'+A.name+'</h3></div><div class="barwrap"><span class="bar"><i style="width:'+p+'%"></i></span><span class="pc">'+p+'%</span></div>';
-    b.onclick=()=>openAmenagement(); g.appendChild(b);
+  homeOrder().forEach(k=>g.appendChild(makeTile(k)));
+}
+/* ---- réorganisation par appui long + glisser (tactile & souris) ---- */
+let _drag=null, _dragSuppressClick=0;
+function attachTileDrag(el){
+  el.addEventListener('touchstart', e=>dragDown(el, e.touches[0]), {passive:true});
+  el.addEventListener('mousedown', e=>{ if(e.button===0) dragDown(el, e); });
+}
+function dragPoint(e){ return e.touches&&e.touches[0] ? e.touches[0] : e; }
+function dragDown(el, pt){
+  dragCleanup();
+  _drag={ el, x0:pt.clientX, y0:pt.clientY, active:false, timer:0 };
+  _drag.timer=setTimeout(dragStart, 380);
+  document.addEventListener('touchmove', dragMove, {passive:false});
+  document.addEventListener('touchend', dragUp, {passive:true});
+  document.addEventListener('touchcancel', dragUp, {passive:true});
+  document.addEventListener('mousemove', dragMove, true);
+  document.addEventListener('mouseup', dragUp, true);
+}
+function dragStart(){
+  if(!_drag) return;
+  _drag.active=true; _drag.el.classList.add('dragging'); _drag.el.style.pointerEvents='none';
+  document.body.classList.add('reordering');
+  try{ if(navigator.vibrate) navigator.vibrate(15); }catch(e){}
+}
+function dragMove(e){
+  if(!_drag) return;
+  const p=dragPoint(e), dx=p.clientX-_drag.x0, dy=p.clientY-_drag.y0;
+  if(!_drag.active){
+    if(Math.abs(dx)>10||Math.abs(dy)>10){ clearTimeout(_drag.timer); dragCleanup(); } // c'est un défilement / tap
+    return;
   }
+  if(e.cancelable) e.preventDefault();               // on bloque le scroll pendant le glisser
+  const under=document.elementFromPoint(p.clientX, p.clientY);
+  const tgt=under&&under.closest ? under.closest('.dtile') : null;
+  if(tgt&&tgt!==_drag.el&&tgt.dataset.key){
+    const g=$('domainList'); const r=tgt.getBoundingClientRect();
+    const before = p.clientY < r.top + r.height/2;
+    g.insertBefore(_drag.el, before ? tgt : tgt.nextSibling);
+  }
+}
+function persistDomainOrderFromDOM(){
+  const g=$('domainList'); if(!g) return;
+  STORE.domainOrder=[...g.children].map(c=>c.dataset.key).filter(Boolean);
+  saveStore();
+}
+function dragUp(){
+  if(_drag&&_drag.active){
+    persistDomainOrderFromDOM();
+    _dragSuppressClick=Date.now()+350;               // évite l'ouverture juste après le lâcher
+  }
+  dragCleanup();
+}
+function dragCleanup(){
+  if(_drag){ if(_drag.timer) clearTimeout(_drag.timer);
+    if(_drag.el){ _drag.el.classList.remove('dragging'); _drag.el.style.pointerEvents=''; } }
+  document.body.classList.remove('reordering');
+  document.removeEventListener('touchmove', dragMove, {passive:false});
+  document.removeEventListener('touchend', dragUp);
+  document.removeEventListener('touchcancel', dragUp);
+  document.removeEventListener('mousemove', dragMove, true);
+  document.removeEventListener('mouseup', dragUp, true);
+  _drag=null;
 }
 function statusOf(k,n){ if(mastered[k].has(n.id))return 'mastered'; if(n.deps.every(d=>mastered[k].has(d)))return 'available'; return 'locked'; }
 function nameOf(k,id){ return D.SKILLS[k].nodes.find(x=>x.id===id).t; }

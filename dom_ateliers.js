@@ -3,6 +3,28 @@
    persistée, réutilisable), 'memo' (aide-mémoire dépliable) et 'tips' (réflexes).
    Injecté par assemble.js ; rendu par renderDomAtelier() dans app.js. */
 window.DOM_ATELIERS={
+sourcier:{ short:'Check avant recherche · aide-mémoire outils · tours de main', sub:'Avant de partir chercher : le rituel de préparation, les repères sur les outils, et les conseils transmis par les anciens.', sections:[
+ {k:'avant', type:'check', t:'Avant de commencer une recherche', items:[
+  'Outil vérifié : fourche équilibrée OU tiges en L qui pivotent librement',
+  'Terrain repéré : limites, obstacles, pente',
+  'Réseaux connus notés (compteur, regards, poteaux) pour recouper',
+  'Détendu et reposé — pas pressé, pas énervé',
+  'Montre et gros objets métalliques ôtés (comme font certains)',
+  '2–3 passages à blanc pour sentir l’outil stable',
+  'De quoi marquer les points (piquets, cailloux, craie)']},
+ {k:'outils', type:'memo', ic:'🧰', t:'Aide-mémoire des outils', items:[
+  {q:'La fourche en Y', a:'Coudrier (noisetier) de préférence, coupée fraîche, bras de 30–50 cm. Tenue paumes vers le ciel, mise en équilibre instable. L’outil « eau » par tradition.'},
+  {q:'Les tiges en L', a:'Un cintre déplié : partie longue 35–40 cm, poignée coudée 12 cm dans un tube (stylo) pour tourner librement. Le plus facile pour débuter et pour suivre un réseau.'},
+  {q:'Le pendule', a:'Un poids au bout d’un fil de 15–20 cm, pour travailler à l’arrêt au-dessus d’un point.'},
+  {q:'La réaction', a:'Fourche qui plonge (ou se relève), tiges qui se croisent (ou s’ouvrent), pendule qui passe du balancement à la rotation.'},
+  {q:'Le point fiable', a:'Le croisement de deux passages perpendiculaires, recoupé une 3ᵉ fois. Un point qui « tient » à chaque passage.'}]},
+ {k:'anciens', type:'tips', t:'Tours de main des anciens', items:[
+  'Tiens l’outil au point d’équilibre : ni crispé, ni mou.',
+  'Marche lentement, respire, ne force jamais la réaction avec les mains.',
+  'Quadrille : passages parallèles, puis perpendiculaires ; marque, puis relie.',
+  'Recoupe à des jours différents, et fais passer quelqu’un d’autre si tu peux.',
+  'Ne promets jamais l’eau, ni profondeur, ni débit.',
+  'Confirme TOUJOURS par une étude de sol ou un sondage avant de creuser ou forer.']}]},
 occitan:{ short:'Phrases de survie · sons clés · réflexes pour progresser', sub:'De quoi se lancer tout de suite : les phrases à cocher quand on les maîtrise, les sons qui piègent, et comment faire vivre la langue.', sections:[
  {k:'frases', type:'check', t:'Phrases de survie — je sais les dire', items:[
   'Adieu ! / Bonjorn ! (salut / bonjour)',

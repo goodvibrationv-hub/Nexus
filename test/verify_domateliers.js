@@ -25,7 +25,7 @@ const DA=c.window.DOM_ATELIERS, SK=c.window.NEXUS_DATA.SKILLS;
 
 // ---- couverture : tous les domaines sauf g270 (qui a son atelier complet) ----
 const attendus=Object.keys(SK).filter(k=>k!=='g270');
-ok('DA1 — un atelier pour chaque domaine (13, g270 exclu)', attendus.every(k=>DA[k]) && !DA.g270);
+ok('DA1 — un atelier pour chaque domaine (14, g270 exclu)', attendus.every(k=>DA[k]) && !DA.g270);
 ok('DA2 — chaque atelier : sous-titre bannière + ≥3 sections', attendus.every(k=>DA[k].short&&DA[k].sub&&DA[k].sections.length>=3));
 ok('DA3 — chaque atelier a 1 check + 1 memo + 1 tips', attendus.every(k=>{ const ts=DA[k].sections.map(s=>s.type);
   return ts.includes('check')&&ts.includes('memo')&&ts.includes('tips'); }));

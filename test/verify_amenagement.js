@@ -36,7 +36,7 @@ ok('M5 — astuces : ≥6 thèmes et ≥25 astuces (titre + détail)', A.astuces
 // ---- accueil : tuile dédiée, PAS un cours ----
 c.renderHome();
 ok('M6 — tuile « Aménagement de camion » sur l’accueil', R.domainList.children.some(x=>/Aménagement de camion/.test(x._html)));
-ok('M7 — compteur : 15 domaines', R.domainCount.textContent==='15 domaines');
+ok('M7 — compteur : 16 domaines', R.domainCount.textContent==='16 domaines');
 ok('M8 — pas un cours : aucun nœud SKILLS ni fiche ajoutés', !c.window.NEXUS_DATA.SKILLS.amenagement && !c.window.NEXUS_CARDS.some(x=>x.skill==='amenagement'));
 
 // ---- hub des modules ----

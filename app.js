@@ -2389,7 +2389,15 @@ function renderNoeuds(){
 }
 
 /* ====== Bien-être : recettes de boissons + rituels (pas un cours) ====== */
-function bienetreS(){ if(!STORE.bienetre) STORE.bienetre={done:{}}; if(!STORE.bienetre.done) STORE.bienetre.done={}; return STORE.bienetre; }
+function bienetreS(){ if(!STORE.bienetre) STORE.bienetre={done:{}}; if(!STORE.bienetre.done) STORE.bienetre.done={}; if(!STORE.bienetre.qty) STORE.bienetre.qty={}; return STORE.bienetre; }
+/* met à l'échelle les nombres d'un ingrédient (entiers, décimaux à virgule, plages « a à b », fractions ½¼¾) */
+function scaleFmt(v){ v=Math.round(v*100)/100; const s=(Math.abs(v-Math.round(v))<1e-9)?String(Math.round(v)):String(v); return s.replace('.',','); }
+function scaleIngr(str, f){ if(!f||f===1) return str; const FR={'½':.5,'¼':.25,'¾':.75,'⅓':1/3,'⅔':2/3};
+  const conv=x=> (x in FR)?FR[x]:parseFloat(String(x).replace(',','.'));
+  const NUM='(?:\\d+(?:[.,]\\d+)?|[½¼¾⅓⅔])';
+  const re=new RegExp(NUM+'(\\s*(?:à|-|–|—)\\s*)'+NUM+'|'+NUM,'g');
+  return str.replace(re,(m,sep)=>{ if(sep){ const parts=m.split(sep); return scaleFmt(conv(parts[0])*f)+sep+scaleFmt(conv(parts[1])*f); } return scaleFmt(conv(m)*f); });
+}
 function bienetreProgress(){ const B=window.BIENETRE; const st=bienetreS(); const tot=((B&&B.recettes)||[]).length;
   const done=((B&&B.recettes)||[]).filter(r=>st.done[r.key]).length; return {done, total:tot}; }
 function openBienetre(){ go(renderBienetreHub,'bien-être'); }
@@ -2414,10 +2422,11 @@ function renderRecette(key,keep){
   mode='learn'; const B=window.BIENETRE; const r=B.recettes.find(x=>x.key===key); const st=bienetreS();
   if(!r){ $('atfBody').innerHTML='<p class="atf-note">Recette introuvable.</p>'; if(!keep) show('scAtelierFlow',{accent:B.color,nav:'domains'}); return; }
   $('atfTitle').textContent=r.t;
-  const on=!!st.done[key];
+  const on=!!st.done[key]; const f=st.qty[key]||1;
   let h='<p class="atf-lead">'+esc(r.s)+'</p>';
-  h+='<div class="rec-meta">'+(r.temps?'<span>⏱️ '+esc(r.temps)+'</span>':'')+(r.pour?'<span>🥃 '+esc(r.pour)+'</span>':'')+'</div>';
-  h+='<div class="dep-cat">Ingrédients</div><ul class="rec-ingr">'+r.ingr.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul>';
+  h+='<div class="rec-meta">'+(r.temps?'<span>⏱️ '+esc(r.temps)+'</span>':'')+(r.pour?'<span>🥃 '+esc(scaleIngr(r.pour,f))+'</span>':'')+'</div>';
+  h+='<div class="qty-ctrl"><span class="qty-lbl">Quantités</span><button class="qty-b" data-qf="down"'+(f<=0.5?' disabled':'')+'>−</button><b class="qty-f">×'+scaleFmt(f)+'</b><button class="qty-b" data-qf="up"'+(f>=5?' disabled':'')+'>+</button>'+(f!==1?'<button class="qty-reset" data-qf="reset">↺</button>':'')+'</div>';
+  h+='<div class="dep-cat">Ingrédients</div><ul class="rec-ingr">'+r.ingr.map(x=>'<li>'+esc(scaleIngr(x,f))+'</li>').join('')+'</ul>';
   h+='<div class="dep-cat">Préparation</div><ol class="tuto-steps big">'+r.etapes.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ol>';
   if(r.conseils&&r.conseils.length){ h+='<div class="dep-cat">Conseils</div><ul class="mod-tips">'+r.conseils.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul>'; }
   if(r.anciens&&r.anciens.length){ h+='<div class="dep-cat">👵 Le tour de main des anciens</div><ul class="rec-anc">'+r.anciens.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul>'; }
@@ -2425,6 +2434,9 @@ function renderRecette(key,keep){
   h+='<button class="mnt-btn add" id="recDone" style="width:100%;margin-top:14px">'+(on?'✓ Déjà faite — retirer':'☐ Marquer « je l’ai faite »')+'</button>';
   $('atfBody').innerHTML=h;
   const bd=$('recDone'); if(bd) bd.onclick=()=>{ if(st.done[key]) delete st.done[key]; else st.done[key]=new Date().toISOString().slice(0,10); saveStore(); renderRecette(key,true); };
+  $('atfBody').querySelectorAll('[data-qf]').forEach(b=>b.onclick=()=>{ let nf=st.qty[key]||1;
+    if(b.dataset.qf==='up') nf=Math.min(5,nf+0.5); else if(b.dataset.qf==='down') nf=Math.max(0.5,nf-0.5); else nf=1;
+    if(nf===1) delete st.qty[key]; else st.qty[key]=nf; saveStore(); renderRecette(key,true); });
   if(!keep) show('scAtelierFlow',{accent:B.color,nav:'domains'});
 }
 function openBienetreAstuces(){ go(renderBienetreAstuces,'rituels'); }

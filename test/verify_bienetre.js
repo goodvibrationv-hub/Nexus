@@ -54,6 +54,19 @@ ok('B13 — hub reflète 1 recette faite', new RegExp('1 / '+B.recettes.length).
 const env2=makeEnv(store(env)); loadApp(env2);
 ok('B14 — état persisté au rechargement', env2.ctx.bienetreS().done.bissap==='2026-07-20');
 
+// ---- ajustement des quantités ----
+ok('B16 — scaleIngr : entier ×2', c.scaleIngr('100 g de fleurs',2)==='200 g de fleurs');
+ok('B17 — scaleIngr : décimal ×2 (1,5 → 3)', c.scaleIngr('1,5 à 2 L d’eau',2)==='3 à 4 L d’eau');
+ok('B18 — scaleIngr : plage ×0.5 (150–250 → 75–125)', c.scaleIngr('(150–250 g)',0.5)==='(75–125 g)');
+ok('B19 — scaleIngr : fraction ½ ×2 → 1', c.scaleIngr('½ concombre',2)==='1 concombre');
+ok('B20 — scaleIngr : facteur 1 inchangé', c.scaleIngr('Le jus de 4–5 citrons',1)==='Le jus de 4–5 citrons');
+// via l'UI : le facteur se règle et se persiste
+c.renderRecette('gnamakoudji');
+const st2=c.bienetreS(); st2.qty.gnamakoudji=2; c.saveStore(); c.renderRecette('gnamakoudji',true);
+ok('B21 — recette rendue avec quantités doublées + contrôle', /×2/.test(R.atfBody.innerHTML) && /300 g de gingembre/.test(R.atfBody.innerHTML) && /data-qf="up"/.test(R.atfBody.innerHTML));
+const env3=makeEnv(store(env)); loadApp(env3);
+ok('B22 — facteur de quantité persisté', env3.ctx.bienetreS().qty.gnamakoudji===2);
+
 // ---- rituels ----
 c.renderBienetreAstuces();
 ok('B15 — rituels rendus (dépliables)', /dep-item arb/.test(R.atfBody.innerHTML) && /Rituels/.test(R.atfTitle.textContent));

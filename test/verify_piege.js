@@ -25,13 +25,14 @@ const Pg=c.window.PIEGES;
 const total=Pg.cats.reduce((a,g)=>a+g.items.length,0);
 
 ok('G1 — les mouches sont la 1re catégorie', Pg.cats[0].cat==='Mouches' && Pg.cats[0].items.length>=3);
-ok('G2 — ≥6 familles d’insectes, ≥15 pièges', Pg.cats.length>=6 && total>=15);
+ok('G2 — ≥6 familles, ≥15 pièges', Pg.cats.length>=6 && total>=15);
+ok('G2b — famille souris & rongeurs (tapette, capture vivante)', Pg.cats.some(g=>/rongeurs/i.test(g.cat)&&g.items.some(k=>/tapette/i.test(k.n))&&g.items.some(k=>/capture vivante/i.test(k.n))));
 ok('G3 — chaque piège : nom, cible, matériel, étapes', Pg.cats.every(g=>g.items.every(k=>k.n&&k.cible&&k.materiel.length&&k.etapes.length)));
 ok('G4 — note de protection des abeilles', /abeille/i.test(JSON.stringify(Pg)));
 
 // tuile accueil
 c.renderHome();
-ok('G5 — tuile Pièges sur l’accueil', R.domainList.children.some(x=>/Pièges à insectes/.test(x._html)));
+ok('G5 — tuile Pièges sur l’accueil', R.domainList.children.some(x=>/>Pièges</.test(x._html)));
 ok('G6 — pas un cours', !c.window.NEXUS_DATA.SKILLS.piege && !c.window.NEXUS_CARDS.some(x=>x.skill==='piege'));
 
 // rendu + recherche

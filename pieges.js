@@ -1,8 +1,8 @@
 /* pieges.js — Compétence « Pièges à insectes » : fabriquer ses pièges maison, par cible.
    Les mouches d'abord. PAS un cours : catalogue consultable + recherche + « déjà fait ». */
 window.PIEGES={
-icon:'🪤', name:'Pièges à insectes', color:'#8B7E3A',
-meta:'Fabriquer ses pièges maison, insecte par insecte — les mouches d’abord',
+icon:'🪤', name:'Pièges', color:'#8B7E3A',
+meta:'Fabriquer ses pièges maison — insectes & rongeurs, les mouches d’abord',
 regle:'Règle d’or : la prévention d’abord (propreté, nourriture couverte, eaux stagnantes éliminées). Et on protège les abeilles : un piège sucré attire aussi les pollinisateurs — ajoute du vinaigre et éloigne-le des fleurs.',
 cats:[
  {cat:'Mouches', ic:'🪰', items:[
@@ -98,6 +98,28 @@ cats:[
    materiel:['1 L d’eau','1 c. à soupe de savon noir liquide'],
    etapes:['Dilue le savon noir dans l’eau tiède.','Pulvérise sur les colonies de pucerons, dessous des feuilles compris.','Renouvelle après la pluie.'],
    conseils:['Traite le matin ou le soir, jamais en plein soleil.']}
+ ]},
+ {cat:'Souris & rongeurs', ic:'🐭', items:[
+  {n:'Tapette à ressort', cible:'souris & rats', diff:'facile',
+   materiel:['1 tapette (modèle souris, ou grand modèle pour les rats)','Appât : beurre de cacahuète, noisette ou chocolat (le fromage est un mythe)'],
+   etapes:['Dépose un peu d’appât collant sur le plateau (elle doit devoir tirer dessus).','Arme le ressort avec précaution.','Place la tapette CONTRE un mur, la palette côté mur : les souris longent les cloisons.','Mets-en plusieurs, à 2–3 m d’intervalle.'],
+   conseils:['Un appât collant (cacahuète) marche mieux qu’un morceau qu’elle emporte.','Rats méfiants : laisse d’abord les pièges non armés quelques jours pour les mettre en confiance.'],
+   warn:'Gare aux doigts en armant. À placer hors de portée des enfants et des animaux.'},
+  {n:'Piège-cage (capture vivante)', cible:'souris & rats — sans les tuer', diff:'facile',
+   materiel:['1 nasse / cage à trappe','Appât : cacahuète, flocons d’avoine, morceau de pomme'],
+   etapes:['Place l’appât au fond, derrière la palette de déclenchement.','Pose la cage le long d’un mur, trappe vers le passage.','Vérifie matin et soir.','Relâche l’animal LOIN de la maison (au moins 1 km : un champ, une haie).'],
+   conseils:['Relâchée trop près, elle revient par le même chemin.'],
+   warn:'Un animal capturé stresse et meurt vite : contrôle le piège au moins deux fois par jour.'},
+  {n:'Piège-seau à bascule (maison)', cible:'souris', diff:'moyen',
+   materiel:['1 seau','1 canette ou 1 rouleau','1 tige qui traverse le haut du seau','1 rampe d’accès (planchette)','Appât (beurre de cacahuète sur la canette)'],
+   etapes:['Enfile la canette enduite d’appât sur la tige, en travers du seau : elle doit tourner librement.','Appuie une rampe contre le bord du seau.','La souris grimpe, marche sur la canette qui pivote, et tombe dans le seau.'],
+   conseils:['Seau VIDE = capture vivante, à relâcher loin.'],
+   warn:'Évite la version avec de l’eau (noyade) : préfère la capture vivante.'},
+  {n:'Prévention & exclusion', cible:'le plus efficace contre les rongeurs', diff:'facile',
+   materiel:['Paille de fer + mastic (ou mousse expansive)','Boîtes hermétiques'],
+   etapes:['Repère et bouche tous les trous de plus de 6 mm (paille de fer enfoncée puis mastic).','Stocke graines, croquettes et aliments dans des boîtes fermées.','Ne laisse pas traîner de nourriture, vide les poubelles.','Éloigne bois, cartons et abris collés à la maison.'],
+   conseils:['Une souris passe par un trou d’1 cm : l’exclusion vaut tous les pièges.'],
+   warn:'Évite les poisons anticoagulants : ils empoisonnent aussi chats, chiens, rapaces et hérissons (empoisonnement secondaire), et l’animal meurt caché. Les pièges sont plus sûrs et plus nets.'}
  ]}
 ]
 };

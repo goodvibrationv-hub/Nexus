@@ -26,6 +26,7 @@ function loadStore(){
       if(d.yoga) STORE.yoga=d.yoga; if(d.g270) STORE.g270=d.g270;
       if(d.amenagement) STORE.amenagement=d.amenagement;
       if(d.bienetre) STORE.bienetre=d.bienetre;
+      if(d.noeuds) STORE.noeuds=d.noeuds;
       if(d.domAteliers) STORE.domAteliers=d.domAteliers;
       if(d.domainOrder) STORE.domainOrder=d.domainOrder;
       if(d.deviceOwner) STORE.deviceOwner=d.deviceOwner;
@@ -408,7 +409,7 @@ function resetProfile(id){ const p=STORE.profiles[id]; if(!p) return;
 }
 
 /* ====== learning ====== */
-function homeKeys(){ const keys=Object.keys(D.SKILLS); if(window.AMENAGEMENT) keys.push('amenagement'); if(window.BIENETRE) keys.push('bienetre'); return keys; }
+function homeKeys(){ const keys=Object.keys(D.SKILLS); if(window.AMENAGEMENT) keys.push('amenagement'); if(window.BIENETRE) keys.push('bienetre'); if(window.NOEUDS) keys.push('noeud'); return keys; }
 function homeOrder(){
   const keys=homeKeys();
   const saved=(STORE.domainOrder||[]).filter(k=>keys.includes(k));
@@ -420,6 +421,8 @@ function tileInfo(k){
     return {color:A.color, icon:A.icon, name:A.name, pc:p, open:()=>openAmenagement()}; }
   if(k==='bienetre'){ const B=window.BIENETRE; const pr=bienetreProgress(); const p=pr.total?Math.round(pr.done*100/pr.total):0;
     return {color:B.color, icon:B.icon, name:B.name, pc:p, open:()=>openBienetre()}; }
+  if(k==='noeud'){ const N=window.NOEUDS; const pr=noeudProgress(); const p=pr.total?Math.round(pr.done*100/pr.total):0;
+    return {color:N.color, icon:N.icon, name:N.name, pc:p, open:()=>openNoeuds()}; }
   const s=D.SKILLS[k]; return {color:s.color, icon:s.icon, name:s.name, pc:pct(k), open:()=>openDomain(k)};
 }
 function makeTile(k){
@@ -2339,6 +2342,50 @@ function renderDomAtelier(k,keep){
   $('atfBody').querySelectorAll('[data-dreset]').forEach(b=>b.onclick=()=>{ const p=b.dataset.dreset+'_';
     Object.keys(st.done).forEach(x=>{ if(x.indexOf(p)===0) delete st.done[x]; }); saveStore(); renderDomAtelier(k,true); });
   if(!keep) show('scAtelierFlow',{accent:s.color,nav:'domains'});
+}
+
+/* ====== Nœuds : catalogue consultable + recherche + « je le sais » ====== */
+function noeudS(){ if(!STORE.noeuds) STORE.noeuds={known:{}}; if(!STORE.noeuds.known) STORE.noeuds.known={}; return STORE.noeuds; }
+function noeudKey(n){ return occNorm(n).replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,''); }
+function noeudProgress(){ const st=noeudS(); let d=0,t=0; ((window.NOEUDS&&window.NOEUDS.cats)||[]).forEach(g=>g.noeuds.forEach(k=>{ t++; if(st.known[noeudKey(k.n)]) d++; })); return {done:d,total:t}; }
+let _nkQ='';
+function noeudListHTML(){
+  const q=occNorm(_nkQ); const st=noeudS(); let h='', n=0;
+  ((window.NOEUDS&&window.NOEUDS.cats)||[]).forEach(g=>{
+    const items=g.noeuds.filter(k=>!q||occNorm(k.n+' '+(k.aka||'')+' '+k.usage).includes(q));
+    if(!items.length) return; n+=items.length;
+    h+='<div class="dep-cat">'+esc((g.ic?g.ic+' ':'')+g.cat)+' — '+items.length+'</div>';
+    items.forEach(k=>{ const key=noeudKey(k.n); const on=!!st.known[key];
+      h+='<details class="dep-item arb"><summary><span class="arb-ic">➰</span><span class="dep-s">'+esc(k.n)+'</span><span class="dep-c">'+esc(k.diff)+'</span></summary><div class="dep-k">'+
+         (k.aka?'<div class="nk-aka">aussi appelé : '+esc(k.aka)+'</div>':'')+
+         '<div class="arb-row"><b>🎯 Usage :</b> '+esc(k.usage)+'</div>'+
+         '<div class="arb-row"><b>➰ Le faire :</b><ol class="nk-steps">'+k.faire.map(s=>'<li>'+esc(s)+'</li>').join('')+'</ol></div>'+
+         (k.tips?'<div class="arb-row"><b>💡 Astuce :</b> '+esc(k.tips)+'</div>':'')+
+         (k.warn?'<div class="arb-warn">⚠️ '+esc(k.warn)+'</div>':'')+
+         '<button class="mnt-btn'+(on?'':' add')+'" data-nk="'+key+'">'+(on?'✓ Je le sais':'☐ Je le sais')+'</button>'+
+         '</div></details>';
+    });
+  });
+  if(!n) h='<p class="atf-note">Aucun nœud trouvé — essaie un autre mot.</p>';
+  return h;
+}
+function bindNoeudToggles(){
+  $('atfBody').querySelectorAll('[data-nk]').forEach(b=>b.onclick=()=>{ const st=noeudS(), key=b.dataset.nk;
+    if(st.known[key]) delete st.known[key]; else st.known[key]=1; saveStore();
+    const on=!!st.known[key]; b.textContent=on?'✓ Je le sais':'☐ Je le sais'; b.className='mnt-btn'+(on?'':' add');
+    const cc=$('nkCount'); if(cc){ const pr=noeudProgress(); cc.textContent=pr.done+' / '+pr.total+' connus'; } });
+}
+function openNoeuds(){ _nkQ=''; go(renderNoeuds,'nœuds'); }
+function renderNoeuds(){
+  mode='learn'; const N=window.NOEUDS; const pr=noeudProgress();
+  $('atfTitle').textContent=N.name;
+  let h='<p class="atf-lead">'+esc(N.meta)+'. <b id="nkCount">'+pr.done+' / '+pr.total+' connus</b>. Touche un nœud pour dérouler ; coche ceux que tu maîtrises.</p>';
+  h+='<input id="nkSearch" class="occ-search" type="text" placeholder="🔎 Rechercher un nœud (nom ou usage)" value="'+esc(_nkQ)+'">';
+  h+='<div id="nkList">'+noeudListHTML()+'</div>';
+  h+='<p class="atf-note">30 nœuds classés par famille. Visuels non embarqués (app hors-ligne) : les étapes sont écrites pas à pas.</p>';
+  $('atfBody').innerHTML=h; bindNoeudToggles();
+  const s=$('nkSearch'); if(s) s.oninput=()=>{ _nkQ=s.value; const l=$('nkList'); if(l){ l.innerHTML=noeudListHTML(); bindNoeudToggles(); } };
+  show('scAtelierFlow',{accent:N.color,nav:'domains'});
 }
 
 /* ====== Bien-être : recettes de boissons + rituels (pas un cours) ====== */

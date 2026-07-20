@@ -25,6 +25,7 @@ function loadStore(){
       if(d.woodStock) STORE.woodStock=d.woodStock; if(d.woodPlan) STORE.woodPlan=d.woodPlan;
       if(d.yoga) STORE.yoga=d.yoga; if(d.g270) STORE.g270=d.g270;
       if(d.amenagement) STORE.amenagement=d.amenagement;
+      if(d.bienetre) STORE.bienetre=d.bienetre;
       if(d.domAteliers) STORE.domAteliers=d.domAteliers;
       if(d.domainOrder) STORE.domainOrder=d.domainOrder;
       if(d.deviceOwner) STORE.deviceOwner=d.deviceOwner;
@@ -407,7 +408,7 @@ function resetProfile(id){ const p=STORE.profiles[id]; if(!p) return;
 }
 
 /* ====== learning ====== */
-function homeKeys(){ const keys=Object.keys(D.SKILLS); if(window.AMENAGEMENT) keys.push('amenagement'); return keys; }
+function homeKeys(){ const keys=Object.keys(D.SKILLS); if(window.AMENAGEMENT) keys.push('amenagement'); if(window.BIENETRE) keys.push('bienetre'); return keys; }
 function homeOrder(){
   const keys=homeKeys();
   const saved=(STORE.domainOrder||[]).filter(k=>keys.includes(k));
@@ -417,6 +418,8 @@ function homeOrder(){
 function tileInfo(k){
   if(k==='amenagement'){ const A=window.AMENAGEMENT; const pr=amenProgress(); const p=pr.total?Math.round(pr.done*100/pr.total):0;
     return {color:A.color, icon:A.icon, name:A.name, pc:p, open:()=>openAmenagement()}; }
+  if(k==='bienetre'){ const B=window.BIENETRE; const pr=bienetreProgress(); const p=pr.total?Math.round(pr.done*100/pr.total):0;
+    return {color:B.color, icon:B.icon, name:B.name, pc:p, open:()=>openBienetre()}; }
   const s=D.SKILLS[k]; return {color:s.color, icon:s.icon, name:s.name, pc:pct(k), open:()=>openDomain(k)};
 }
 function makeTile(k){
@@ -430,8 +433,7 @@ function makeTile(k){
 }
 function renderHome(){
   const g=$('domainList'); g.innerHTML='';
-  const n=Object.keys(D.SKILLS).length+(window.AMENAGEMENT?1:0);
-  if($('domainCount')) $('domainCount').textContent=n+' domaines';
+  if($('domainCount')) $('domainCount').textContent=homeKeys().length+' domaines';
   homeOrder().forEach(k=>g.appendChild(makeTile(k)));
 }
 /* ---- réorganisation par appui long + glisser (tactile & souris) ---- */
@@ -2337,6 +2339,58 @@ function renderDomAtelier(k,keep){
   $('atfBody').querySelectorAll('[data-dreset]').forEach(b=>b.onclick=()=>{ const p=b.dataset.dreset+'_';
     Object.keys(st.done).forEach(x=>{ if(x.indexOf(p)===0) delete st.done[x]; }); saveStore(); renderDomAtelier(k,true); });
   if(!keep) show('scAtelierFlow',{accent:s.color,nav:'domains'});
+}
+
+/* ====== Bien-être : recettes de boissons + rituels (pas un cours) ====== */
+function bienetreS(){ if(!STORE.bienetre) STORE.bienetre={done:{}}; if(!STORE.bienetre.done) STORE.bienetre.done={}; return STORE.bienetre; }
+function bienetreProgress(){ const B=window.BIENETRE; const st=bienetreS(); const tot=((B&&B.recettes)||[]).length;
+  const done=((B&&B.recettes)||[]).filter(r=>st.done[r.key]).length; return {done, total:tot}; }
+function openBienetre(){ go(renderBienetreHub,'bien-être'); }
+function renderBienetreHub(){
+  mode='learn'; const B=window.BIENETRE; const st=bienetreS();
+  $('atfTitle').textContent=B.name;
+  const nAst=(B.astuces||[]).reduce((a,g)=>a+g.items.length,0);
+  let h='<p class="atf-lead">'+esc(B.meta)+'. Touche une recette pour la préparer ; coche-la quand tu l’as faite.</p>';
+  h+='<button class="atelier-banner astuce" type="button" data-beast="1"><span class="ab-ic">🧘</span><span class="ab-mid"><span class="ab-t">Rituels bien-être</span><span class="ab-s">'+nAst+' astuces : bien boire, respirer, dormir, bouger</span></span><span class="ab-go">Ouvrir ›</span></button>';
+  const pr=bienetreProgress();
+  h+='<div class="dep-cat">Recettes — '+pr.done+' / '+pr.total+' déjà faites</div>';
+  B.recettes.forEach(r=>{ const on=!!st.done[r.key];
+    h+='<button class="mod-row'+(on?' full':'')+'" type="button" data-berec="'+r.key+'"><span class="arb-ic">'+r.ic+'</span><span class="mod-mid"><span class="dep-s">'+esc(r.t)+(on?' ✓':'')+'</span><span class="mod-s">'+esc(r.s)+'</span></span><span class="ab-go">Voir ›</span></button>'; });
+  h+='<p class="atf-note">Le bissap est en tête, avec le tour de main des anciens.</p>';
+  $('atfBody').innerHTML=h;
+  $('atfBody').querySelectorAll('[data-berec]').forEach(b=>b.onclick=()=>openRecette(b.dataset.berec));
+  const ab=$('atfBody').querySelector('[data-beast]'); if(ab) ab.onclick=()=>openBienetreAstuces();
+  show('scAtelierFlow',{accent:B.color,nav:'domains'});
+}
+function openRecette(key){ go(()=>renderRecette(key),'recette'); }
+function renderRecette(key,keep){
+  mode='learn'; const B=window.BIENETRE; const r=B.recettes.find(x=>x.key===key); const st=bienetreS();
+  if(!r){ $('atfBody').innerHTML='<p class="atf-note">Recette introuvable.</p>'; if(!keep) show('scAtelierFlow',{accent:B.color,nav:'domains'}); return; }
+  $('atfTitle').textContent=r.t;
+  const on=!!st.done[key];
+  let h='<p class="atf-lead">'+esc(r.s)+'</p>';
+  h+='<div class="rec-meta">'+(r.temps?'<span>⏱️ '+esc(r.temps)+'</span>':'')+(r.pour?'<span>🥃 '+esc(r.pour)+'</span>':'')+'</div>';
+  h+='<div class="dep-cat">Ingrédients</div><ul class="rec-ingr">'+r.ingr.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul>';
+  h+='<div class="dep-cat">Préparation</div><ol class="tuto-steps big">'+r.etapes.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ol>';
+  if(r.conseils&&r.conseils.length){ h+='<div class="dep-cat">Conseils</div><ul class="mod-tips">'+r.conseils.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul>'; }
+  if(r.anciens&&r.anciens.length){ h+='<div class="dep-cat">👵 Le tour de main des anciens</div><ul class="rec-anc">'+r.anciens.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul>'; }
+  if(r.note) h+='<div class="atf-key">'+esc(r.note)+'</div>';
+  h+='<button class="mnt-btn add" id="recDone" style="width:100%;margin-top:14px">'+(on?'✓ Déjà faite — retirer':'☐ Marquer « je l’ai faite »')+'</button>';
+  $('atfBody').innerHTML=h;
+  const bd=$('recDone'); if(bd) bd.onclick=()=>{ if(st.done[key]) delete st.done[key]; else st.done[key]=new Date().toISOString().slice(0,10); saveStore(); renderRecette(key,true); };
+  if(!keep) show('scAtelierFlow',{accent:B.color,nav:'domains'});
+}
+function openBienetreAstuces(){ go(renderBienetreAstuces,'rituels'); }
+function renderBienetreAstuces(){
+  mode='learn'; const B=window.BIENETRE;
+  $('atfTitle').textContent='Rituels bien-être';
+  let h='<p class="atf-lead">Des petits gestes simples, à côté des recettes. Touche une astuce pour dérouler.</p>';
+  (B.astuces||[]).forEach(g=>{
+    h+='<div class="dep-cat">'+esc((g.ic?g.ic+' ':'')+g.cat)+' — '+g.items.length+'</div>';
+    g.items.forEach(a=>{ h+='<details class="dep-item arb"><summary><span class="arb-ic">'+(g.ic||'🌿')+'</span><span class="dep-s">'+esc(a.t)+'</span></summary><div class="dep-k">'+esc(a.d)+'</div></details>'; });
+  });
+  $('atfBody').innerHTML=h;
+  show('scAtelierFlow',{accent:B.color,nav:'domains'});
 }
 
 /* ====== Aménagement de camion : guide de chantier en modules (pas un cours) ====== */

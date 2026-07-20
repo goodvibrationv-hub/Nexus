@@ -17,7 +17,7 @@ function makeEnv(seed){ const reg={}; const $id=id=>{ if(!reg[id])reg[id]=mkEl(i
   const ctx={window:{scrollTo(){},addEventListener(){},matchMedia:()=>({matches:false,addEventListener(){}})},document,localStorage,console,alert:()=>{},
     setTimeout:()=>0,clearTimeout:()=>{},fetch:()=>{throw new Error('net');},Math,Date,JSON,parseInt,parseFloat,isNaN,Object,Array,String,Number,Boolean,RegExp,Set,Map};
   vm.createContext(ctx); return {ctx,reg,ls:_ls}; }
-function loadApp(env){ for(const f of ['data_core.js','content_courses.js','cards.js','amenagement.js','app.js']) vm.runInContext(fs.readFileSync(P(f),'utf8'),env.ctx,{filename:f}); }
+function loadApp(env){ for(const f of ['data_core.js','content_courses.js','cards.js','amenagement.js','bienetre.js','app.js']) vm.runInContext(fs.readFileSync(P(f),'utf8'),env.ctx,{filename:f}); }
 const store=env=>JSON.parse(env.ls.get('nexus_stable'));
 
 const env=makeEnv({mastered:{}}); loadApp(env); const c=env.ctx, R=env.reg;
@@ -36,7 +36,7 @@ ok('M5 — astuces : ≥6 thèmes et ≥25 astuces (titre + détail)', A.astuces
 // ---- accueil : tuile dédiée, PAS un cours ----
 c.renderHome();
 ok('M6 — tuile « Aménagement de camion » sur l’accueil', R.domainList.children.some(x=>/Aménagement de camion/.test(x._html)));
-ok('M7 — compteur : 16 domaines', R.domainCount.textContent==='16 domaines');
+ok('M7 — compteur : 17 domaines', R.domainCount.textContent==='17 domaines');
 ok('M8 — pas un cours : aucun nœud SKILLS ni fiche ajoutés', !c.window.NEXUS_DATA.SKILLS.amenagement && !c.window.NEXUS_CARDS.some(x=>x.skill==='amenagement'));
 
 // ---- hub des modules ----

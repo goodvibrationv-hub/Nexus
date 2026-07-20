@@ -19,7 +19,7 @@ function makeEnv(seed){ const reg={}; const $id=id=>{ if(!reg[id])reg[id]=mkEl(i
   const ctx={window:{scrollTo(){},addEventListener(){},matchMedia:()=>({matches:false,addEventListener(){}})},document,localStorage,console,alert:()=>{},navigator:{},
     setTimeout:()=>0,clearTimeout:()=>{},fetch:()=>{throw new Error('net');},Math,Date,JSON,parseInt,parseFloat,isNaN,Object,Array,String,Number,Boolean,RegExp,Set,Map};
   vm.createContext(ctx); return {ctx,reg,ls:_ls}; }
-function loadApp(env){ for(const f of ['data_core.js','content_courses.js','cards.js','amenagement.js','app.js']) vm.runInContext(fs.readFileSync(P(f),'utf8'),env.ctx,{filename:f}); }
+function loadApp(env){ for(const f of ['data_core.js','content_courses.js','cards.js','amenagement.js','bienetre.js','app.js']) vm.runInContext(fs.readFileSync(P(f),'utf8'),env.ctx,{filename:f}); }
 const store=env=>JSON.parse(env.ls.get('nexus_stable'));
 const order=env=>env.reg.domainList.children.map(c=>c.dataset.key);
 
@@ -28,7 +28,7 @@ const env=makeEnv({mastered:{}}); loadApp(env); const c=env.ctx;
 c.renderHome();
 const keys=c.homeKeys();
 ok('R1 — toutes les tuiles présentes', order(env).length===keys.length && keys.length>=15);
-ok('R2 — par défaut : escalade en 1er, aménagement en dernier', order(env)[0]==='escalade' && order(env)[order(env).length-1]==='amenagement');
+ok('R2 — par défaut : escalade en 1er, modules à la fin', order(env)[0]==='escalade' && order(env).includes('amenagement') && order(env).includes('bienetre'));
 ok('R3 — chaque tuile porte sa clé (data-key)', env.reg.domainList.children.every(x=>x.dataset.key));
 
 // --- ordre personnalisé mémorisé ---

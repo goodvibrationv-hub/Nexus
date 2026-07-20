@@ -2408,10 +2408,14 @@ function renderBienetreHub(){
   let h='<p class="atf-lead">'+esc(B.meta)+'. Touche une recette pour la préparer ; coche-la quand tu l’as faite.</p>';
   h+='<button class="atelier-banner astuce" type="button" data-beast="1"><span class="ab-ic">🧘</span><span class="ab-mid"><span class="ab-t">Rituels bien-être</span><span class="ab-s">'+nAst+' astuces : bien boire, respirer, dormir, bouger</span></span><span class="ab-go">Ouvrir ›</span></button>';
   const pr=bienetreProgress();
-  h+='<div class="dep-cat">Recettes — '+pr.done+' / '+pr.total+' déjà faites</div>';
-  B.recettes.forEach(r=>{ const on=!!st.done[r.key];
-    h+='<button class="mod-row'+(on?' full':'')+'" type="button" data-berec="'+r.key+'"><span class="arb-ic">'+r.ic+'</span><span class="mod-mid"><span class="dep-s">'+esc(r.t)+(on?' ✓':'')+'</span><span class="mod-s">'+esc(r.s)+'</span></span><span class="ab-go">Voir ›</span></button>'; });
-  h+='<p class="atf-note">Le bissap est en tête, avec le tour de main des anciens.</p>';
+  h+='<p class="atf-note" style="margin:0 0 6px">'+pr.done+' / '+pr.total+' recettes déjà faites</p>';
+  const cats=B.cats||[{key:'boissons',label:'Recettes',ic:'🥤'}];
+  const rowFor=r=>{ const on=!!st.done[r.key];
+    return '<button class="mod-row'+(on?' full':'')+'" type="button" data-berec="'+r.key+'"><span class="arb-ic">'+r.ic+'</span><span class="mod-mid"><span class="dep-s">'+esc(r.t)+(on?' ✓':'')+'</span><span class="mod-s">'+esc(r.s)+(r.apport?' · '+esc(r.apport):'')+'</span></span><span class="ab-go">Voir ›</span></button>'; };
+  cats.forEach(cat=>{ const items=B.recettes.filter(r=>(r.cat||'boissons')===cat.key); if(!items.length) return;
+    h+='<div class="dep-cat">'+esc((cat.ic?cat.ic+' ':'')+cat.label)+' — '+items.length+'</div>';
+    items.forEach(r=>{ h+=rowFor(r); }); });
+  h+='<p class="atf-note">Le bissap est en tête, avec le tour de main des anciens. Les plats du coin sont des versions traditionnelles — envoie-moi celles de ta famille à Bonnac et je les remplace.</p>';
   $('atfBody').innerHTML=h;
   $('atfBody').querySelectorAll('[data-berec]').forEach(b=>b.onclick=()=>openRecette(b.dataset.berec));
   const ab=$('atfBody').querySelector('[data-beast]'); if(ab) ab.onclick=()=>openBienetreAstuces();
@@ -2424,7 +2428,7 @@ function renderRecette(key,keep){
   $('atfTitle').textContent=r.t;
   const on=!!st.done[key]; const f=st.qty[key]||1;
   let h='<p class="atf-lead">'+esc(r.s)+'</p>';
-  h+='<div class="rec-meta">'+(r.temps?'<span>⏱️ '+esc(r.temps)+'</span>':'')+(r.pour?'<span>🥃 '+esc(scaleIngr(r.pour,f))+'</span>':'')+'</div>';
+  h+='<div class="rec-meta">'+(r.temps?'<span>⏱️ '+esc(r.temps)+'</span>':'')+(r.pour?'<span>🥃 '+esc(scaleIngr(r.pour,f))+'</span>':'')+(r.apport?'<span>💪 '+esc(scaleIngr(r.apport,f))+'</span>':'')+'</div>';
   h+='<div class="qty-ctrl"><span class="qty-lbl">Quantités</span><button class="qty-b" data-qf="down"'+(f<=0.5?' disabled':'')+'>−</button><b class="qty-f">×'+scaleFmt(f)+'</b><button class="qty-b" data-qf="up"'+(f>=5?' disabled':'')+'>+</button>'+(f!==1?'<button class="qty-reset" data-qf="reset">↺</button>':'')+'</div>';
   h+='<div class="dep-cat">Ingrédients</div><ul class="rec-ingr">'+r.ingr.map(x=>'<li>'+esc(scaleIngr(x,f))+'</li>').join('')+'</ul>';
   h+='<div class="dep-cat">Préparation</div><ol class="tuto-steps big">'+r.etapes.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ol>';

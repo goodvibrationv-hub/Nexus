@@ -29,6 +29,9 @@ ok('B2 — bissap en 1re recette', B.recettes[0].key==='bissap' && /hibiscus/i.t
 ok('B3 — ≥6 recettes, chacune avec ingrédients + étapes', B.recettes.length>=6 && B.recettes.every(r=>r.ingr.length&&r.etapes.length&&r.t&&r.key));
 ok('B4 — bissap : conseils des anciens (≥3)', Array.isArray(B.recettes[0].anciens) && B.recettes[0].anciens.length>=3);
 ok('B5 — rituels bien-être présents', B.astuces.length>=1 && B.astuces.every(g=>g.items.every(x=>x.t&&x.d)));
+ok('B5b — 3 sections (boissons, terroir Bonnac, prise de masse)', B.cats.length>=3 && B.recettes.some(r=>r.cat==='terroir') && B.recettes.some(r=>r.cat==='masse'));
+ok('B5c — plat du coin de Bonnac/Ariège (azinat)', B.recettes.some(r=>r.key==='azinat' && /ari[eèé]ge/i.test(r.s)));
+ok('B5d — prise de masse avec œufs/poulet + apport protéines', B.recettes.some(r=>r.cat==='masse'&&/prot/i.test(r.apport||'')) && B.recettes.some(r=>r.cat==='masse'&&/œuf|poulet/i.test(JSON.stringify(r))));
 
 // ---- accueil : tuile dédiée, pas un cours ----
 c.renderHome();
@@ -39,6 +42,7 @@ ok('B7 — pas un cours : aucun nœud SKILLS ni fiche', !c.window.NEXUS_DATA.SKI
 c.renderBienetreHub();
 const hub=R.atfBody.innerHTML;
 ok('B8 — hub : bannière rituels + recettes listées + bissap', /data-beast/.test(hub) && /data-berec="bissap"/.test(hub) && new RegExp('0 / '+B.recettes.length).test(hub));
+ok('B8b — hub groupé par sections', /Prise de masse/.test(hub) && /Bonnac/.test(hub) && /Boissons/.test(hub));
 ok('B9 — écran scAtelierFlow activé', R.scAtelierFlow.classList.contains('active'));
 
 // ---- recette détaillée + « déjà faite » ----

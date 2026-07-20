@@ -22,7 +22,7 @@ function loadStore(){
       if(d.projects) STORE.projects=d.projects; if(d.seedProjects) STORE.seedProjects=d.seedProjects;
       if(d.daily) STORE.daily=d.daily;
       if(d.profiles){ STORE.profiles=d.profiles; STORE.currentProfile=d.currentProfile||'mael'; if(d.seedProfiles) STORE.seedProfiles=d.seedProfiles; }
-      if(d.woodStock) STORE.woodStock=d.woodStock; if(d.woodPlan) STORE.woodPlan=d.woodPlan;
+      if(d.woodStock) STORE.woodStock=d.woodStock; if(d.woodPlan) STORE.woodPlan=d.woodPlan; if(d.woodLastSpecies) STORE.woodLastSpecies=d.woodLastSpecies;
       if(d.yoga) STORE.yoga=d.yoga; if(d.g270) STORE.g270=d.g270;
       if(d.amenagement) STORE.amenagement=d.amenagement;
       if(d.bienetre) STORE.bienetre=d.bienetre;
@@ -1662,6 +1662,9 @@ function scaleRealCm(segPts, refPts, refCm, rw, rh){
 function grumeVolume(lenCm,d1,d2){ const L=(lenCm||0)/100; if(!(L>0)||!(d1>0)) return 0;
   if(d2>0){ const r1=(d1/2)/100, r2=(d2/2)/100; return Math.PI*L/3*(r1*r1+r1*r2+r2*r2); }
   const r=(d1/2)/100; return Math.PI*r*r*L; }
+/* estimation du nombre de planches d'une épaisseur donnée dans une grume */
+function plankEstimate(lenCm,diamCm,thickCm){ if(!(lenCm>0)||!(diamCm>0)||!(thickCm>0)) return 0;
+  const side=diamCm*0.7, kerf=0.4; return Math.max(0,Math.floor((side+kerf)/(thickCm+kerf))); }
 function measureResults(d){
   const m=d.m||{}; const rw=m.rw||1, rh=m.rh||1; const circ=(d.mMode==='circ');
   const toD=v=>(circ&&v>0)?v/Math.PI:v;                 // circonférence → diamètre (mesure manuelle)
@@ -1760,27 +1763,43 @@ function renderWoodIdentify(){
 }
 
 /* ---- stock ---- */
+let woodSort='date';
+function woodByEssence(){ const s=STORE.woodStock||[]; const map={}; s.forEach(l=>{ const k=l.speciesName||'—'; (map[k]||(map[k]={n:0,vol:0})); map[k].n++; map[k].vol+=(l.volumeM3||0); }); return Object.entries(map).sort((a,b)=>b[1].vol-a[1].vol); }
+function woodExportText(){ const s=STORE.woodStock||[]; const cl=x=>String(x==null?'':x).replace(/[;\n]/g,',');
+  const head='n°;essence;longueur_cm;diam_cm;diam2_cm;volume_m3;etat;provenance;date_abattage;note';
+  return head+'\n'+s.map(l=>[l.numero,l.speciesName,l.lengthCm,l.diamCm,l.diam2Cm,l.volumeM3,l.etat,l.provenance,l.dateAbattage,l.note].map(cl).join(';')).join('\n'); }
+function duplicateWoodLog(id){ const l=(STORE.woodStock||[]).find(x=>x.id===id); if(!l) return;
+  const cp=JSON.parse(JSON.stringify(l)); cp.id='log_'+Date.now(); cp.date=new Date().toISOString().slice(0,10); cp.numero='';
+  STORE.woodStock.push(cp); if(!saveStoreOk()){ STORE.woodStock.pop(); alert('Stockage plein.'); return; } renderWoodStock(); }
 function renderWoodStock(){
   const b=$('wfBody'); const s=STORE.woodStock||[];
   if(!s.length){ b.innerHTML='<div class="empty">Aucune grume en stock. Ajoute-en une depuis « Nouvelle grume ».</div>'; return; }
   const st=woodStats();
-  let html='<div class="ec-head">'+st.count+' grume'+(st.count>1?'s':'')+' · '+st.vol.toFixed(2)+' m³</div><div class="woodlist">';
-  s.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||'')).forEach(l=>{
-    const e=essenceByKey(l.speciesKey);
+  let html='<div class="ec-head">'+st.count+' grume'+(st.count>1?'s':'')+' · '+st.vol.toFixed(2)+' m³</div>';
+  html+='<details class="wood-tot"><summary>Total par essence</summary><div class="wt-list">'+woodByEssence().map(([n,v])=>'<div class="wt-row"><span>'+esc(n)+'</span><b>'+v.n+' · '+v.vol.toFixed(2)+' m³</b></div>').join('')+'</div></details>';
+  html+='<div class="wsort">'+[['date','Récent'],['vol','Volume'],['essence','Essence']].map(([k,l])=>'<button class="wsortb'+(woodSort===k?' on':'')+'" data-sort="'+k+'">'+l+'</button>').join('')+'</div>';
+  const sorted=s.slice();
+  if(woodSort==='vol') sorted.sort((a,b)=>(b.volumeM3||0)-(a.volumeM3||0));
+  else if(woodSort==='essence') sorted.sort((a,b)=>(a.speciesName||'').localeCompare(b.speciesName||''));
+  else sorted.sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  html+='<div class="woodlist">';
+  sorted.forEach(l=>{ const e=essenceByKey(l.speciesKey);
     const num=l.numero?'<span class="lg-num">n°'+esc(l.numero)+'</span> ':'';
     const dims=l.lengthCm?(l.lengthCm+' cm × Ø'+l.diamCm+(l.diam2Cm?'/'+l.diam2Cm:'')+' cm'):'dimensions —';
-    const extra=[]; if(l.provenance) extra.push('📍'+esc(l.provenance)); if(l.etat) extra.push(esc(l.etat));
-    if(l.qualite) extra.push(esc(l.qualite));
-    const ep=parseFloat(l.epaisseur); if(ep>0) extra.push('🌬️ sec ≈ '+ep+' an'+(ep>1?'s':'')+' après débit');
+    const extra=[]; if(l.provenance) extra.push('📍'+esc(l.provenance)); if(l.etat) extra.push(esc(l.etat)); if(l.qualite) extra.push(esc(l.qualite));
+    const ep=parseFloat(l.epaisseur); if(ep>0){ extra.push('🌬️ sec ≈ '+ep+' an'+(ep>1?'s':'')+' après débit'); const nb=plankEstimate(l.lengthCm,l.diamCm,ep); if(nb>0) extra.push('🪚 ≈ '+nb+' planche'+(nb>1?'s':'')+' de '+ep+' cm'); }
     html+='<div class="logrow"><span class="lg-ph">'+(l.photo?'<img src="'+l.photo+'" alt="">':'🪵')+'</span>'+
       '<span class="lg-mid"><span class="lg-n">'+num+esc(l.speciesName||(e?e.n:'Grume'))+'</span>'+
       '<span class="lg-m">'+dims+' · '+(l.volumeM3?l.volumeM3.toFixed(3)+' m³':'—')+'</span>'+
       (extra.length?'<span class="lg-x">'+extra.join(' · ')+'</span>':'')+'</span>'+
-      '<button class="lg-del" data-del="'+l.id+'">×</button></div>';
+      '<span class="lg-acts"><button class="lg-dup" data-dup="'+l.id+'" title="Dupliquer">⧉</button><button class="lg-del" data-del="'+l.id+'">×</button></span></div>';
   });
   html+='</div>';
+  html+='<details class="wood-exp"><summary>Exporter l’inventaire (copier-coller)</summary><textarea class="wexp-ta" readonly rows="6">'+esc(woodExportText())+'</textarea></details>';
   b.innerHTML=html;
+  b.querySelectorAll('[data-sort]').forEach(x=>x.onclick=()=>{ woodSort=x.dataset.sort; renderWoodStock(); });
   b.querySelectorAll('[data-del]').forEach(x=>x.onclick=()=>{ STORE.woodStock=STORE.woodStock.filter(l=>l.id!==x.dataset.del); saveStore(); renderWoodStock(); });
+  b.querySelectorAll('[data-dup]').forEach(x=>x.onclick=()=>duplicateWoodLog(x.dataset.dup));
 }
 
 /* ---- projets possibles (règles essence + dimensions + durabilité) ---- */
@@ -2178,7 +2197,7 @@ function renderWoodProjectDoc(k,keep){
 
 /* ---- nouvelle grume : assistant photo → essence → mesure → stock ---- */
 let woodDraft=null;
-function startWoodNew(){ woodDraft={step:1, photo:'', ans:{}, speciesKey:'', speciesName:'', m:null, mMode:'diam', mLenManual:'', mDiamManual:'', mDiam2Manual:'', numero:'', provenance:'', dateAbattage:'', etat:'', qualite:'', epaisseur:'', note:''}; go(renderWoodNew,'nouvelle grume'); }
+function startWoodNew(){ const last=STORE.woodLastSpecies||{}; woodDraft={step:1, photo:'', ans:{}, speciesKey:last.key||'', speciesName:last.name||'', m:null, mMode:'diam', mLenManual:'', mDiamManual:'', mDiam2Manual:'', numero:'', provenance:'', dateAbattage:'', etat:'', qualite:'', epaisseur:'', note:''}; go(renderWoodNew,'nouvelle grume'); }
 function renderWoodNew(){ mode='wood'; $('wfTitle').textContent='Nouvelle grume'; drawWoodStep(); show('scWoodFlow',{accent:'#7C5A34',nav:'wood'}); }
 function drawWoodStep(){
   const d=woodDraft, b=$('wfBody'); if(!d) return;
@@ -2215,7 +2234,9 @@ function drawWoodStep(){
     h+='<div class="field"><label>État</label><select id="wnEtat"><option value="">—</option>'+['Grume fraîche','Ressuyée','Sèche'].map(o=>'<option'+(d.etat===o?' selected':'')+'>'+o+'</option>').join('')+'</select></div>';
     h+='<div class="field"><label>Qualité / défauts</label><input id="wnQual" type="text" value="'+esc(d.qualite||'')+'" placeholder="droite, nœuds, cœur excentré, gélivure…"></div>';
     h+='<div class="field"><label>Épaisseur de débit visée (cm)</label><input id="wnEp" type="number" min="0" step="0.5" value="'+esc(d.epaisseur||'')+'"></div>';
-    const ep=parseFloat(d.epaisseur); if(ep>0) h+='<p class="wm-help">🌬️ Séchage à l’air après débit : ≈ '+scaleFmt(ep)+' an'+(ep>1?'s':'')+' (règle 1 an / cm d’épaisseur).</p>';
+    const ep=parseFloat(d.epaisseur);
+    if(ep>0){ h+='<p class="wm-help">🌬️ Séchage à l’air après débit : ≈ '+scaleFmt(ep)+' an'+(ep>1?'s':'')+' (règle 1 an / cm d’épaisseur).</p>';
+      const nb=plankEstimate(r.lenCm,r.diamCm,ep); if(nb>0) h+='<p class="wm-help">🪚 Débit estimé : ≈ '+nb+' planche'+(nb>1?'s':'')+' de '+scaleFmt(ep)+' cm (~'+Math.round(r.diamCm*0.7)+' cm de large × '+r.lenCm+' cm).</p>'; }
     h+='<div class="field"><label>Note</label><input id="wnNote" type="text" value="'+esc(d.note||'')+'" placeholder="remarque libre"></div>';
     h+='<div class="wnav"><button class="miniBtn" id="wnBack">← Mesure</button><button class="save" id="wnSave">Enregistrer dans le stock</button></div>';
     b.innerHTML=h;
@@ -2290,6 +2311,7 @@ function drawDots(d){ const host=$('wmDots'); if(!host) return; const cls={ref:'
 function saveWoodLog(){
   const d=woodDraft; const r=measureResults(d);
   const log={ id:'log_'+Date.now(), date:new Date().toISOString().slice(0,10), dateAbattage:d.dateAbattage||'', speciesKey:d.speciesKey, speciesName:d.speciesName, lengthCm:r.lenCm, diamCm:r.diamCm, diam2Cm:r.diam2Cm||0, volumeM3:+r.vol.toFixed(3), numero:d.numero||'', provenance:d.provenance||'', etat:d.etat||'', qualite:d.qualite||'', epaisseur:d.epaisseur||'', note:d.note||'', photo:d.photo||'' };
+  if(d.speciesKey) STORE.woodLastSpecies={key:d.speciesKey,name:d.speciesName};
   STORE.woodStock.push(log);
   if(!saveStoreOk()){ STORE.woodStock.pop(); alert('Stockage plein — grume non enregistrée. Supprime des photos/grumes.'); return; }
   woodDraft=null; goRoot(rWood,'projet bois');

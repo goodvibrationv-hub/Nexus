@@ -51,6 +51,7 @@ const rc=c.measureResults({m:{ref:[],len:[],diam:[],refCm:100,rw:1,rh:1}, mLenMa
 ok('W11b — tronc de cône : Ø petit bout + volume < cylindre', rc.diam2Cm===20 && near(rc.vol,c.grumeVolume(200,40,20)) && rc.vol<c.grumeVolume(200,40,0));
 const rq=c.measureResults({mMode:'circ', m:{ref:[],len:[],diam:[],refCm:100,rw:1,rh:1}, mLenManual:'200', mDiamManual:'100'});
 ok('W11c — circonférence → diamètre (100 → ~32 cm)', rq.diamCm===Math.round(100/Math.PI));
+ok('W11d — débit estimé : plus de planches sur grosse grume', c.plankEstimate(300,40,2.7)>0 && c.plankEstimate(300,40,2.7)>c.plankEstimate(300,20,2.7) && c.plankEstimate(300,40,0)===0);
 
 // ---- stock + projets (règles) ----
 const chLog={id:'l1',speciesKey:'chene',speciesName:'Chêne',lengthCm:250,diamCm:30,volumeM3:c.logVolume(250,30),photo:''};

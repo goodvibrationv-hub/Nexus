@@ -1,0 +1,103 @@
+/* pieges.js — Compétence « Pièges à insectes » : fabriquer ses pièges maison, par cible.
+   Les mouches d'abord. PAS un cours : catalogue consultable + recherche + « déjà fait ». */
+window.PIEGES={
+icon:'🪤', name:'Pièges à insectes', color:'#8B7E3A',
+meta:'Fabriquer ses pièges maison, insecte par insecte — les mouches d’abord',
+regle:'Règle d’or : la prévention d’abord (propreté, nourriture couverte, eaux stagnantes éliminées). Et on protège les abeilles : un piège sucré attire aussi les pollinisateurs — ajoute du vinaigre et éloigne-le des fleurs.',
+cats:[
+ {cat:'Mouches', ic:'🪰', items:[
+  {n:'Piège-bouteille à appât', cible:'mouches domestiques & à viande', diff:'facile',
+   materiel:['1 bouteille plastique de 1,5 L','Appât : eau + sucre + un peu de levure (ou sirop) ; un morceau de viande/poisson pour les mouches à viande','Ruban adhésif'],
+   etapes:['Coupe le haut de la bouteille au tiers.','Retourne cette partie en entonnoir dans la base (goulot vers le bas).','Verse l’appât au fond, sans mouiller l’entonnoir.','Scotche les deux parties. Les mouches entrent et ne ressortent pas.'],
+   conseils:['À placer dehors, au soleil, à l’écart de la table.','Renouvelle l’appât tous les 3–4 jours.']},
+  {n:'Bol vinaigre de cidre + liquide vaisselle', cible:'mouches & moucherons', diff:'facile',
+   materiel:['Un bol ou un verre','Vinaigre de cidre','2 gouttes de liquide vaisselle','Film étirable'],
+   etapes:['Verse 2–3 cm de vinaigre de cidre dans le bol.','Ajoute 2 gouttes de liquide vaisselle (ça casse la tension : les insectes coulent).','Couvre de film étirable, perce de petits trous.','Les insectes descendent par les trous et se noient.'],
+   conseils:['Le vinaigre attire, le savon noie : le duo le plus efficace.']},
+  {n:'Ruban collant maison', cible:'mouches', diff:'facile',
+   materiel:['Bandes de papier kraft','Mélange : miel + sucre + un peu d’eau (ou sirop épais)','Ficelle'],
+   etapes:['Enduis les bandes du mélange collant.','Perce un trou en haut, passe la ficelle.','Suspends près des fenêtres ou du plafond.'],
+   conseils:['Efficace mais salissant : remplace la bande dès qu’elle est saturée.']},
+  {n:'Piège au lait, sucre & poivre', cible:'mouches (recette ancienne)', diff:'facile',
+   materiel:['250 ml de lait','3 c. à soupe de sucre','1 c. à soupe de poivre moulu','1 plat peu profond'],
+   etapes:['Fais chauffer doucement le lait avec le sucre et le poivre 5 min.','Verse dans un plat peu profond.','Pose là où les mouches tournent : elles s’en approchent et s’y noient.'],
+   conseils:['Recette de grand-mère : efficacité modeste, surtout en appoint.']},
+  {n:'Citron piqué de clous de girofle', cible:'éloigner les mouches', diff:'facile',
+   materiel:['1 citron (ou 1 orange)','Une poignée de clous de girofle'],
+   etapes:['Coupe le citron en deux.','Pique chaque moitié de clous de girofle.','Pose sur la table ou le rebord de fenêtre.'],
+   conseils:['Répulsif (il éloigne, il ne piège pas) ; sent bon et dure quelques jours.'],
+   warn:'N’élimine pas les mouches : c’est un complément à un vrai piège.'}
+ ]},
+ {cat:'Moucherons & drosophiles', ic:'🍷', items:[
+  {n:'Piège au fruit mûr', cible:'mouches des fruits', diff:'facile',
+   materiel:['1 bocal','Un morceau de fruit très mûr (banane, pomme)','Film étirable'],
+   etapes:['Mets le fruit au fond du bocal.','Couvre de film, perce de trous d’épingle.','Les drosophiles entrent par les trous et restent piégées.'],
+   conseils:['Encore mieux avec un fond de vinaigre de cidre en plus.']},
+  {n:'Verre de vin ou de bière', cible:'moucherons', diff:'facile',
+   materiel:['Un fond de vin rouge ou de bière','1 goutte de liquide vaisselle'],
+   etapes:['Laisse un fond de vin/bière dans un verre.','Ajoute une goutte de liquide vaisselle.','Pose près de la corbeille de fruits.'],
+   conseils:['Le sucre et l’alcool les attirent irrésistiblement.']},
+  {n:'Barrage à la source', cible:'prévention drosophiles', diff:'facile',
+   materiel:['—'],
+   etapes:['Range les fruits mûrs au frigo ou sous cloche.','Vide et rince la corbeille et la poubelle souvent.','Nettoie siphon d’évier et bac à compost.'],
+   conseils:['Sans source de fermentation, les moucherons disparaissent tout seuls.']}
+ ]},
+ {cat:'Guêpes & frelons', ic:'🐝', items:[
+  {n:'Piège-bouteille sucré', cible:'guêpes', diff:'facile',
+   materiel:['1 bouteille plastique','Appât : sirop / jus / bière + un trait de VINAIGRE','—'],
+   etapes:['Coupe le haut, retourne-le en entonnoir dans la base.','Verse l’appât sucré + un trait de vinaigre.','Suspends à l’écart des zones de repas.'],
+   conseils:['Le vinaigre repousse les abeilles tout en laissant venir les guêpes.'],
+   warn:'Éloigne-le des fleurs et des ruches pour épargner les pollinisateurs. Ne détruis jamais un nid toi-même.'},
+  {n:'Piège de printemps (frelon asiatique)', cible:'fondatrices de frelon asiatique', diff:'moyen',
+   materiel:['1 bouteille','Mélange : bière brune + vin blanc + sirop de cassis'],
+   etapes:['Prépare le piège-bouteille classique.','Remplis du mélange (le vin blanc éloigne les abeilles).','Pose de mars à mai, quand les fondatrices sortent.'],
+   conseils:['Ce mélange épargne en grande partie les abeilles.'],
+   warn:'Un nid de frelon asiatique se signale à la mairie / à un pro : on n’y touche pas soi-même.'}
+ ]},
+ {cat:'Moustiques', ic:'🦟', items:[
+  {n:'Piège à CO₂ (levure & sucre)', cible:'moustiques', diff:'moyen',
+   materiel:['1 bouteille de 1,5 L','200 ml d’eau tiède','50 g de sucre roux','1 g de levure de boulanger'],
+   etapes:['Dissous le sucre dans l’eau tiède, laisse refroidir, verse dans la base de la bouteille.','Ajoute la levure (sans remuer) : la fermentation dégage du CO₂ qui attire.','Coupe le haut, retourne-le en entonnoir, entoure de noir (ils aiment le sombre).','Place dans un coin sombre et humide.'],
+   conseils:['Renouvelle le mélange tous les 10–15 jours ; efficacité d’appoint.']},
+  {n:'Éliminer les eaux stagnantes', cible:'prévention (le plus efficace)', diff:'facile',
+   materiel:['—'],
+   etapes:['Vide coupelles, seaux, gouttières, arrosoirs, pneus.','Change l’eau des animaux et des vases tous les 2–3 jours.','Couvre les récupérateurs d’eau d’une moustiquaire.'],
+   conseils:['Pas d’eau stagnante = pas de larves : ça vaut tous les pièges.'],
+   warn:'Une larve de moustique se développe dans un simple bouchon d’eau.'}
+ ]},
+ {cat:'Fourmis', ic:'🐜', items:[
+  {n:'Barrières naturelles', cible:'éloigner les fourmis', diff:'facile',
+   materiel:['Vinaigre blanc, jus de citron, craie, marc de café ou cannelle'],
+   etapes:['Repère la piste des fourmis.','Nettoie-la au vinaigre (ça efface leur trace odorante).','Dépose une barrière (craie, marc, cannelle) sur les points d’entrée.'],
+   conseils:['Casser la piste odorante les désoriente durablement.']},
+  {n:'Appât bicarbonate & sucre', cible:'détruire la colonie (doux)', diff:'facile',
+   materiel:['Bicarbonate de soude','Sucre glace (à parts égales)','Un bouchon'],
+   etapes:['Mélange bicarbonate et sucre glace à 50/50.','Dépose le mélange sur leur passage.','Elles l’emportent au nid ; le bicarbonate agit à la source.'],
+   conseils:['Alternative plus douce que le borax.']},
+  {n:'Appât au borax', cible:'colonie (efficace)', diff:'moyen',
+   materiel:['Borax','Sucre / miel','Eau','Coton'],
+   etapes:['Mélange une petite dose de borax avec du sucre et un peu d’eau.','Imbibe un coton, pose-le dans une boîte percée.','Les ouvrières rapportent l’appât à la reine.'],
+   warn:'Le borax est toxique : tiens-le HORS de portée des enfants et des animaux. Préfère le bicarbonate si tu as un doute.'}
+ ]},
+ {cat:'Mites', ic:'🦋', items:[
+  {n:'Mites alimentaires', cible:'placards & denrées', diff:'facile',
+   materiel:['Contenants hermétiques','Feuilles de laurier','Piège à phéromones (du commerce)'],
+   etapes:['Jette les paquets infestés, aspire les recoins du placard.','Range farines, pâtes et graines dans des bocaux fermés.','Glisse des feuilles de laurier ; pose un piège à phéromones pour capturer les mâles.'],
+   conseils:['Le laurier repousse ; la phéromone piège : les deux ensemble.']},
+  {n:'Mites des vêtements', cible:'armoires & lainages', diff:'facile',
+   materiel:['Sachets de lavande ou copeaux de cèdre','Piège à phéromones textile'],
+   etapes:['Lave ou congèle 48 h les textiles atteints.','Aère et aspire l’armoire.','Dispose lavande/cèdre et un piège à phéromones.'],
+   conseils:['La lavande et le cèdre éloignent ; on renouvelle l’odeur chaque saison.']}
+ ]},
+ {cat:'Au jardin', ic:'🌱', items:[
+  {n:'Bandes engluées jaunes', cible:'pucerons ailés, aleurodes', diff:'facile',
+   materiel:['Carton ou plastique jaune','Colle (huile + savon, ou glu du commerce)'],
+   etapes:['Découpe des rectangles jaunes (le jaune attire les insectes volants).','Enduis-les de colle.','Suspends près des plantes atteintes.'],
+   conseils:['Surveille pour ne pas piéger des auxiliaires utiles.']},
+  {n:'Savon noir contre les pucerons', cible:'pucerons', diff:'facile',
+   materiel:['1 L d’eau','1 c. à soupe de savon noir liquide'],
+   etapes:['Dilue le savon noir dans l’eau tiède.','Pulvérise sur les colonies de pucerons, dessous des feuilles compris.','Renouvelle après la pluie.'],
+   conseils:['Traite le matin ou le soir, jamais en plein soleil.']}
+ ]}
+]
+};

@@ -27,6 +27,7 @@ function loadStore(){
       if(d.amenagement) STORE.amenagement=d.amenagement;
       if(d.bienetre) STORE.bienetre=d.bienetre;
       if(d.noeuds) STORE.noeuds=d.noeuds;
+      if(d.pieges) STORE.pieges=d.pieges;
       if(d.domAteliers) STORE.domAteliers=d.domAteliers;
       if(d.domainOrder) STORE.domainOrder=d.domainOrder;
       if(d.deviceOwner) STORE.deviceOwner=d.deviceOwner;
@@ -409,7 +410,7 @@ function resetProfile(id){ const p=STORE.profiles[id]; if(!p) return;
 }
 
 /* ====== learning ====== */
-function homeKeys(){ const keys=Object.keys(D.SKILLS); if(window.AMENAGEMENT) keys.push('amenagement'); if(window.BIENETRE) keys.push('bienetre'); if(window.NOEUDS) keys.push('noeud'); return keys; }
+function homeKeys(){ const keys=Object.keys(D.SKILLS); if(window.AMENAGEMENT) keys.push('amenagement'); if(window.BIENETRE) keys.push('bienetre'); if(window.NOEUDS) keys.push('noeud'); if(window.PIEGES) keys.push('piege'); return keys; }
 function homeOrder(){
   const keys=homeKeys();
   const saved=(STORE.domainOrder||[]).filter(k=>keys.includes(k));
@@ -423,6 +424,8 @@ function tileInfo(k){
     return {color:B.color, icon:B.icon, name:B.name, pc:p, open:()=>openBienetre()}; }
   if(k==='noeud'){ const N=window.NOEUDS; const pr=noeudProgress(); const p=pr.total?Math.round(pr.done*100/pr.total):0;
     return {color:N.color, icon:N.icon, name:N.name, pc:p, open:()=>openNoeuds()}; }
+  if(k==='piege'){ const Pg=window.PIEGES; const pr=piegeProgress(); const p=pr.total?Math.round(pr.done*100/pr.total):0;
+    return {color:Pg.color, icon:Pg.icon, name:Pg.name, pc:p, open:()=>openPieges()}; }
   const s=D.SKILLS[k]; return {color:s.color, icon:s.icon, name:s.name, pc:pct(k), open:()=>openDomain(k)};
 }
 function makeTile(k){
@@ -2386,6 +2389,50 @@ function renderNoeuds(){
   $('atfBody').innerHTML=h; bindNoeudToggles();
   const s=$('nkSearch'); if(s) s.oninput=()=>{ _nkQ=s.value; const l=$('nkList'); if(l){ l.innerHTML=noeudListHTML(); bindNoeudToggles(); } };
   show('scAtelierFlow',{accent:N.color,nav:'domains'});
+}
+
+/* ====== Pièges à insectes : catalogue par cible + recherche + « déjà fait » ====== */
+function piegeS(){ if(!STORE.pieges) STORE.pieges={done:{}}; if(!STORE.pieges.done) STORE.pieges.done={}; return STORE.pieges; }
+function piegeKey(n){ return occNorm(n).replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,''); }
+function piegeProgress(){ const st=piegeS(); let d=0,t=0; ((window.PIEGES&&window.PIEGES.cats)||[]).forEach(g=>g.items.forEach(k=>{ t++; if(st.done[piegeKey(k.n)]) d++; })); return {done:d,total:t}; }
+let _pgQ='';
+function piegeListHTML(){
+  const q=occNorm(_pgQ); const st=piegeS(); let h='', n=0;
+  ((window.PIEGES&&window.PIEGES.cats)||[]).forEach(g=>{
+    const items=g.items.filter(k=>!q||occNorm(k.n+' '+(k.cible||'')+' '+k.etapes.join(' ')).includes(q));
+    if(!items.length) return; n+=items.length;
+    h+='<div class="dep-cat">'+esc((g.ic?g.ic+' ':'')+g.cat)+' — '+items.length+'</div>';
+    items.forEach(k=>{ const key=piegeKey(k.n); const on=!!st.done[key];
+      h+='<details class="dep-item arb"><summary><span class="arb-ic">🪤</span><span class="dep-s">'+esc(k.n)+'</span><span class="dep-c">'+esc(k.diff)+'</span></summary><div class="dep-k">'+
+         '<div class="nk-aka">cible : '+esc(k.cible)+'</div>'+
+         '<div class="arb-row"><b>🧰 Matériel :</b><ul class="rec-ingr">'+k.materiel.map(s=>'<li>'+esc(s)+'</li>').join('')+'</ul></div>'+
+         '<div class="arb-row"><b>🪤 Fabrication :</b><ol class="nk-steps">'+k.etapes.map(s=>'<li>'+esc(s)+'</li>').join('')+'</ol></div>'+
+         (k.conseils?'<div class="arb-row"><b>💡 Conseils :</b><ul class="mod-tips">'+k.conseils.map(s=>'<li>'+esc(s)+'</li>').join('')+'</ul></div>':'')+
+         (k.warn?'<div class="arb-warn">⚠️ '+esc(k.warn)+'</div>':'')+
+         '<button class="mnt-btn'+(on?'':' add')+'" data-pg="'+key+'">'+(on?'✓ Déjà fait':'☐ Déjà fait')+'</button>'+
+         '</div></details>';
+    });
+  });
+  if(!n) h='<p class="atf-note">Aucun piège trouvé — essaie un autre mot.</p>';
+  return h;
+}
+function bindPiegeToggles(){
+  $('atfBody').querySelectorAll('[data-pg]').forEach(b=>b.onclick=()=>{ const st=piegeS(), key=b.dataset.pg;
+    if(st.done[key]) delete st.done[key]; else st.done[key]=1; saveStore();
+    const on=!!st.done[key]; b.textContent=on?'✓ Déjà fait':'☐ Déjà fait'; b.className='mnt-btn'+(on?'':' add');
+    const cc=$('pgCount'); if(cc){ const pr=piegeProgress(); cc.textContent=pr.done+' / '+pr.total+' faits'; } });
+}
+function openPieges(){ _pgQ=''; go(renderPieges,'pièges'); }
+function renderPieges(){
+  mode='learn'; const Pg=window.PIEGES; const pr=piegeProgress();
+  $('atfTitle').textContent=Pg.name;
+  let h='<p class="atf-lead">'+esc(Pg.meta)+'. <b id="pgCount">'+pr.done+' / '+pr.total+' faits</b>.</p>';
+  if(Pg.regle) h+='<div class="atf-key">'+esc(Pg.regle)+'</div>';
+  h+='<input id="pgSearch" class="occ-search" type="text" placeholder="🔎 Rechercher (insecte ou méthode)" value="'+esc(_pgQ)+'">';
+  h+='<div id="pgList">'+piegeListHTML()+'</div>';
+  $('atfBody').innerHTML=h; bindPiegeToggles();
+  const s=$('pgSearch'); if(s) s.oninput=()=>{ _pgQ=s.value; const l=$('pgList'); if(l){ l.innerHTML=piegeListHTML(); bindPiegeToggles(); } };
+  show('scAtelierFlow',{accent:Pg.color,nav:'domains'});
 }
 
 /* ====== Bien-être : recettes de boissons + rituels (pas un cours) ====== */

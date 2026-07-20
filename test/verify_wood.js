@@ -47,6 +47,10 @@ const rr=c.measureResults({m,mLenManual:'',mDiamManual:''});
 ok('W10 — mesure photo : longueur 200cm, Ø 75cm', rr.lenCm===200 && rr.diamCm===75);
 const rm=c.measureResults({m:{ref:[],len:[],diam:[],refCm:100,rw:1,rh:1}, mLenManual:'250', mDiamManual:'30'});
 ok('W11 — saisie manuelle prioritaire', rm.lenCm===250 && rm.diamCm===30 && near(rm.vol,c.logVolume(250,30)));
+const rc=c.measureResults({m:{ref:[],len:[],diam:[],refCm:100,rw:1,rh:1}, mLenManual:'200', mDiamManual:'40', mDiam2Manual:'20'});
+ok('W11b — tronc de cône : Ø petit bout + volume < cylindre', rc.diam2Cm===20 && near(rc.vol,c.grumeVolume(200,40,20)) && rc.vol<c.grumeVolume(200,40,0));
+const rq=c.measureResults({mMode:'circ', m:{ref:[],len:[],diam:[],refCm:100,rw:1,rh:1}, mLenManual:'200', mDiamManual:'100'});
+ok('W11c — circonférence → diamètre (100 → ~32 cm)', rq.diamCm===Math.round(100/Math.PI));
 
 // ---- stock + projets (règles) ----
 const chLog={id:'l1',speciesKey:'chene',speciesName:'Chêne',lengthCm:250,diamCm:30,volumeM3:c.logVolume(250,30),photo:''};

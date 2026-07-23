@@ -890,6 +890,15 @@
   .cm-panel .atf-note{ margin:6px 0 0; font-size:11px }
   .cm-panel .atf-key{ margin:4px 0 0 }
   .cm-reg{ margin-top:8px; width:100%; padding:9px; border-radius:10px; border:1px solid var(--line2); background:transparent; color:inherit; font-size:12.5px; font-weight:600; cursor:pointer }
+  /* pastille d'info parcelle (flottante) + mini-crédit, sans bandeau */
+  .cm-info{ position:absolute; top:calc(62px + env(safe-area-inset-top)); left:50%; transform:translateX(-50%); max-width:82%; background:rgba(255,255,255,.96); border:1px solid var(--line2); border-radius:13px; padding:8px 14px; z-index:3; box-shadow:0 5px 18px rgba(0,0,0,.32); text-align:center }
+  .cm-info .ci-main{ font-size:14px }
+  .cm-info .ci-sub{ font-size:12px; color:var(--mut); margin-top:2px }
+  .cm-info .ci-act{ margin-top:7px; display:flex; gap:8px; justify-content:center }
+  .cm-info .ci-act button{ padding:5px 14px; border-radius:8px; border:1px solid var(--line2); background:transparent; color:inherit; font-size:12px; cursor:pointer }
+  .cm-cred{ position:absolute; left:8px; bottom:calc(5px + env(safe-area-inset-bottom)); font-size:8.5px; line-height:1.3; color:rgba(255,255,255,.72); text-shadow:0 1px 2px rgba(0,0,0,.85); z-index:1; pointer-events:none; max-width:66% }
+  .cm-clbl{ font-family:'JetBrains Mono',monospace; font-size:4px; fill:#2a1a05; paint-order:stroke; stroke:#fff; stroke-width:1px; text-anchor:middle; font-weight:600 }
+  @media (prefers-color-scheme: dark){ .cm-info{ background:rgba(30,27,22,.96); color:#eee } }
   .cm-sheet{ position:absolute; left:50%; transform:translateX(-50%); bottom:calc(10px + env(safe-area-inset-bottom)); z-index:2; padding:8px 14px; border-radius:12px; border:1px solid var(--line2); background:rgba(255,255,255,.94); color:#222; font-size:12px; font-weight:600; cursor:pointer; box-shadow:0 4px 14px rgba(0,0,0,.25); display:none }
   .cm-panel.folded ~ .cm-sheet{ display:block }
   @media (prefers-color-scheme: dark){ .cm-panel,.cm-close,.cm-sheet,.cm-full .cm-zoom button{ background:rgba(30,27,22,.95); color:#eee } }

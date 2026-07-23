@@ -78,8 +78,11 @@ ok('C16c — cycle des 4 fonds : ortho IGN, Esri, Plan IGN, cadastre', (()=>{ if
   return ign && esri && rando && plan; })());
 c._cmLayer='ign'; c.renderCartoMap();
 c.renderCartoMap();
-ok('C16d — plein écran : overlay no-swipe + bouton fermer + panneau repliable', (()=>{ const h=R.atfBody.innerHTML;
-  return /class="cm-wrap cm-full no-swipe"/.test(h) && /id="cmBack" class="cm-close"/.test(h) && /id="cmFold"/.test(h) && /id="cmUnfold"/.test(h) && typeof R.cmFold.onclick==='function' && typeof R.cmBack.onclick==='function'; })());
+ok('C16d — plein écran sans bandeau : overlay no-swipe + fermer + mini-crédit', (()=>{ const h=R.atfBody.innerHTML;
+  return /class="cm-wrap cm-full no-swipe"/.test(h) && /id="cmBack" class="cm-close"/.test(h) && /cm-cred/.test(h) && !/cm-panel/.test(h) && !/id="cmFold"/.test(h) && typeof R.cmBack.onclick==='function'; })());
+ok('C16i — données exploitées : noms de chemins (cm-clbl) sur la carte', (()=>{ const h=R.atfBody.innerHTML;
+  const named=(c.window.CARTO_SEED.chemins||[]).some(x=>x.n);
+  return named && (h.match(/class="cm-clbl"/g)||[]).length>=1 && /Route du Castella|Chemin|D 436/.test(h); })());
 ok('C16e — porte « Le Territoire » ouvre directement la carte plein écran', typeof R.doorCarto.onclick==='function' && (()=>{ R.doorCarto.onclick(); return R.scAtelierFlow.classList.contains('active') && /cm-full/.test(R.atfBody.innerHTML) && /id="cmReg"/.test(R.atfBody.innerHTML); })());
 ok('C16h — bouton « Registre » depuis la carte ouvre le registre', typeof R.cmReg.onclick==='function' && (()=>{ R.cmReg.onclick(); const h=R.atfBody.innerHTML; return /Voir la carte/.test(h) && !/cm-full/.test(h); })());
 c.renderCartoMap();

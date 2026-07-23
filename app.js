@@ -2568,16 +2568,43 @@ function cmSatMeta(l){ return l==='ign'?{ic:'🇫🇷',nom:'IGN BD ORTHO®',attr
   :l==='esri'?{ic:'🌍',nom:'Esri World Imagery',attr:'Imagerie © Esri, Maxar, Earthstar Geographics'}
   :l==='ignplan'?{ic:'🥾',nom:'Plan IGN — chemins & sentiers',attr:'Plan IGN® © IGN (data.geopf.fr)'}:{ic:'🛰',nom:'',attr:''}; }
 let _cmZoom=1,_cmX=0,_cmY=0,_cmSel='',_cmLayer='ign';
-let _cmGeo=null,_cmWatch=null,_cmProj=null,_cmPxDegLat=0,_cmGeoFirst=false,_cmPaths=true,_cmFollow=false;
+let _cmGeo=null,_cmWatch=null,_cmProj=null,_cmUnproj=null,_cmPxDegLat=0,_cmGeoFirst=false,_cmPaths=true,_cmFollow=false;
+let _cmMeasure=false,_cmMpts=[];
 const CM_OPEN_ZOOM=4; // petit zoom appliqué au premier point GPS (carte collée à la position)
+const CM_LBL_Z=2;   // n° de parcelles visibles à partir de ce zoom
+const CM_CLBL_Z=3;  // noms de chemins visibles à partir de ce zoom
+// projection inverse : point (repère viewBox) → [lon,lat]
+function cartoUnproject(bb){ const midLat=(bb.miny+bb.maxy)/2, lonScale=Math.cos(midLat*Math.PI/180)||1;
+  const wW=(bb.maxx-bb.minx)*lonScale||1e-9, wH=(bb.maxy-bb.miny)||1e-9;
+  const s=Math.min((CM_VW-2*CM_PAD)/wW,(CM_VH-2*CM_PAD)/wH), oX=(CM_VW-wW*s)/2, oY=(CM_VH-wH*s)/2;
+  return q=>[ bb.minx+(q[0]-oX)/(lonScale*s), bb.maxy-(q[1]-oY)/s ]; }
+// mesures (comme « mesurer une distance » sur Maps)
+function cmHaversine(a,b){ const R=6371000, t=Math.PI/180, dLa=(b[1]-a[1])*t, dLo=(b[0]-a[0])*t, la1=a[1]*t, la2=b[1]*t;
+  const h=Math.sin(dLa/2)**2+Math.cos(la1)*Math.cos(la2)*Math.sin(dLo/2)**2; return 2*R*Math.asin(Math.min(1,Math.sqrt(h))); }
+function cmMeasDist(){ let d=0; for(let i=1;i<_cmMpts.length;i++) d+=cmHaversine(_cmMpts[i-1],_cmMpts[i]); return d; }
+function cmPolyArea(pts){ if(pts.length<3) return 0; const midLat=pts.reduce((a,p)=>a+p[1],0)/pts.length, k=Math.cos(midLat*Math.PI/180)*111320, mL=111320;
+  let s=0; for(let i=0;i<pts.length;i++){ const a=pts[i], b=pts[(i+1)%pts.length]; s+=(a[0]*k)*(b[1]*mL)-(b[0]*k)*(a[1]*mL); } return Math.abs(s)/2; }
+function cmFmtDist(m){ return m<1000?Math.round(m)+' m':(m/1000).toFixed(m<10000?2:1)+' km'; }
+function cmFmtArea(a){ return a<10000?Math.round(a)+' m²':(a/10000).toFixed(2)+' ha'; }
+function cmMeasVal(){ if(_cmMpts.length<2) return 'Touche la carte pour poser des points';
+  let t='📏 '+cmFmtDist(cmMeasDist()); if(_cmMpts.length>=3) t+=' · '+cmFmtArea(cmPolyArea(_cmMpts))+' (surface)'; return t; }
+function cmMeasMarkup(){ if(!_cmProj||!_cmMpts.length) return ''; const P=_cmMpts.map(_cmProj); let s='';
+  if(P.length>=3) s+='<polygon points="'+P.map(q=>q[0].toFixed(1)+','+q[1].toFixed(1)).join(' ')+'" fill="rgba(43,108,255,.14)" stroke="none" pointer-events="none"/>';
+  if(P.length>=2) s+='<polyline points="'+P.map(q=>q[0].toFixed(1)+','+q[1].toFixed(1)).join(' ')+'" fill="none" stroke="#2b6cff" stroke-width="1" stroke-dasharray="2 1.4" stroke-linejoin="round" pointer-events="none"/>';
+  P.forEach(q=>{ s+='<circle cx="'+q[0].toFixed(1)+'" cy="'+q[1].toFixed(1)+'" r="1.8" fill="#fff" stroke="#2b6cff" stroke-width="1" pointer-events="none"/>'; });
+  return s; }
+function cmUpdateMeas(){ const g=document.getElementById('cmMeas'); if(g) g.innerHTML=cmMeasMarkup();
+  const v=document.getElementById('cmMeasVal'); if(v) v.textContent=cmMeasVal(); }
 // marqueur « je suis ici » (dans le groupe zoomable → suit pan/zoom)
 function cmMeMarkup(){ if(!_cmGeo||!_cmProj) return '';
   const v=_cmProj([_cmGeo.lon,_cmGeo.lat]); const accPx=Math.max(1.6,Math.min(120,(_cmGeo.acc/111320)*_cmPxDegLat));
   return '<circle cx="'+v[0].toFixed(1)+'" cy="'+v[1].toFixed(1)+'" r="'+accPx.toFixed(1)+'" fill="#2b6cff" fill-opacity=".14" stroke="#2b6cff" stroke-opacity=".55" stroke-width=".4"/>'+
     '<circle cx="'+v[0].toFixed(1)+'" cy="'+v[1].toFixed(1)+'" r="2.6" fill="#2b6cff" stroke="#fff" stroke-width="1.1"/>'; }
 function cmDrawMe(){ const g=document.getElementById('cmMe'); if(g) g.innerHTML=cmMeMarkup(); }
+function cmApplyLabels(){ const pl=document.getElementById('cmPLbl'); if(pl) pl.style.display=(_cmZoom>=CM_LBL_Z?'':'none');
+  const cl=document.getElementById('cmCLbl'); if(cl) cl.style.display=(_cmZoom>=CM_CLBL_Z?'':'none'); }
 function cmCenterMe(){ if(!_cmGeo||!_cmProj) return; const v=_cmProj([_cmGeo.lon,_cmGeo.lat]);
-  _cmX=CM_VW/2 - v[0]*_cmZoom; _cmY=CM_VH/2 - v[1]*_cmZoom; const g=document.getElementById('cmG'); if(g) g.setAttribute('transform',cmTransform()); }
+  _cmX=CM_VW/2 - v[0]*_cmZoom; _cmY=CM_VH/2 - v[1]*_cmZoom; const g=document.getElementById('cmG'); if(g) g.setAttribute('transform',cmTransform()); cmApplyLabels(); }
 function cmStopGeo(){ if(_cmWatch!=null && typeof navigator!=='undefined' && navigator.geolocation) try{ navigator.geolocation.clearWatch(_cmWatch); }catch(_){}
   _cmWatch=null; }
 function cmToggleGeo(){ if(_cmWatch!=null){ cmStopGeo(); _cmGeo=null; renderCartoMap(); return; }
@@ -2606,7 +2633,7 @@ function renderCartoMap(){
   if(!bb){ $('atfBody').innerHTML='<p class="atf-lead">Pas encore de contours. Reviens au registre et <b>importe le GeoJSON</b> du cadastre pour dessiner la carte.</p><button class="mnt-btn" id="cmBack" style="width:100%">← Registre</button>';
     $('cmBack').onclick=()=>navBack(); show('scAtelierFlow',{accent:'#3E7C4E',nav:'domains'}); return; }
   const proj=cartoProject(bb); const sat=(_cmLayer!=='plan'), ortho=(_cmLayer==='ign'||_cmLayer==='esri'); let inner='', labels='';
-  _cmProj=proj; { const p0=proj([bb.minx,bb.miny]), p1=proj([bb.minx,bb.miny+0.001]); _cmPxDegLat=Math.abs(p1[1]-p0[1])/0.001; }
+  _cmProj=proj; _cmUnproj=cartoUnproject(bb); { const p0=proj([bb.minx,bb.miny]), p1=proj([bb.minx,bb.miny+0.001]); _cmPxDegLat=Math.abs(p1[1]-p0[1])/0.001; }
   parc.forEach(p=>{ const rings=geoRings(p.geo); if(!rings.length) return; const col=cartoUsageColor(p.usage); const sel=(p.id===_cmSel);
     const fo=sat?(sel?'.30':'.10'):(sel?'.85':'.55'), stk=ortho?'#fff':(sel?'#111':'#5a4a2a'), sw=sat?(sel?'1.6':'.9'):(sel?'1.4':'.6');
     rings.forEach(ring=>{ const pts=ring.map(proj).map(q=>q[0].toFixed(1)+','+q[1].toFixed(1)).join(' ');
@@ -2629,18 +2656,19 @@ function renderCartoMap(){
   let bgImg=''; if(sat){ const r=cartoImgRect(bb); bgImg='<image href="'+esc(cartoSatUrl(bb,_cmLayer))+'" x="'+r.x.toFixed(1)+'" y="'+r.y.toFixed(1)+'" width="'+r.w.toFixed(1)+'" height="'+r.h.toFixed(1)+'" preserveAspectRatio="none"/>'; }
   const sp=_cmSel?parc.find(x=>x.id===_cmSel):null;
   let h='<div class="cm-wrap cm-full no-swipe">'+
-    '<svg id="cmSvg" viewBox="0 0 '+CM_VW+' '+CM_VH+'" class="cm-svg" preserveAspectRatio="xMidYMid meet"><g id="cmG" transform="'+cmTransform()+'">'+bgImg+inner+bats+paths+clabels+labels+'<g id="cmMe">'+cmMeMarkup()+'</g></g></svg>'+
+    '<svg id="cmSvg" viewBox="0 0 '+CM_VW+' '+CM_VH+'" class="cm-svg" preserveAspectRatio="xMidYMid meet"><g id="cmG" transform="'+cmTransform()+'">'+bgImg+inner+bats+paths+'<g id="cmCLbl">'+clabels+'</g><g id="cmPLbl">'+labels+'</g><g id="cmMeas">'+cmMeasMarkup()+'</g><g id="cmMe">'+cmMeMarkup()+'</g></g></svg>'+
     '<div class="cm-title">'+(sat?esc(meta.nom):'Domaine du Freyche')+'</div>'+
     '<button id="cmBack" class="cm-close" title="Fermer la carte">✕</button>'+
-    '<div class="cm-zoom"><button id="cmGeo" class="'+(_cmFollow&&_cmWatch!=null?'on':'')+'" title="'+(_cmFollow?'Position GPS (carte collée) — toucher pour libérer':'Recoller la carte à ma position')+'">📍</button>'+(chm.length?'<button id="cmPaths" class="'+(_cmPaths?'onp':'')+'" title="Chemins & sentiers">🚶</button>':'')+'<button id="cmLayer" title="Fond : '+(sat?esc(meta.nom):'cadastre')+'">'+meta.ic+'</button><button id="cmIn" title="Zoom +">+</button><button id="cmOut" title="Zoom −">−</button><button id="cmFit" title="Recadrer">⤢</button><button id="cmReg" title="Registre des parcelles">≡</button></div>'+
+    '<div class="cm-zoom"><button id="cmGeo" class="'+(_cmFollow&&_cmWatch!=null?'on':'')+'" title="'+(_cmFollow?'Position GPS (carte collée) — toucher pour libérer':'Recoller la carte à ma position')+'">📍</button>'+(chm.length?'<button id="cmPaths" class="'+(_cmPaths?'onp':'')+'" title="Chemins & sentiers">🚶</button>':'')+'<button id="cmLayer" title="Fond : '+(sat?esc(meta.nom):'cadastre')+'">'+meta.ic+'</button><button id="cmIn" title="Zoom +">+</button><button id="cmOut" title="Zoom −">−</button><button id="cmFit" title="Recadrer">⤢</button><button id="cmRuler" class="'+(_cmMeasure?'onm':'')+'" title="Mesurer une distance">📏</button><button id="cmReg" title="Registre des parcelles">≡</button></div>'+
+    (_cmMeasure?('<div class="cm-meas" id="cmMeasOut"><span id="cmMeasVal">'+esc(cmMeasVal())+'</span><span class="cm-meas-b"><button id="cmMeasUndo" title="Annuler le dernier point">↶</button><button id="cmMeasClear" title="Tout effacer">✕</button></span></div>'):'')+
     (sp?('<div class="cm-info"><div class="ci-main">Parcelle <b>'+esc(sp.num)+'</b></div><div class="ci-sub">'+esc(cartoSurf(sp.cont))+(sp.usage?' · '+esc(sp.usage):'')+(sp.note?' · '+esc(sp.note):'')+'</div><div class="ci-act"><button id="cmEdit">éditer</button><button id="cmDesel">✕</button></div></div>'):'')+
     '<div class="cm-cred">'+(sat?esc(meta.attr):'Cadastre © DGFiP')+(chm.length&&_cmPaths?' · chemins © OpenStreetMap':'')+'</div>'+
     '</div>';
   $('atfBody').innerHTML=h;
   const svg=$('cmSvg'), G=()=>$('cmG');
-  const applyT=()=>{ const g=G(); if(g) g.setAttribute('transform',cmTransform()); };
-  // sélection d'une parcelle (tap simple, sans déplacement)
-  $('atfBody').querySelectorAll('[data-cp]').forEach(el=>el.onclick=()=>{ if(svg&&svg._moved) return; _cmSel=el.dataset.cp; renderCartoMap(); });
+  const applyT=()=>{ const g=G(); if(g) g.setAttribute('transform',cmTransform()); cmApplyLabels(); };
+  // sélection d'une parcelle (tap simple, sans déplacement ; désactivée en mode mesure)
+  $('atfBody').querySelectorAll('[data-cp]').forEach(el=>el.onclick=()=>{ if((svg&&svg._moved)||_cmMeasure) return; _cmSel=el.dataset.cp; renderCartoMap(); });
   if(svg){ const pts=new Map(); let pan=null, pinch=null, lastTap=0;
     const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
     const scl=()=>{ const r=svg.getBoundingClientRect(); return Math.min(r.width/CM_VW,r.height/CM_VH)||1; };
@@ -2655,7 +2683,9 @@ function renderCartoMap(){
     const up=e=>{ pts.delete(e.pointerId); if(pts.size<2) pinch=null;
       if(pts.size===1){ const v=[...pts.values()][0]; pan={x:v.x,y:v.y,ox:_cmX,oy:_cmY}; }
       else if(pts.size===0){ pan=null;
-        if(!svg._moved){ const now=Date.now(); if(now-lastTap<300){ const v=cmClientToVB(svg,e.clientX,e.clientY); cmZoomAt(1.8,v[0],v[1]); applyT(); lastTap=0; } else lastTap=now; } } };
+        if(!svg._moved){
+          if(_cmMeasure){ const v=cmClientToVB(svg,e.clientX,e.clientY); const ll=_cmUnproj(v); _cmMpts.push([ll[0],ll[1]]); cmUpdateMeas(); }
+          else { const now=Date.now(); if(now-lastTap<300){ const v=cmClientToVB(svg,e.clientX,e.clientY); cmZoomAt(1.8,v[0],v[1]); applyT(); lastTap=0; } else lastTap=now; } } } };
     svg.onpointerup=svg.onpointercancel=up;
     svg.onwheel=e=>{ e.preventDefault&&e.preventDefault(); const v=cmClientToVB(svg,e.clientX,e.clientY); cmZoomAt(e.deltaY<0?1.18:1/1.18,v[0],v[1]); applyT(); }; }
   if($('cmLayer')) $('cmLayer').onclick=()=>{ _cmLayer=CM_LAYERS[(CM_LAYERS.indexOf(_cmLayer)+1)%CM_LAYERS.length]; renderCartoMap(); };
@@ -2667,9 +2697,12 @@ function renderCartoMap(){
     else { _cmFollow=!_cmFollow; if(_cmFollow) cmCenterMe(); renderCartoMap(); } };
   if($('cmPaths')) $('cmPaths').onclick=()=>{ _cmPaths=!_cmPaths; renderCartoMap(); };
   if($('cmReg')) $('cmReg').onclick=()=>{ cmStopGeo(); _cmGeo=null; _cmFollow=false; openCarto(); };
+  if($('cmRuler')) $('cmRuler').onclick=()=>{ _cmMeasure=!_cmMeasure; if(_cmMeasure){ _cmFollow=false; } else { _cmMpts=[]; } renderCartoMap(); };
+  if($('cmMeasUndo')) $('cmMeasUndo').onclick=()=>{ _cmMpts.pop(); cmUpdateMeas(); };
+  if($('cmMeasClear')) $('cmMeasClear').onclick=()=>{ _cmMpts=[]; cmUpdateMeas(); };
   if($('cmEdit')) $('cmEdit').onclick=()=>openCartoEdit(_cmSel);
-  $('cmBack').onclick=()=>{ cmStopGeo(); _cmGeo=null; _cmFollow=false; navBack(); };
-  cmDrawMe();
+  $('cmBack').onclick=()=>{ cmStopGeo(); _cmGeo=null; _cmFollow=false; _cmMeasure=false; _cmMpts=[]; navBack(); };
+  cmDrawMe(); applyT();
   show('scAtelierFlow',{accent:'#3E7C4E',nav:'domains'});
 }
 

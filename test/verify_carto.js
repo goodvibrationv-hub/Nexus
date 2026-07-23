@@ -82,7 +82,22 @@ ok('C16d — plein écran sans bandeau : overlay no-swipe + fermer + mini-crédi
   return /class="cm-wrap cm-full no-swipe"/.test(h) && /id="cmBack" class="cm-close"/.test(h) && /cm-cred/.test(h) && !/cm-panel/.test(h) && !/id="cmFold"/.test(h) && typeof R.cmBack.onclick==='function'; })());
 ok('C16i — données exploitées : noms de chemins (cm-clbl) sur la carte', (()=>{ const h=R.atfBody.innerHTML;
   const named=(c.window.CARTO_SEED.chemins||[]).some(x=>x.n);
-  return named && (h.match(/class="cm-clbl"/g)||[]).length>=1 && /Route du Castella|Chemin|D 436/.test(h); })());
+  return named && (h.match(/class="cm-clbl"/g)||[]).length>=1 && /Route du Castella|Chemin|D 436/.test(h) && /id="cmCLbl"/.test(h) && /id="cmPLbl"/.test(h); })());
+ok('C16k — mesure : bouton 📏 + lecteur + calculs distance/surface', (()=>{ if(typeof R.cmRuler.onclick!=='function') return false;
+  R.cmRuler.onclick(); const on=R.atfBody.innerHTML;
+  const uiOk=/class="cm-meas"/.test(on) && /id="cmMeasVal"/.test(on) && /id="cmMeasUndo"/.test(on) && /id="cmMeasClear"/.test(on);
+  const d=c.cmHaversine([1.58,43.18],[1.58,43.19]); const dOk=d>1090&&d<1130; // ~1113 m
+  const a=c.cmPolyArea([[1.58,43.18],[1.5802,43.18],[1.5802,43.1802],[1.58,43.1802]]); const aOk=a>200&&a<600;
+  const fOk=/km$/.test(c.cmFmtDist(2500)) && / m$/.test(c.cmFmtDist(300)) && /ha$/.test(c.cmFmtArea(50000));
+  R.cmRuler.onclick(); // off → efface
+  return uiOk && dOk && aOk && fOk && !/class="cm-meas"/.test(R.atfBody.innerHTML); })());
+ok('C16l — noms visibles seulement au zoom (groupes masqués/affichés)', (()=>{
+  if(R.cmFit&&R.cmFit.onclick) R.cmFit.onclick(); // zoom 1
+  const hidden = R.cmPLbl.style.display==='none' && R.cmCLbl.style.display==='none';
+  for(let i=0;i<6;i++){ if(R.cmIn&&R.cmIn.onclick) R.cmIn.onclick(); } // zoom ↑
+  const shown = R.cmPLbl.style.display!=='none' && R.cmCLbl.style.display!=='none';
+  if(R.cmFit&&R.cmFit.onclick) R.cmFit.onclick(); // remet zoom 1 pour la suite
+  return hidden && shown; })());
 ok('C16e — porte « Le Territoire » ouvre directement la carte plein écran', typeof R.doorCarto.onclick==='function' && (()=>{ R.doorCarto.onclick(); return R.scAtelierFlow.classList.contains('active') && /cm-full/.test(R.atfBody.innerHTML) && /id="cmReg"/.test(R.atfBody.innerHTML); })());
 ok('C16h — bouton « Registre » depuis la carte ouvre le registre', typeof R.cmReg.onclick==='function' && (()=>{ R.cmReg.onclick(); const h=R.atfBody.innerHTML; return /Voir la carte/.test(h) && !/cm-full/.test(h); })());
 c.renderCartoMap();

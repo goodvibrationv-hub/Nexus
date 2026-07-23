@@ -2558,10 +2558,13 @@ function renderCartoMap(){
       inner+='<polygon points="'+pts+'" fill="'+col+'" fill-opacity="'+(sel?'.85':'.55')+'" stroke="'+(sel?'#111':'#5a4a2a')+'" stroke-width="'+(sel?'1.4':'.6')+'" data-cp="'+esc(p.id)+'"/>'; });
     const cc=cmCentroid(rings[0],proj); labels+='<text x="'+cc[0].toFixed(1)+'" y="'+cc[1].toFixed(1)+'" class="cm-lbl">'+esc(p.num)+'</text>';
   });
-  let h='<div class="cm-wrap"><svg id="cmSvg" viewBox="0 0 '+CM_VW+' '+CM_VH+'" class="cm-svg"><g id="cmG" transform="translate('+_cmX.toFixed(1)+','+_cmY.toFixed(1)+') scale('+_cmZoom.toFixed(3)+')">'+inner+labels+'</g></svg>'+
+  let bats=''; const bg=(window.CARTO_SEED&&window.CARTO_SEED.batiments)||[];
+  bg.forEach(b=>{ geoRings(b).forEach(ring=>{ const pts=ring.map(proj).map(q=>q[0].toFixed(1)+','+q[1].toFixed(1)).join(' ');
+    bats+='<polygon points="'+pts+'" fill="#4A403A" fill-opacity=".92" stroke="#241d18" stroke-width=".5" pointer-events="none"/>'; }); });
+  let h='<div class="cm-wrap"><svg id="cmSvg" viewBox="0 0 '+CM_VW+' '+CM_VH+'" class="cm-svg"><g id="cmG" transform="translate('+_cmX.toFixed(1)+','+_cmY.toFixed(1)+') scale('+_cmZoom.toFixed(3)+')">'+inner+bats+labels+'</g></svg>'+
     '<div class="cm-zoom"><button id="cmIn">+</button><button id="cmOut">−</button><button id="cmFit">⤢</button></div></div>';
   const us=[...new Set(parc.filter(p=>geoRings(p.geo).length).map(p=>p.usage||'(à renseigner)'))];
-  h+='<div class="cm-leg">'+us.map(u=>'<span class="cm-lg"><i style="background:'+cartoUsageColor(u==='(à renseigner)'?'':u)+'"></i>'+esc(u)+'</span>').join('')+'</div>';
+  h+='<div class="cm-leg">'+us.map(u=>'<span class="cm-lg"><i style="background:'+cartoUsageColor(u==='(à renseigner)'?'':u)+'"></i>'+esc(u)+'</span>').join('')+(bg.length?'<span class="cm-lg"><i style="background:#4A403A"></i>Bâtiments</span>':'')+'</div>';
   const sp=_cmSel?parc.find(x=>x.id===_cmSel):null;
   if(sp) h+='<div class="atf-key">Parcelle <b>'+esc(sp.num)+'</b> · '+esc(cartoSurf(sp.cont))+(sp.usage?' · '+esc(sp.usage):'')+' <button class="jr-del" id="cmEdit">éditer</button></div>';
   h+='<p class="atf-note">Glisse pour te déplacer, +/− pour zoomer, touche une parcelle pour la sélectionner. '+cartoGeoCount()+' / '+parc.length+' géolocalisées.</p>';

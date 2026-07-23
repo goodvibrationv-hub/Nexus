@@ -65,6 +65,7 @@ ok('C14 — import GeoJSON relie 2 parcelles (par n° et par id)', ri.matched===
 ok('C15 — JSON invalide → erreur', !!c.cartoImport('{pas du json').error);
 c.renderCartoMap();
 ok('C16 — carte : SVG + polygones cliquables + légende', /<svg/.test(R.atfBody.innerHTML) && (R.atfBody.innerHTML.match(/<polygon/g)||[]).length>=2 && /data-cp=/.test(R.atfBody.innerHTML) && /cm-leg/.test(R.atfBody.innerHTML));
+ok('C16b — bâtiments : ≥6 seed + surcouche non-cliquable + légende', ((c.window.CARTO_SEED.batiments||[]).length>=6) && (R.atfBody.innerHTML.match(/pointer-events="none"/g)||[]).length>=6 && /Bâtiments<\/span>/.test(R.atfBody.innerHTML));
 ok('C17 — géométrie persistée au rechargement', (()=>{ const e3=makeEnv(store(env)); loadApp(e3); return e3.ctx.cartoGeoCount()===13; })());
 
 // ---- migration : un registre existant SANS géométrie récupère les contours ----

@@ -2,7 +2,7 @@
 
 PWA mono-fichier hors-ligne (français). Build : `node assemble.js` (injecte
 data_core.js + content_courses.js + cards.js + g270_photos.js + g270_atelier.js
-+ elagage_guide.js + amenagement.js + dom_ateliers.js + occitan_phrases.js + bienetre.js + noeuds.js + pieges.js + app.js dans template.html → `nexus_app_vN.html`). Valider : `node check.js`,
++ elagage_guide.js + amenagement.js + dom_ateliers.js + occitan_phrases.js + bienetre.js + noeuds.js + pieges.js + carto_data.js + app.js dans template.html → `nexus_app_vN.html`). Valider : `node check.js`,
 `npm test`, `for f in test/verify_*.js; do node "$f"; done`.
 Publier : copier le build dans `index.html` sur `main` (GitHub Pages).
 Dev sur la branche `claude/nexus-project-resumption-ymnhtx`. Rester en français.

@@ -19,7 +19,7 @@ function makeEnv(seed){ const reg={}; const $id=id=>{ if(!reg[id])reg[id]=mkEl(i
   const ctx={window:{scrollTo(){},addEventListener(){},matchMedia:()=>({matches:false,addEventListener(){}})},document,localStorage,console,alert:()=>{},navigator:{},
     setTimeout:()=>0,clearTimeout:()=>{},fetch:()=>{throw new Error('net');},Math,Date,JSON,parseInt,parseFloat,isNaN,Object,Array,String,Number,Boolean,RegExp,Set,Map};
   vm.createContext(ctx); return {ctx,reg,ls:_ls}; }
-function loadApp(env){ for(const f of ['data_core.js','content_courses.js','cards.js','amenagement.js','bienetre.js','noeuds.js','pieges.js','app.js']) vm.runInContext(fs.readFileSync(P(f),'utf8'),env.ctx,{filename:f}); }
+function loadApp(env){ for(const f of ['data_core.js','content_courses.js','cards.js','amenagement.js','bienetre.js','noeuds.js','pieges.js','carto_data.js','app.js']) vm.runInContext(fs.readFileSync(P(f),'utf8'),env.ctx,{filename:f}); }
 const store=env=>JSON.parse(env.ls.get('nexus_stable'));
 const order=env=>env.reg.domainList.children.map(c=>c.dataset.key);
 

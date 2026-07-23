@@ -49,9 +49,10 @@ let occPhr = '';    try { occPhr    = read('occitan_phrases.js'); } catch { occP
 let bienet = '';    try { bienet    = read('bienetre.js');       } catch { bienet   = ''; }
 let noeuds = '';    try { noeuds    = read('noeuds.js');         } catch { noeuds   = ''; }
 let pieges = '';    try { pieges    = read('pieges.js');         } catch { pieges   = ''; }
+let carto = '';     try { carto     = read('carto_data.js');     } catch { carto    = ''; }
 
 /* ---- injection ---- */
-const dataBlock = [dataCore, content, cards, photos, atelier, elagGuide, amen, domAt, occPhr, bienet, noeuds, pieges].join('\n');
+const dataBlock = [dataCore, content, cards, photos, atelier, elagGuide, amen, domAt, occPhr, bienet, noeuds, pieges, carto].join('\n');
 
 const html = template
   .replace('/* {{DATA_INJECT}} */', dataBlock)

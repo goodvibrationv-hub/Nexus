@@ -28,6 +28,8 @@ function loadStore(){
       if(d.bienetre) STORE.bienetre=d.bienetre;
       if(d.noeuds) STORE.noeuds=d.noeuds;
       if(d.pieges) STORE.pieges=d.pieges;
+      if(d.carto) STORE.carto=d.carto;
+      if(d.pieges) STORE.pieges=d.pieges;
       if(d.domAteliers) STORE.domAteliers=d.domAteliers;
       if(d.domainOrder) STORE.domainOrder=d.domainOrder;
       if(d.deviceOwner) STORE.deviceOwner=d.deviceOwner;
@@ -410,7 +412,7 @@ function resetProfile(id){ const p=STORE.profiles[id]; if(!p) return;
 }
 
 /* ====== learning ====== */
-function homeKeys(){ const keys=Object.keys(D.SKILLS); if(window.AMENAGEMENT) keys.push('amenagement'); if(window.BIENETRE) keys.push('bienetre'); if(window.NOEUDS) keys.push('noeud'); if(window.PIEGES) keys.push('piege'); return keys; }
+function homeKeys(){ const keys=Object.keys(D.SKILLS); if(window.AMENAGEMENT) keys.push('amenagement'); if(window.BIENETRE) keys.push('bienetre'); if(window.NOEUDS) keys.push('noeud'); if(window.PIEGES) keys.push('piege'); if(window.CARTO_SEED) keys.push('carto'); return keys; }
 function homeOrder(){
   const keys=homeKeys();
   const saved=(STORE.domainOrder||[]).filter(k=>keys.includes(k));
@@ -426,6 +428,8 @@ function tileInfo(k){
     return {color:N.color, icon:N.icon, name:N.name, pc:p, open:()=>openNoeuds()}; }
   if(k==='piege'){ const Pg=window.PIEGES; const pr=piegeProgress(); const p=pr.total?Math.round(pr.done*100/pr.total):0;
     return {color:Pg.color, icon:Pg.icon, name:Pg.name, pc:p, open:()=>openPieges()}; }
+  if(k==='carto'){ const pr=cartoProgress(); const p=pr.total?Math.round(pr.done*100/pr.total):0;
+    return {color:'#3E7C4E', icon:'🗺️', name:'Cartographie', pc:p, open:()=>openCarto()}; }
   const s=D.SKILLS[k]; return {color:s.color, icon:s.icon, name:s.name, pc:pct(k), open:()=>openDomain(k)};
 }
 function makeTile(k){
@@ -2451,6 +2455,56 @@ function renderNoeuds(){
   $('atfBody').innerHTML=h; bindNoeudToggles();
   const s=$('nkSearch'); if(s) s.oninput=()=>{ _nkQ=s.value; const l=$('nkList'); if(l){ l.innerHTML=noeudListHTML(); bindNoeudToggles(); } };
   show('scAtelierFlow',{accent:N.color,nav:'domains'});
+}
+
+/* ====== Cartographie du domaine : registre des parcelles (partagé, éditable) ====== */
+function cartoS(){ if(!STORE.carto){ const seed=(window.CARTO_SEED&&window.CARTO_SEED.parcelles)||[]; STORE.carto={parcelles:JSON.parse(JSON.stringify(seed)), note:''}; saveStore(); }
+  if(!Array.isArray(STORE.carto.parcelles)) STORE.carto.parcelles=[]; return STORE.carto; }
+function cartoProgress(){ const p=cartoS().parcelles; return {done:p.filter(x=>x.usage).length, total:p.length}; }
+function cartoTotalHa(){ return cartoS().parcelles.reduce((a,p)=>a+(+p.cont||0),0)/10000; }
+function cartoSurf(cont){ const v=+cont||0; return v>=10000?(v/10000).toFixed(2)+' ha':v+' m²'; }
+function openCarto(){ go(renderCarto,'cartographie'); }
+function renderCarto(){
+  mode='learn'; const c=cartoS(); const pr=cartoProgress();
+  $('atfTitle').textContent='Cartographie du domaine';
+  let h='<p class="atf-lead">'+esc((window.CARTO_SEED&&window.CARTO_SEED.domaine)||'Domaine')+', parcelle par parcelle. <b>'+c.parcelles.length+' parcelles</b> · <b>'+cartoTotalHa().toFixed(2)+' ha</b> · '+pr.done+' / '+pr.total+' avec un usage.</p>';
+  h+='<button class="mnt-btn add" id="cartoAdd" style="width:100%">+ Ajouter une parcelle</button>';
+  const byC={}; c.parcelles.forEach(p=>{ const k=p.insee||'—'; (byC[k]||(byC[k]=[])).push(p); });
+  Object.keys(byC).sort().forEach(insee=>{ const list=byC[insee]; const sha=(list.reduce((a,p)=>a+(+p.cont||0),0)/10000).toFixed(2);
+    h+='<div class="dep-cat">Commune '+esc(insee)+' — '+list.length+' · '+sha+' ha</div>';
+    list.slice().sort((a,b)=>(a.num||'').localeCompare(b.num||'')).forEach(p=>{
+      h+='<button class="mod-row'+(p.usage?' full':'')+'" type="button" data-cp="'+esc(p.id)+'"><span class="arb-ic">🗺️</span><span class="mod-mid"><span class="dep-s">Parcelle '+esc(p.num)+(p.usage?' · '+esc(p.usage):'')+'</span><span class="mod-s">'+esc('Sect. '+(p.section||'?')+' · F'+(p.feuille||'?'))+(p.note?' · '+esc(p.note):'')+'</span></span><span class="dep-c">'+esc(cartoSurf(p.cont))+'</span></button>';
+    });
+  });
+  h+='<p class="atf-note">Cartographie en cours — touche une parcelle pour renseigner son usage (bois, pré, bâti…). Données partagées, visibles par tous les comptes.</p>';
+  $('atfBody').innerHTML=h;
+  $('atfBody').querySelectorAll('[data-cp]').forEach(b=>b.onclick=()=>openCartoEdit(b.dataset.cp));
+  const add=$('cartoAdd'); if(add) add.onclick=()=>openCartoEdit(null);
+  show('scAtelierFlow',{accent:'#3E7C4E',nav:'domains'});
+}
+function openCartoEdit(id){ go(()=>renderCartoEdit(id),'parcelle'); }
+function renderCartoEdit(id){
+  mode='learn'; const c=cartoS(); const p=id?c.parcelles.find(x=>x.id===id):null; const isNew=!p;
+  const d=p?Object.assign({},p):{id:'p_'+Date.now(),num:'',section:'0A',feuille:'',insee:'',cont:'',usage:'',note:''};
+  $('atfTitle').textContent=isNew?'Nouvelle parcelle':('Parcelle '+(d.num||''));
+  const usages=['','Bois','Pré / prairie','Bâti','Cour / accès','Verger','Jardin','Friche','Eau / ruisseau','Autre'];
+  let h='';
+  h+='<div class="field"><label>N° de parcelle</label><input id="cfNum" value="'+esc(d.num)+'" placeholder="ex : 0961"></div>';
+  h+='<div class="field"><label>Section</label><input id="cfSec" value="'+esc(d.section)+'"></div>';
+  h+='<div class="field"><label>Feuille</label><input id="cfFeu" value="'+esc(d.feuille)+'"></div>';
+  h+='<div class="field"><label>Commune (INSEE)</label><input id="cfIns" value="'+esc(d.insee)+'" placeholder="ex : 09060"></div>';
+  h+='<div class="field"><label>Contenance (m²)</label><input id="cfCont" type="number" value="'+esc(String(d.cont||''))+'"></div>';
+  h+='<div class="field"><label>Usage</label><select id="cfUse">'+usages.map(u=>'<option'+(d.usage===u?' selected':'')+'>'+(u||'—')+'</option>').join('')+'</select></div>';
+  h+='<div class="field"><label>Note</label><input id="cfNote" value="'+esc(d.note)+'" placeholder="remarque"></div>';
+  h+='<button class="save" id="cfSave" style="width:100%;margin-top:6px">Enregistrer</button>';
+  if(!isNew) h+='<button class="demolink del" id="cfDel" style="width:100%;margin-top:10px">Supprimer cette parcelle</button>';
+  $('atfBody').innerHTML=h;
+  $('cfSave').onclick=()=>{ d.num=($('cfNum').value||'').trim(); d.section=($('cfSec').value||'').trim(); d.feuille=($('cfFeu').value||'').trim(); d.insee=($('cfIns').value||'').trim(); d.cont=($('cfCont').value||'').trim(); const u=$('cfUse').value; d.usage=(u==='—'?'':u); d.note=($('cfNote').value||'').trim();
+    if(!d.num){ alert('Indique au moins le n° de parcelle.'); return; }
+    if(p) Object.assign(p,d); else c.parcelles.push(d);
+    saveStore(); navBack(); };
+  if($('cfDel')) $('cfDel').onclick=()=>{ c.parcelles=c.parcelles.filter(x=>x.id!==id); saveStore(); navBack(); };
+  show('scAtelierFlow',{accent:'#3E7C4E',nav:'domains'});
 }
 
 /* ====== Pièges à insectes : catalogue par cible + recherche + « déjà fait » ====== */

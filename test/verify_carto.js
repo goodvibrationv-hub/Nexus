@@ -53,5 +53,18 @@ ok('C12 — données cartographie persistées (partagées)', env2.ctx.cartoS().p
 c.cartoS().parcelles.push({id:'p_test',num:'9999',section:'0A',feuille:'4',insee:'09060',cont:1000,usage:'',note:''}); c.saveStore();
 ok('C13 — ajout d’une parcelle pris en compte', c.cartoS().parcelles.length===14 && store(env).carto.parcelles.some(x=>x.num==='9999'));
 
+// ---- import GeoJSON + carte interactive ----
+const gj=JSON.stringify({type:'FeatureCollection',features:[
+  {type:'Feature',properties:{numero:'0961',section:'0A',commune:'09060',contenance:20280},geometry:{type:'Polygon',coordinates:[[[1.600,43.100],[1.601,43.100],[1.601,43.101],[1.600,43.101],[1.600,43.100]]]}},
+  {type:'Feature',properties:{id:'090600000A0963'},geometry:{type:'Polygon',coordinates:[[[1.602,43.100],[1.603,43.100],[1.603,43.101],[1.602,43.101],[1.602,43.100]]]}},
+  {type:'Feature',properties:{numero:'8888',commune:'09999'},geometry:{type:'Polygon',coordinates:[[[9,9],[9,9.1],[9.1,9.1],[9,9]]]}}
+]});
+const ri=c.cartoImport(gj);
+ok('C14 — import GeoJSON relie 2 parcelles (par n° et par id)', ri.matched===2 && c.cartoGeoCount()===2 && !!c.cartoS().parcelles.find(x=>x.id==='p_0961').geo && !!c.cartoS().parcelles.find(x=>x.id==='p_0963').geo);
+ok('C15 — JSON invalide → erreur', !!c.cartoImport('{pas du json').error);
+c.renderCartoMap();
+ok('C16 — carte : SVG + polygones cliquables + légende', /<svg/.test(R.atfBody.innerHTML) && (R.atfBody.innerHTML.match(/<polygon/g)||[]).length>=2 && /data-cp=/.test(R.atfBody.innerHTML) && /cm-leg/.test(R.atfBody.innerHTML));
+ok('C17 — géométrie persistée au rechargement', (()=>{ const e3=makeEnv(store(env)); loadApp(e3); return e3.ctx.cartoGeoCount()===2; })());
+
 console.log('\n=== Bilan verif Cartographie :', pass, 'réussis,', fail, 'échoués ===');
 process.exit(fail?1:0);

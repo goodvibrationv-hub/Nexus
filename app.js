@@ -2468,7 +2468,9 @@ function renderCarto(){
   mode='learn'; const c=cartoS(); const pr=cartoProgress();
   $('atfTitle').textContent='Cartographie du domaine';
   let h='<p class="atf-lead">'+esc((window.CARTO_SEED&&window.CARTO_SEED.domaine)||'Domaine')+', parcelle par parcelle. <b>'+c.parcelles.length+' parcelles</b> · <b>'+cartoTotalHa().toFixed(2)+' ha</b> · '+pr.done+' / '+pr.total+' avec un usage.</p>';
-  h+='<button class="mnt-btn add" id="cartoAdd" style="width:100%">+ Ajouter une parcelle</button>';
+  h+='<button class="mnt-btn" id="cartoMap" style="width:100%">🗺️ Voir la carte — '+cartoGeoCount()+' / '+c.parcelles.length+' géolocalisées</button>';
+  h+='<button class="mnt-btn add" id="cartoAdd" style="width:100%;margin-top:6px">+ Ajouter une parcelle</button>';
+  h+='<details class="wood-exp"><summary>Importer le cadastre (GeoJSON)</summary><p class="atf-note">Colle le GeoJSON des parcelles (depuis <b>cadastre.data.gouv.fr</b>). Je relie chaque forme à ta parcelle (par n° + commune).</p><textarea id="cartoGj" class="wexp-ta" rows="4" placeholder=\'{"type":"FeatureCollection","features":[…]}\'></textarea><button class="mnt-btn add" id="cartoImp" style="width:100%;margin-top:6px">Importer</button></details>';
   const byC={}; c.parcelles.forEach(p=>{ const k=p.insee||'—'; (byC[k]||(byC[k]=[])).push(p); });
   Object.keys(byC).sort().forEach(insee=>{ const list=byC[insee]; const sha=(list.reduce((a,p)=>a+(+p.cont||0),0)/10000).toFixed(2);
     h+='<div class="dep-cat">Commune '+esc(insee)+' — '+list.length+' · '+sha+' ha</div>';
@@ -2480,6 +2482,8 @@ function renderCarto(){
   $('atfBody').innerHTML=h;
   $('atfBody').querySelectorAll('[data-cp]').forEach(b=>b.onclick=()=>openCartoEdit(b.dataset.cp));
   const add=$('cartoAdd'); if(add) add.onclick=()=>openCartoEdit(null);
+  const mp=$('cartoMap'); if(mp) mp.onclick=()=>openCartoMap();
+  const imp=$('cartoImp'); if(imp) imp.onclick=()=>{ const t=($('cartoGj').value||'').trim(); if(!t){ return; } const r=cartoImport(t); if(r.error){ alert('Import : '+r.error); return; } alert(r.matched+' parcelle(s) reliée(s) sur '+r.total+'.'); renderCarto(); };
   show('scAtelierFlow',{accent:'#3E7C4E',nav:'domains'});
 }
 function openCartoEdit(id){ go(()=>renderCartoEdit(id),'parcelle'); }
@@ -2504,6 +2508,69 @@ function renderCartoEdit(id){
     if(p) Object.assign(p,d); else c.parcelles.push(d);
     saveStore(); navBack(); };
   if($('cfDel')) $('cfDel').onclick=()=>{ c.parcelles=c.parcelles.filter(x=>x.id!==id); saveStore(); navBack(); };
+  show('scAtelierFlow',{accent:'#3E7C4E',nav:'domains'});
+}
+
+/* ---- carte : géométrie, import GeoJSON, rendu SVG interactif ---- */
+function geoRings(g){ if(!g) return []; if(g.type==='Polygon') return g.coordinates||[];
+  if(g.type==='MultiPolygon'){ const r=[]; (g.coordinates||[]).forEach(poly=>(poly||[]).forEach(ring=>r.push(ring))); return r; } return []; }
+function cartoGeoCount(){ return cartoS().parcelles.filter(p=>p.geo&&geoRings(p.geo).length).length; }
+function cartoUsageColor(u){ return ({'Bois':'#3E7C4E','Pré / prairie':'#9BB84E','Bâti':'#8A7B6B','Cour / accès':'#B0A18C','Verger':'#C58A33','Jardin':'#7BA05B','Friche':'#A98B5A','Eau / ruisseau':'#4A7A8C','Autre':'#9A8560'}[u])||'#B9AE97'; }
+function cartoImport(text){
+  let fc; try{ fc=JSON.parse(text); }catch(e){ return {error:'JSON illisible'}; }
+  const feats=fc.type==='FeatureCollection'?(fc.features||[]):(fc.type==='Feature'?[fc]:(Array.isArray(fc)?fc:[]));
+  if(!feats.length) return {error:'aucune parcelle (FeatureCollection attendu)'};
+  const parc=cartoS().parcelles; let matched=0; const strip=s=>String(s||'').replace(/^0+/,'')||'0';
+  feats.forEach(f=>{ if(!f||!f.geometry) return; const pr=f.properties||{};
+    let num=pr.numero||'', ins=pr.commune||'';
+    if((!num||!ins)&&typeof pr.id==='string'&&pr.id.length>=14){ ins=ins||pr.id.slice(0,5); num=num||pr.id.slice(10,14); }
+    const nN=strip(num); const p=parc.find(x=> strip(x.num)===nN && (!ins||x.insee===ins));
+    if(p){ p.geo=f.geometry; if(pr.contenance) p.cont=+pr.contenance; matched++; }
+  });
+  saveStore(); return {matched, total:parc.length};
+}
+function cartoBBox(){ let a=Infinity,b=Infinity,c=-Infinity,d=-Infinity;
+  cartoS().parcelles.forEach(p=>geoRings(p.geo).forEach(ring=>ring.forEach(pt=>{ const x=pt[0],y=pt[1]; if(x<a)a=x; if(x>c)c=x; if(y<b)b=y; if(y>d)d=y; })));
+  return isFinite(a)?{minx:a,miny:b,maxx:c,maxy:d}:null; }
+const CM_VW=320, CM_VH=360, CM_PAD=14;
+function cartoProject(bb){ const midLat=(bb.miny+bb.maxy)/2; const lonScale=Math.cos(midLat*Math.PI/180)||1;
+  const wW=(bb.maxx-bb.minx)*lonScale||1e-9, wH=(bb.maxy-bb.miny)||1e-9;
+  const s=Math.min((CM_VW-2*CM_PAD)/wW,(CM_VH-2*CM_PAD)/wH); const oX=(CM_VW-wW*s)/2, oY=(CM_VH-wH*s)/2;
+  return pt=>[ oX+(pt[0]-bb.minx)*lonScale*s, oY+(bb.maxy-pt[1])*s ]; }
+function cmCentroid(ring,proj){ let sx=0,sy=0,n=0; (ring||[]).forEach(pt=>{ const q=proj(pt); sx+=q[0]; sy+=q[1]; n++; }); return n?[sx/n,sy/n]:[0,0]; }
+let _cmZoom=1,_cmX=0,_cmY=0,_cmSel='';
+function cmZoomBy(f){ const cx=CM_VW/2,cy=CM_VH/2; const z=Math.max(1,Math.min(10,_cmZoom*f)); _cmX=cx-(cx-_cmX)*(z/_cmZoom); _cmY=cy-(cy-_cmY)*(z/_cmZoom); _cmZoom=z; }
+function openCartoMap(){ _cmZoom=1;_cmX=0;_cmY=0;_cmSel=''; go(renderCartoMap,'carte'); }
+function renderCartoMap(){
+  mode='learn'; const parc=cartoS().parcelles; const bb=cartoBBox();
+  $('atfTitle').textContent='Carte du domaine';
+  if(!bb){ $('atfBody').innerHTML='<p class="atf-lead">Pas encore de contours. Reviens au registre et <b>importe le GeoJSON</b> du cadastre pour dessiner la carte.</p><button class="mnt-btn" id="cmBack" style="width:100%">← Registre</button>';
+    $('cmBack').onclick=()=>navBack(); show('scAtelierFlow',{accent:'#3E7C4E',nav:'domains'}); return; }
+  const proj=cartoProject(bb); let inner='', labels='';
+  parc.forEach(p=>{ const rings=geoRings(p.geo); if(!rings.length) return; const col=cartoUsageColor(p.usage); const sel=(p.id===_cmSel);
+    rings.forEach(ring=>{ const pts=ring.map(proj).map(q=>q[0].toFixed(1)+','+q[1].toFixed(1)).join(' ');
+      inner+='<polygon points="'+pts+'" fill="'+col+'" fill-opacity="'+(sel?'.85':'.55')+'" stroke="'+(sel?'#111':'#5a4a2a')+'" stroke-width="'+(sel?'1.4':'.6')+'" data-cp="'+esc(p.id)+'"/>'; });
+    const cc=cmCentroid(rings[0],proj); labels+='<text x="'+cc[0].toFixed(1)+'" y="'+cc[1].toFixed(1)+'" class="cm-lbl">'+esc(p.num)+'</text>';
+  });
+  let h='<div class="cm-wrap"><svg id="cmSvg" viewBox="0 0 '+CM_VW+' '+CM_VH+'" class="cm-svg"><g id="cmG" transform="translate('+_cmX.toFixed(1)+','+_cmY.toFixed(1)+') scale('+_cmZoom.toFixed(3)+')">'+inner+labels+'</g></svg>'+
+    '<div class="cm-zoom"><button id="cmIn">+</button><button id="cmOut">−</button><button id="cmFit">⤢</button></div></div>';
+  const us=[...new Set(parc.filter(p=>geoRings(p.geo).length).map(p=>p.usage||'(à renseigner)'))];
+  h+='<div class="cm-leg">'+us.map(u=>'<span class="cm-lg"><i style="background:'+cartoUsageColor(u==='(à renseigner)'?'':u)+'"></i>'+esc(u)+'</span>').join('')+'</div>';
+  const sp=_cmSel?parc.find(x=>x.id===_cmSel):null;
+  if(sp) h+='<div class="atf-key">Parcelle <b>'+esc(sp.num)+'</b> · '+esc(cartoSurf(sp.cont))+(sp.usage?' · '+esc(sp.usage):'')+' <button class="jr-del" id="cmEdit">éditer</button></div>';
+  h+='<p class="atf-note">Glisse pour te déplacer, +/− pour zoomer, touche une parcelle pour la sélectionner. '+cartoGeoCount()+' / '+parc.length+' géolocalisées.</p>';
+  h+='<button class="mnt-btn" id="cmBack" style="width:100%">← Registre</button>';
+  $('atfBody').innerHTML=h;
+  const svg=$('cmSvg'); let drag=null;
+  $('atfBody').querySelectorAll('[data-cp]').forEach(el=>el.onclick=()=>{ if(svg&&svg._moved) return; _cmSel=el.dataset.cp; renderCartoMap(); });
+  if(svg){ svg.onpointerdown=e=>{ drag={x:e.clientX,y:e.clientY,ox:_cmX,oy:_cmY}; svg._moved=false; };
+    svg.onpointermove=e=>{ if(!drag) return; const r=svg.getBoundingClientRect(); const k=CM_VW/(r.width||CM_VW); const dx=(e.clientX-drag.x)*k, dy=(e.clientY-drag.y)*k; if(Math.abs(dx)+Math.abs(dy)>2) svg._moved=true; _cmX=drag.ox+dx; _cmY=drag.oy+dy; const g=$('cmG'); if(g) g.setAttribute('transform','translate('+_cmX.toFixed(1)+','+_cmY.toFixed(1)+') scale('+_cmZoom.toFixed(3)+')'); };
+    svg.onpointerup=svg.onpointerleave=svg.onpointercancel=()=>{ drag=null; }; }
+  if($('cmIn')) $('cmIn').onclick=()=>{ cmZoomBy(1.35); renderCartoMap(); };
+  if($('cmOut')) $('cmOut').onclick=()=>{ cmZoomBy(1/1.35); renderCartoMap(); };
+  if($('cmFit')) $('cmFit').onclick=()=>{ _cmZoom=1;_cmX=0;_cmY=0; renderCartoMap(); };
+  if($('cmEdit')) $('cmEdit').onclick=()=>openCartoEdit(_cmSel);
+  $('cmBack').onclick=()=>navBack();
   show('scAtelierFlow',{accent:'#3E7C4E',nav:'domains'});
 }
 

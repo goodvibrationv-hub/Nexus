@@ -862,6 +862,16 @@
   .wt-list{ margin-top:6px }
   .wt-row{ display:flex; justify-content:space-between; padding:5px 2px; border-bottom:1px solid var(--line); font-size:12.5px }
   .wexp-ta{ width:100%; box-sizing:border-box; margin-top:6px; font-family:'JetBrains Mono',monospace; font-size:10.5px; border:1px solid var(--line2); border-radius:9px; padding:8px; background:var(--surf); color:inherit }
+  /* carte du domaine */
+  .cm-wrap{ position:relative; margin:6px 0 4px }
+  .cm-svg{ width:100%; height:56vh; background:#e9e3d6; border:1px solid var(--line2); border-radius:14px; touch-action:none; display:block }
+  .cm-lbl{ font-family:'JetBrains Mono',monospace; font-size:5px; fill:#1c1c1c; text-anchor:middle; paint-order:stroke; stroke:#fff; stroke-width:1.1px }
+  .cm-zoom{ position:absolute; top:10px; right:10px; display:flex; flex-direction:column; gap:6px }
+  .cm-zoom button{ width:38px; height:38px; border-radius:10px; border:1px solid var(--line2); background:rgba(255,255,255,.92); color:#333; font-size:20px; font-weight:600; cursor:pointer; line-height:1 }
+  .cm-leg{ display:flex; flex-wrap:wrap; gap:10px; margin:8px 0; font-size:11.5px; color:var(--mut) }
+  .cm-lg{ display:inline-flex; align-items:center; gap:5px }
+  .cm-lg i{ width:12px; height:12px; border-radius:3px; display:inline-block; border:1px solid rgba(0,0,0,.2) }
+  @media (prefers-color-scheme: dark){ .cm-svg{ background:#2a2620 } }
   /* aménagement de camion : modules de chantier + astuces */
   .atelier-banner.astuce{ border-color:rgba(78,112,140,.45); background:linear-gradient(150deg,var(--surf) 60%,rgba(78,112,140,.09)) }
   .atelier-banner.astuce .ab-go{ color:#4E708C }

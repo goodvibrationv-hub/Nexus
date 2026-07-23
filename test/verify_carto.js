@@ -67,5 +67,14 @@ c.renderCartoMap();
 ok('C16 — carte : SVG + polygones cliquables + légende', /<svg/.test(R.atfBody.innerHTML) && (R.atfBody.innerHTML.match(/<polygon/g)||[]).length>=2 && /data-cp=/.test(R.atfBody.innerHTML) && /cm-leg/.test(R.atfBody.innerHTML));
 ok('C17 — géométrie persistée au rechargement', (()=>{ const e3=makeEnv(store(env)); loadApp(e3); return e3.ctx.cartoGeoCount()===13; })());
 
+// ---- migration : un registre existant SANS géométrie récupère les contours ----
+const oldSeed={mastered:{}, carto:{ note:'', parcelles:[
+  {id:'p_0961', num:'0961', section:'0A', feuille:'4', insee:'09060', cont:20280, usage:'Bois', note:'ma note'},
+  {id:'p_1139', num:'1139', section:'0A', feuille:'4', insee:'09060', cont:38698, usage:'', note:''}
+]}};
+const em=makeEnv(oldSeed); loadApp(em); const P0=em.ctx.cartoS().parcelles;
+ok('C18 — migration : contours ajoutés à un registre existant', em.ctx.cartoGeoCount()===2 && P0.find(x=>x.id==='p_0961').geo);
+ok('C19 — migration : usage et note préservés', P0.find(x=>x.id==='p_0961').usage==='Bois' && P0.find(x=>x.id==='p_0961').note==='ma note');
+
 console.log('\n=== Bilan verif Cartographie :', pass, 'réussis,', fail, 'échoués ===');
 process.exit(fail?1:0);

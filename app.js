@@ -2459,7 +2459,13 @@ function renderNoeuds(){
 
 /* ====== Cartographie du domaine : registre des parcelles (partagé, éditable) ====== */
 function cartoS(){ if(!STORE.carto){ const seed=(window.CARTO_SEED&&window.CARTO_SEED.parcelles)||[]; STORE.carto={parcelles:JSON.parse(JSON.stringify(seed)), note:''}; saveStore(); }
-  if(!Array.isArray(STORE.carto.parcelles)) STORE.carto.parcelles=[]; return STORE.carto; }
+  if(!Array.isArray(STORE.carto.parcelles)) STORE.carto.parcelles=[];
+  /* migration : ajoute les contours (geo) aux registres créés avant leur intégration, sans écraser usage/note */
+  const seed=(window.CARTO_SEED&&window.CARTO_SEED.parcelles)||[]; let changed=false;
+  seed.forEach(sp=>{ if(!sp.geo) return; const p=STORE.carto.parcelles.find(x=>x.id===sp.id||(x.num===sp.num&&x.insee===sp.insee));
+    if(p&&!p.geo){ p.geo=sp.geo; if(!p.cont) p.cont=sp.cont; changed=true; } });
+  if(changed) saveStore();
+  return STORE.carto; }
 function cartoProgress(){ const p=cartoS().parcelles; return {done:p.filter(x=>x.usage).length, total:p.length}; }
 function cartoTotalHa(){ return cartoS().parcelles.reduce((a,p)=>a+(+p.cont||0),0)/10000; }
 function cartoSurf(cont){ const v=+cont||0; return v>=10000?(v/10000).toFixed(2)+' ha':v+' m²'; }

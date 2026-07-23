@@ -80,6 +80,15 @@ ok('C16d — plein écran : overlay no-swipe + bouton fermer + panneau repliable
   return /class="cm-wrap cm-full no-swipe"/.test(h) && /id="cmBack" class="cm-close"/.test(h) && /id="cmFold"/.test(h) && /id="cmUnfold"/.test(h) && typeof R.cmFold.onclick==='function' && typeof R.cmBack.onclick==='function'; })());
 ok('C16e — porte « Le Territoire » sur l’accueil ouvre la carto', typeof R.doorCarto.onclick==='function' && (()=>{ R.doorCarto.onclick(); return R.scAtelierFlow.classList.contains('active'); })());
 c.renderCartoMap();
+ok('C16g — chemins : ≥6 segments seed + polylignes + bouton 🚶 + légende', (()=>{ const chm=c.window.CARTO_SEED.chemins||[]; const h=R.atfBody.innerHTML;
+  if(chm.length<6) return false;
+  const okDraw=(h.match(/<polyline/g)||[]).length>=chm.length && /id="cmPaths"/.test(h) && /Chemins<\/span>/.test(h) && /Routes<\/span>/.test(h);
+  if(!okDraw||typeof R.cmPaths.onclick!=='function') return false;
+  R.cmPaths.onclick(); const off=R.atfBody.innerHTML; // masqué
+  const okOff=!/<polyline/.test(off) && !/Chemins<\/span>/.test(off);
+  R.cmPaths.onclick(); // ré-affiche pour la suite
+  return okOff; })());
+c.renderCartoMap();
 ok('C16f — point GPS : bouton 📍 + groupe marqueur + fermeture coupe le GPS', (()=>{ const h=R.atfBody.innerHTML;
   if(!/id="cmGeo"/.test(h) || !/id="cmMe"/.test(h) || typeof R.cmGeo.onclick!=='function') return false;
   // pas de navigator dans le vm : un tap ne doit pas planter (géoloc indisponible → alert avalée)

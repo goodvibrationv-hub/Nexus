@@ -880,12 +880,12 @@
   .cm-full .cm-svg{ width:100%; height:100%; border:0; border-radius:0; background:#0d0d0d }
   .cm-title{ position:absolute; top:calc(14px + env(safe-area-inset-top)); left:56px; right:56px; text-align:center; font-family:'Fraunces',serif; font-style:italic; font-size:15px; color:#fff; text-shadow:0 1px 5px rgba(0,0,0,.8); pointer-events:none; z-index:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
   .cm-close{ position:absolute; top:calc(10px + env(safe-area-inset-top)); left:12px; width:44px; height:44px; border-radius:12px; border:1px solid var(--line2); background:rgba(255,255,255,.94); color:#222; font-size:19px; font-weight:700; cursor:pointer; z-index:2; line-height:1 }
-  .cm-full .cm-zoom{ top:calc(10px + env(safe-area-inset-top)); right:12px; z-index:2 }
+  .cm-full .cm-zoom{ top:auto; bottom:calc(16px + env(safe-area-inset-bottom)); right:12px; z-index:2; max-height:78vh; flex-wrap:wrap-reverse; align-content:flex-end; gap:8px }
   .cm-full .cm-zoom button{ width:44px; height:44px; font-size:22px; box-shadow:0 2px 8px rgba(0,0,0,.25) }
   .cm-zoom button.on{ background:#2b6cff; border-color:#2b6cff; box-shadow:0 0 0 3px rgba(43,108,255,.28) }
   .cm-zoom button.onp{ background:#ffd400; border-color:#e0b400; box-shadow:0 0 0 3px rgba(255,212,0,.3) }
   .cm-zoom button.onm{ background:#2b6cff; border-color:#2b6cff; box-shadow:0 0 0 3px rgba(43,108,255,.28) }
-  .cm-meas{ position:absolute; left:50%; transform:translateX(-50%); bottom:calc(14px + env(safe-area-inset-bottom)); z-index:3; display:flex; align-items:center; gap:10px; padding:9px 14px; border-radius:13px; border:1px solid var(--line2); background:rgba(255,255,255,.96); box-shadow:0 5px 18px rgba(0,0,0,.32); font-size:13px; font-weight:600; max-width:88% }
+  .cm-meas{ position:absolute; left:12px; right:66px; bottom:calc(14px + env(safe-area-inset-bottom)); z-index:3; display:flex; align-items:center; justify-content:space-between; gap:10px; padding:9px 14px; border-radius:13px; border:1px solid var(--line2); background:rgba(255,255,255,.96); box-shadow:0 5px 18px rgba(0,0,0,.32); font-size:13px; font-weight:600 }
   .cm-meas .cm-meas-b{ display:flex; gap:6px }
   .cm-meas .cm-meas-b button{ width:30px; height:30px; border-radius:8px; border:1px solid var(--line2); background:transparent; color:inherit; font-size:15px; cursor:pointer; line-height:1 }
   @media (prefers-color-scheme: dark){ .cm-meas{ background:rgba(30,27,22,.96); color:#eee } }

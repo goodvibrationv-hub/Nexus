@@ -2659,7 +2659,16 @@ function renderCartoMap(){
     '<svg id="cmSvg" viewBox="0 0 '+CM_VW+' '+CM_VH+'" class="cm-svg" preserveAspectRatio="xMidYMid meet"><g id="cmG" transform="'+cmTransform()+'">'+bgImg+inner+bats+paths+'<g id="cmCLbl">'+clabels+'</g><g id="cmPLbl">'+labels+'</g><g id="cmMeas">'+cmMeasMarkup()+'</g><g id="cmMe">'+cmMeMarkup()+'</g></g></svg>'+
     '<div class="cm-title">'+(sat?esc(meta.nom):'Domaine du Freyche')+'</div>'+
     '<button id="cmBack" class="cm-close" title="Fermer la carte">✕</button>'+
-    '<div class="cm-zoom"><button id="cmGeo" class="'+(_cmFollow&&_cmWatch!=null?'on':'')+'" title="'+(_cmFollow?'Position GPS (carte collée) — toucher pour libérer':'Recoller la carte à ma position')+'">📍</button>'+(chm.length?'<button id="cmPaths" class="'+(_cmPaths?'onp':'')+'" title="Chemins & sentiers">🚶</button>':'')+'<button id="cmLayer" title="Fond : '+(sat?esc(meta.nom):'cadastre')+'">'+meta.ic+'</button><button id="cmIn" title="Zoom +">+</button><button id="cmOut" title="Zoom −">−</button><button id="cmFit" title="Recadrer">⤢</button><button id="cmRuler" class="'+(_cmMeasure?'onm':'')+'" title="Mesurer une distance">📏</button><button id="cmReg" title="Registre des parcelles">≡</button></div>'+
+    '<div class="cm-zoom">'+
+      '<button id="cmReg" title="Registre des parcelles">≡</button>'+
+      '<button id="cmRuler" class="'+(_cmMeasure?'onm':'')+'" title="Mesurer une distance">📏</button>'+
+      '<button id="cmFit" title="Recadrer">⤢</button>'+
+      (chm.length?'<button id="cmPaths" class="'+(_cmPaths?'onp':'')+'" title="Chemins & sentiers">🚶</button>':'')+
+      '<button id="cmLayer" title="Fond : '+(sat?esc(meta.nom):'cadastre')+'">'+meta.ic+'</button>'+
+      '<button id="cmGeo" class="'+(_cmFollow&&_cmWatch!=null?'on':'')+'" title="'+(_cmFollow?'Position GPS (carte collée) — toucher pour libérer':'Recoller la carte à ma position')+'">📍</button>'+
+      '<button id="cmOut" title="Zoom −">−</button>'+
+      '<button id="cmIn" title="Zoom +">+</button>'+
+    '</div>'+
     (_cmMeasure?('<div class="cm-meas" id="cmMeasOut"><span id="cmMeasVal">'+esc(cmMeasVal())+'</span><span class="cm-meas-b"><button id="cmMeasUndo" title="Annuler le dernier point">↶</button><button id="cmMeasClear" title="Tout effacer">✕</button></span></div>'):'')+
     (sp?('<div class="cm-info"><div class="ci-main">Parcelle <b>'+esc(sp.num)+'</b></div><div class="ci-sub">'+esc(cartoSurf(sp.cont))+(sp.usage?' · '+esc(sp.usage):'')+(sp.note?' · '+esc(sp.note):'')+'</div><div class="ci-act"><button id="cmEdit">éditer</button><button id="cmDesel">✕</button></div></div>'):'')+
     '<div class="cm-cred">'+(sat?esc(meta.attr):'Cadastre © DGFiP')+(chm.length&&_cmPaths?' · chemins © OpenStreetMap':'')+'</div>'+

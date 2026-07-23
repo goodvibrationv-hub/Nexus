@@ -32,6 +32,7 @@ ok('C3 — surface totale ≈ 22,31 ha', Math.abs(total-223115)<1 && Math.abs(c.
 // ---- store initialisé (partagé, racine) + tuile ----
 ok('C4 — cartoS() initialise STORE.carto depuis la graine', c.cartoS().parcelles.length===13 && store(env).carto);
 ok('C5 — progression : 0 usage au départ', c.cartoProgress().done===0 && c.cartoProgress().total===13);
+ok('C5b — géométrie officielle embarquée (13/13)', c.cartoGeoCount()===13 && SEED.parcelles.every(p=>p.geo&&p.geo.coordinates));
 c.renderHome();
 ok('C6 — tuile Cartographie sur l’accueil', R.domainList.children.some(x=>/Cartographie/.test(x._html)));
 ok('C7 — pas un cours (aucun nœud SKILLS)', !c.window.NEXUS_DATA.SKILLS.carto);
@@ -60,11 +61,11 @@ const gj=JSON.stringify({type:'FeatureCollection',features:[
   {type:'Feature',properties:{numero:'8888',commune:'09999'},geometry:{type:'Polygon',coordinates:[[[9,9],[9,9.1],[9.1,9.1],[9,9]]]}}
 ]});
 const ri=c.cartoImport(gj);
-ok('C14 — import GeoJSON relie 2 parcelles (par n° et par id)', ri.matched===2 && c.cartoGeoCount()===2 && !!c.cartoS().parcelles.find(x=>x.id==='p_0961').geo && !!c.cartoS().parcelles.find(x=>x.id==='p_0963').geo);
+ok('C14 — import GeoJSON relie 2 parcelles (par n° et par id)', ri.matched===2 && c.cartoGeoCount()===13 && !!c.cartoS().parcelles.find(x=>x.id==='p_0961').geo && !!c.cartoS().parcelles.find(x=>x.id==='p_0963').geo);
 ok('C15 — JSON invalide → erreur', !!c.cartoImport('{pas du json').error);
 c.renderCartoMap();
 ok('C16 — carte : SVG + polygones cliquables + légende', /<svg/.test(R.atfBody.innerHTML) && (R.atfBody.innerHTML.match(/<polygon/g)||[]).length>=2 && /data-cp=/.test(R.atfBody.innerHTML) && /cm-leg/.test(R.atfBody.innerHTML));
-ok('C17 — géométrie persistée au rechargement', (()=>{ const e3=makeEnv(store(env)); loadApp(e3); return e3.ctx.cartoGeoCount()===2; })());
+ok('C17 — géométrie persistée au rechargement', (()=>{ const e3=makeEnv(store(env)); loadApp(e3); return e3.ctx.cartoGeoCount()===13; })());
 
 console.log('\n=== Bilan verif Cartographie :', pass, 'réussis,', fail, 'échoués ===');
 process.exit(fail?1:0);

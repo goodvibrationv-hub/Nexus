@@ -2567,8 +2567,9 @@ const CM_LAYERS=['plan','ign','esri','ignplan'];
 function cmSatMeta(l){ return l==='ign'?{ic:'🇫🇷',nom:'IGN BD ORTHO®',attr:'IGN — BD ORTHO® (data.geopf.fr)'}
   :l==='esri'?{ic:'🌍',nom:'Esri World Imagery',attr:'Imagerie © Esri, Maxar, Earthstar Geographics'}
   :l==='ignplan'?{ic:'🥾',nom:'Plan IGN — chemins & sentiers',attr:'Plan IGN® © IGN (data.geopf.fr)'}:{ic:'🛰',nom:'',attr:''}; }
-let _cmZoom=1,_cmX=0,_cmY=0,_cmSel='',_cmLayer='plan';
-let _cmGeo=null,_cmWatch=null,_cmProj=null,_cmPxDegLat=0,_cmGeoFirst=false,_cmPaths=true;
+let _cmZoom=1,_cmX=0,_cmY=0,_cmSel='',_cmLayer='ign';
+let _cmGeo=null,_cmWatch=null,_cmProj=null,_cmPxDegLat=0,_cmGeoFirst=false,_cmPaths=true,_cmFollow=false;
+const CM_OPEN_ZOOM=4; // petit zoom appliqué au premier point GPS (carte collée à la position)
 // marqueur « je suis ici » (dans le groupe zoomable → suit pan/zoom)
 function cmMeMarkup(){ if(!_cmGeo||!_cmProj) return '';
   const v=_cmProj([_cmGeo.lon,_cmGeo.lat]); const accPx=Math.max(1.6,Math.min(120,(_cmGeo.acc/111320)*_cmPxDegLat));
@@ -2584,8 +2585,10 @@ function cmToggleGeo(){ if(_cmWatch!=null){ cmStopGeo(); _cmGeo=null; renderCart
   _cmGeoFirst=true;
   _cmWatch=navigator.geolocation.watchPosition(pos=>{
       _cmGeo={lon:pos.coords.longitude,lat:pos.coords.latitude,acc:pos.coords.accuracy||25,ts:Date.now()};
-      cmDrawMe(); if(_cmGeoFirst){ _cmGeoFirst=false; cmCenterMe(); } },
-    err=>{ cmStopGeo(); alert('Position introuvable : '+((err&&err.message)||'autorisation refusée ?')); renderCartoMap(); },
+      cmDrawMe();
+      if(_cmGeoFirst){ _cmGeoFirst=false; _cmZoom=CM_OPEN_ZOOM; cmCenterMe(); }
+      else if(_cmFollow){ cmCenterMe(); } },
+    err=>{ cmStopGeo(); _cmFollow=false; alert('Position introuvable : '+((err&&err.message)||'autorisation refusée ?')); renderCartoMap(); },
     {enableHighAccuracy:true,maximumAge:4000,timeout:20000});
   renderCartoMap(); }
 function cmTransform(){ return 'translate('+_cmX.toFixed(1)+','+_cmY.toFixed(1)+') scale('+_cmZoom.toFixed(3)+')'; }
@@ -2595,7 +2598,8 @@ function cmZoomBy(f){ cmZoomAt(f,CM_VW/2,CM_VH/2); }
 function cmClientToVB(svg,clientX,clientY){ const r=svg.getBoundingClientRect(); const s=Math.min(r.width/CM_VW,r.height/CM_VH)||1;
   const offX=(r.width-CM_VW*s)/2, offY=(r.height-CM_VH*s)/2;
   return [ (clientX-r.left-offX)/s, (clientY-r.top-offY)/s ]; }
-function openCartoMap(){ _cmZoom=1;_cmX=0;_cmY=0;_cmSel=''; go(renderCartoMap,'carte'); }
+function openCartoMap(){ _cmZoom=1;_cmX=0;_cmY=0;_cmSel=''; _cmFollow=true; _cmGeoFirst=true; go(renderCartoMap,'carte');
+  if(_cmWatch==null) cmToggleGeo(); }
 function renderCartoMap(){
   mode='learn'; const parc=cartoS().parcelles; const bb=cartoBBox();
   $('atfTitle').textContent='Carte du domaine';
@@ -2619,20 +2623,17 @@ function renderCartoMap(){
       '<polyline points="'+pts+'" fill="none" stroke="'+top+'" stroke-width="1" '+dash+'stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>'; }); }
   const meta=cmSatMeta(_cmLayer);
   let bgImg=''; if(sat){ const r=cartoImgRect(bb); bgImg='<image href="'+esc(cartoSatUrl(bb,_cmLayer))+'" x="'+r.x.toFixed(1)+'" y="'+r.y.toFixed(1)+'" width="'+r.w.toFixed(1)+'" height="'+r.h.toFixed(1)+'" preserveAspectRatio="none"/>'; }
-  const us=[...new Set(parc.filter(p=>geoRings(p.geo).length).map(p=>p.usage||'(à renseigner)'))];
-  const chmN=((window.CARTO_SEED&&window.CARTO_SEED.chemins)||[]);
-  const legend='<div class="cm-leg">'+us.map(u=>'<span class="cm-lg"><i style="background:'+cartoUsageColor(u==='(à renseigner)'?'':u)+'"></i>'+esc(u)+'</span>').join('')+(bg.length?'<span class="cm-lg"><i style="background:#4A403A"></i>Bâtiments</span>':'')+(chmN.length&&_cmPaths?'<span class="cm-lg"><i style="background:#ff8a3d"></i>Routes</span><span class="cm-lg"><i style="background:#ffd400"></i>Chemins</span>':'')+'</div>';
   const sp=_cmSel?parc.find(x=>x.id===_cmSel):null;
   let h='<div class="cm-wrap cm-full no-swipe">'+
     '<svg id="cmSvg" viewBox="0 0 '+CM_VW+' '+CM_VH+'" class="cm-svg" preserveAspectRatio="xMidYMid meet"><g id="cmG" transform="'+cmTransform()+'">'+bgImg+inner+bats+paths+labels+'<g id="cmMe">'+cmMeMarkup()+'</g></g></svg>'+
     '<div class="cm-title">'+(sat?esc(meta.nom):'Domaine du Freyche')+'</div>'+
     '<button id="cmBack" class="cm-close" title="Fermer la carte">✕</button>'+
-    '<div class="cm-zoom"><button id="cmGeo" class="'+(_cmWatch!=null?'on':'')+'" title="Ma position GPS">📍</button>'+(chm.length?'<button id="cmPaths" class="'+(_cmPaths?'onp':'')+'" title="Chemins & sentiers">🚶</button>':'')+'<button id="cmLayer" title="Fond : '+(sat?esc(meta.nom):'cadastre')+'">'+meta.ic+'</button><button id="cmIn" title="Zoom +">+</button><button id="cmOut" title="Zoom −">−</button><button id="cmFit" title="Recadrer">⤢</button><button id="cmFold" title="Masquer le panneau">▾</button></div>'+
-    '<div class="cm-panel" id="cmPanel">'+legend+
+    '<div class="cm-zoom"><button id="cmGeo" class="'+(_cmFollow&&_cmWatch!=null?'on':'')+'" title="'+(_cmFollow?'Position GPS (carte collée) — toucher pour libérer':'Recoller la carte à ma position')+'">📍</button>'+(chm.length?'<button id="cmPaths" class="'+(_cmPaths?'onp':'')+'" title="Chemins & sentiers">🚶</button>':'')+'<button id="cmLayer" title="Fond : '+(sat?esc(meta.nom):'cadastre')+'">'+meta.ic+'</button><button id="cmIn" title="Zoom +">+</button><button id="cmOut" title="Zoom −">−</button><button id="cmFit" title="Recadrer">⤢</button><button id="cmFold" title="Masquer le panneau">▾</button></div>'+
+    '<div class="cm-panel" id="cmPanel">'+
       (sp?('<div class="atf-key">Parcelle <b>'+esc(sp.num)+'</b> · '+esc(cartoSurf(sp.cont))+(sp.usage?' · '+esc(sp.usage):'')+' <button class="jr-del" id="cmEdit">éditer</button></div>'):'')+
+      (_cmWatch!=null?'<p class="atf-note">📍 <b>'+(_cmFollow?'Carte collée à ta position':'GPS actif')+'</b> (précision ≈ '+(_cmGeo?Math.round(_cmGeo.acc)+' m':'…')+'). '+(_cmFollow?'Touche 📍 pour libérer la carte.':'Touche 📍 pour recoller.')+'</p>':'')+
       (sat?('<p class="atf-note">'+meta.ic+' <b>'+esc(meta.nom)+'</b> — fond en ligne (nécessite une connexion). '+esc(meta.attr)+'.</p>'):'')+
-      (_cmWatch!=null?'<p class="atf-note">📍 <b>GPS actif</b> — le point bleu suit ta position (précision ≈ '+(_cmGeo?Math.round(_cmGeo.acc)+' m':'…')+'). Re-touche 📍 pour recentrer. Le GPS se coupe en fermant la carte.</p>':'')+
-      '<p class="atf-note">Pince ou double-tape pour zoomer · glisse pour te déplacer · 📍 ta position · '+meta.ic+' change le fond · touche une parcelle. '+cartoGeoCount()+'/'+parc.length+' géoloc.</p>'+
+      '<p class="atf-note">Pince / double-tape pour zoomer · '+meta.ic+' change le fond'+(chm.length?' · 🚶 chemins':'')+' · touche une parcelle.</p>'+
     '</div>'+
     '<button class="cm-sheet" id="cmUnfold">▴ Infos</button>'+
     '</div>';
@@ -2664,10 +2665,11 @@ function renderCartoMap(){
   if($('cmFit')) $('cmFit').onclick=()=>{ _cmZoom=1;_cmX=0;_cmY=0; applyT(); };
   if($('cmFold')) $('cmFold').onclick=()=>{ const p=$('cmPanel'); if(p) p.classList.add('folded'); };
   if($('cmUnfold')) $('cmUnfold').onclick=()=>{ const p=$('cmPanel'); if(p) p.classList.remove('folded'); };
-  if($('cmGeo')) $('cmGeo').onclick=()=>{ if(_cmWatch!=null && _cmGeo){ cmCenterMe(); } else { cmToggleGeo(); } };
+  if($('cmGeo')) $('cmGeo').onclick=()=>{ if(_cmWatch==null){ _cmFollow=true; _cmGeoFirst=true; cmToggleGeo(); }
+    else { _cmFollow=!_cmFollow; if(_cmFollow) cmCenterMe(); renderCartoMap(); } };
   if($('cmPaths')) $('cmPaths').onclick=()=>{ _cmPaths=!_cmPaths; renderCartoMap(); };
   if($('cmEdit')) $('cmEdit').onclick=()=>openCartoEdit(_cmSel);
-  $('cmBack').onclick=()=>{ cmStopGeo(); _cmGeo=null; navBack(); };
+  $('cmBack').onclick=()=>{ cmStopGeo(); _cmGeo=null; _cmFollow=false; navBack(); };
   cmDrawMe();
   show('scAtelierFlow',{accent:'#3E7C4E',nav:'domains'});
 }

@@ -64,28 +64,30 @@ const ri=c.cartoImport(gj);
 ok('C14 — import GeoJSON relie 2 parcelles (par n° et par id)', ri.matched===2 && c.cartoGeoCount()===13 && !!c.cartoS().parcelles.find(x=>x.id==='p_0961').geo && !!c.cartoS().parcelles.find(x=>x.id==='p_0963').geo);
 ok('C15 — JSON invalide → erreur', !!c.cartoImport('{pas du json').error);
 c.renderCartoMap();
-ok('C16 — carte : SVG + polygones cliquables + légende', /<svg/.test(R.atfBody.innerHTML) && (R.atfBody.innerHTML.match(/<polygon/g)||[]).length>=2 && /data-cp=/.test(R.atfBody.innerHTML) && /cm-leg/.test(R.atfBody.innerHTML));
-ok('C16b — bâtiments : ≥6 seed + surcouche non-cliquable + légende', ((c.window.CARTO_SEED.batiments||[]).length>=6) && (R.atfBody.innerHTML.match(/pointer-events="none"/g)||[]).length>=6 && /Bâtiments<\/span>/.test(R.atfBody.innerHTML));
-ok('C16c — cycle fond : cadastre → IGN → Esri (image calée + attribution)', (()=>{ if(!/id="cmLayer"/.test(R.atfBody.innerHTML)) return false;
-  R.cmLayer.onclick(); const ign=R.atfBody.innerHTML;
-  const okIgn=/<image[^>]+data\.geopf\.fr[^>]+ORTHOIMAGERY\.ORTHOPHOTOS/.test(ign) && /CRS=EPSG:4326/.test(ign.replace(/&amp;/g,'&')) && /preserveAspectRatio="none"/.test(ign) && /BD ORTHO/.test(ign);
-  R.cmLayer.onclick(); const esri=R.atfBody.innerHTML;
-  const okEsri=/<image[^>]+arcgisonline\.com[^>]+World_Imagery/.test(esri) && /Esri/.test(esri);
-  R.cmLayer.onclick(); const rando=R.atfBody.innerHTML;
-  const okRando=/<image[^>]+data\.geopf\.fr[^>]+GEOGRAPHICALGRIDSYSTEMS\.PLANIGNV2/.test(rando) && /chemins/i.test(rando);
-  R.cmLayer.onclick(); const plan=R.atfBody.innerHTML; // retour cadastre
-  return okIgn && okEsri && okRando && !/<image/.test(plan); })());
+ok('C16 — carte : SVG + polygones cliquables + plein écran', /<svg/.test(R.atfBody.innerHTML) && (R.atfBody.innerHTML.match(/<polygon/g)||[]).length>=2 && /data-cp=/.test(R.atfBody.innerHTML) && /cm-full/.test(R.atfBody.innerHTML));
+ok('C16b — bâtiments : ≥6 seed + surcouche non-cliquable', ((c.window.CARTO_SEED.batiments||[]).length>=6) && (R.atfBody.innerHTML.match(/pointer-events="none"/g)||[]).length>=6);
+ok('C16b2 — fond IGN par défaut (ortho IGN affichée à l’ouverture)', /<image[^>]+data\.geopf\.fr[^>]+ORTHOIMAGERY\.ORTHOPHOTOS/.test(R.atfBody.innerHTML) && /BD ORTHO/.test(R.atfBody.innerHTML));
+ok('C16c — cycle des 4 fonds : ortho IGN, Esri, Plan IGN, cadastre', (()=>{ if(!/id="cmLayer"/.test(R.atfBody.innerHTML)) return false;
+  let ign=false,esri=false,rando=false,plan=false;
+  for(let i=0;i<4;i++){ const h=R.atfBody.innerHTML;
+    if(/<image[^>]+data\.geopf\.fr[^>]+ORTHOIMAGERY\.ORTHOPHOTOS/.test(h) && /CRS=EPSG:4326/.test(h.replace(/&amp;/g,'&')) && /preserveAspectRatio="none"/.test(h) && /BD ORTHO/.test(h)) ign=true;
+    if(/<image[^>]+arcgisonline\.com[^>]+World_Imagery/.test(h) && /Esri/.test(h)) esri=true;
+    if(/<image[^>]+data\.geopf\.fr[^>]+GEOGRAPHICALGRIDSYSTEMS\.PLANIGNV2/.test(h) && /Plan IGN/.test(h)) rando=true;
+    if(!/<image/.test(h)) plan=true;
+    R.cmLayer.onclick(); }
+  return ign && esri && rando && plan; })());
+c._cmLayer='ign'; c.renderCartoMap();
 c.renderCartoMap();
 ok('C16d — plein écran : overlay no-swipe + bouton fermer + panneau repliable', (()=>{ const h=R.atfBody.innerHTML;
   return /class="cm-wrap cm-full no-swipe"/.test(h) && /id="cmBack" class="cm-close"/.test(h) && /id="cmFold"/.test(h) && /id="cmUnfold"/.test(h) && typeof R.cmFold.onclick==='function' && typeof R.cmBack.onclick==='function'; })());
 ok('C16e — porte « Le Territoire » sur l’accueil ouvre la carto', typeof R.doorCarto.onclick==='function' && (()=>{ R.doorCarto.onclick(); return R.scAtelierFlow.classList.contains('active'); })());
 c.renderCartoMap();
-ok('C16g — chemins : ≥6 segments seed + polylignes + bouton 🚶 + légende', (()=>{ const chm=c.window.CARTO_SEED.chemins||[]; const h=R.atfBody.innerHTML;
+ok('C16g — chemins : ≥6 segments seed + polylignes + bouton 🚶 masque/affiche', (()=>{ const chm=c.window.CARTO_SEED.chemins||[]; const h=R.atfBody.innerHTML;
   if(chm.length<6) return false;
-  const okDraw=(h.match(/<polyline/g)||[]).length>=chm.length && /id="cmPaths"/.test(h) && /Chemins<\/span>/.test(h) && /Routes<\/span>/.test(h);
+  const okDraw=(h.match(/<polyline/g)||[]).length>=chm.length && /id="cmPaths"/.test(h);
   if(!okDraw||typeof R.cmPaths.onclick!=='function') return false;
   R.cmPaths.onclick(); const off=R.atfBody.innerHTML; // masqué
-  const okOff=!/<polyline/.test(off) && !/Chemins<\/span>/.test(off);
+  const okOff=!/<polyline/.test(off);
   R.cmPaths.onclick(); // ré-affiche pour la suite
   return okOff; })());
 c.renderCartoMap();

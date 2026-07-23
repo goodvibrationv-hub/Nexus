@@ -199,7 +199,10 @@ if(BROWSER_NAV) window.addEventListener('popstate', ()=>{ navBack(); });
 (function(){
   if(typeof window==='undefined'||!window.addEventListener) return;
   let sx=0, sy=0, st=0, ok=false;
-  window.addEventListener('touchstart', e=>{ if(!e.touches||e.touches.length!==1){ ok=false; return; } const t=e.touches[0]; sx=t.clientX; sy=t.clientY; st=Date.now(); ok=sx>30; }, {passive:true});
+  window.addEventListener('touchstart', e=>{ if(!e.touches||e.touches.length!==1){ ok=false; return; } const t=e.touches[0];
+    // ne pas armer le retour si le geste démarre sur une zone pannable (carte plein écran)
+    if(e.target&&e.target.closest&&e.target.closest('.no-swipe')){ ok=false; return; }
+    sx=t.clientX; sy=t.clientY; st=Date.now(); ok=sx>30; }, {passive:true});
   window.addEventListener('touchend', e=>{ if(!ok||!st) return; ok=false; const t=(e.changedTouches&&e.changedTouches[0]); if(!t) return;
     const dx=t.clientX-sx, dy=t.clientY-sy, dt=Date.now()-st;
     if(dx>78 && Math.abs(dy)<48 && Math.abs(dx)>Math.abs(dy)*1.7 && dt<600 && navHist.length){ doBack(); }
@@ -2561,7 +2564,13 @@ const CM_LAYERS=['plan','ign','esri'];
 function cmSatMeta(l){ return l==='ign'?{ic:'🇫🇷',nom:'IGN BD ORTHO®',attr:'IGN — BD ORTHO® (data.geopf.fr)'}
   :l==='esri'?{ic:'🌍',nom:'Esri World Imagery',attr:'Imagerie © Esri, Maxar, Earthstar Geographics'}:{ic:'🛰',nom:'',attr:''}; }
 let _cmZoom=1,_cmX=0,_cmY=0,_cmSel='',_cmLayer='plan';
-function cmZoomBy(f){ const cx=CM_VW/2,cy=CM_VH/2; const z=Math.max(1,Math.min(10,_cmZoom*f)); _cmX=cx-(cx-_cmX)*(z/_cmZoom); _cmY=cy-(cy-_cmY)*(z/_cmZoom); _cmZoom=z; }
+function cmTransform(){ return 'translate('+_cmX.toFixed(1)+','+_cmY.toFixed(1)+') scale('+_cmZoom.toFixed(3)+')'; }
+function cmZoomAt(f,cx,cy){ const z=Math.max(1,Math.min(12,_cmZoom*f)); if(z===_cmZoom) return; _cmX=cx-(cx-_cmX)*(z/_cmZoom); _cmY=cy-(cy-_cmY)*(z/_cmZoom); _cmZoom=z; }
+function cmZoomBy(f){ cmZoomAt(f,CM_VW/2,CM_VH/2); }
+// convertit un point écran → coordonnées viewBox de la carte (tient compte du letterbox 'meet')
+function cmClientToVB(svg,clientX,clientY){ const r=svg.getBoundingClientRect(); const s=Math.min(r.width/CM_VW,r.height/CM_VH)||1;
+  const offX=(r.width-CM_VW*s)/2, offY=(r.height-CM_VH*s)/2;
+  return [ (clientX-r.left-offX)/s, (clientY-r.top-offY)/s ]; }
 function openCartoMap(){ _cmZoom=1;_cmX=0;_cmY=0;_cmSel=''; go(renderCartoMap,'carte'); }
 function renderCartoMap(){
   mode='learn'; const parc=cartoS().parcelles; const bb=cartoBBox();
@@ -2580,25 +2589,49 @@ function renderCartoMap(){
     bats+='<polygon points="'+pts+'" fill="#4A403A" fill-opacity=".92" stroke="#241d18" stroke-width=".5" pointer-events="none"/>'; }); });
   const meta=cmSatMeta(_cmLayer);
   let bgImg=''; if(sat){ const r=cartoImgRect(bb); bgImg='<image href="'+esc(cartoSatUrl(bb,_cmLayer))+'" x="'+r.x.toFixed(1)+'" y="'+r.y.toFixed(1)+'" width="'+r.w.toFixed(1)+'" height="'+r.h.toFixed(1)+'" preserveAspectRatio="none"/>'; }
-  let h='<div class="cm-wrap"><svg id="cmSvg" viewBox="0 0 '+CM_VW+' '+CM_VH+'" class="cm-svg"><g id="cmG" transform="translate('+_cmX.toFixed(1)+','+_cmY.toFixed(1)+') scale('+_cmZoom.toFixed(3)+')">'+bgImg+inner+bats+labels+'</g></svg>'+
-    '<div class="cm-zoom"><button id="cmLayer" title="Fond de carte : '+(sat?esc(meta.nom):'cadastre')+'">'+meta.ic+'</button><button id="cmIn">+</button><button id="cmOut">−</button><button id="cmFit">⤢</button></div></div>';
   const us=[...new Set(parc.filter(p=>geoRings(p.geo).length).map(p=>p.usage||'(à renseigner)'))];
-  h+='<div class="cm-leg">'+us.map(u=>'<span class="cm-lg"><i style="background:'+cartoUsageColor(u==='(à renseigner)'?'':u)+'"></i>'+esc(u)+'</span>').join('')+(bg.length?'<span class="cm-lg"><i style="background:#4A403A"></i>Bâtiments</span>':'')+'</div>';
+  const legend='<div class="cm-leg">'+us.map(u=>'<span class="cm-lg"><i style="background:'+cartoUsageColor(u==='(à renseigner)'?'':u)+'"></i>'+esc(u)+'</span>').join('')+(bg.length?'<span class="cm-lg"><i style="background:#4A403A"></i>Bâtiments</span>':'')+'</div>';
   const sp=_cmSel?parc.find(x=>x.id===_cmSel):null;
-  if(sp) h+='<div class="atf-key">Parcelle <b>'+esc(sp.num)+'</b> · '+esc(cartoSurf(sp.cont))+(sp.usage?' · '+esc(sp.usage):'')+' <button class="jr-del" id="cmEdit">éditer</button></div>';
-  if(sat) h+='<p class="atf-note">'+meta.ic+' Fond satellite <b>'+esc(meta.nom)+'</b> — nécessite une connexion (l’imagerie se charge en ligne). '+esc(meta.attr)+'.</p>';
-  h+='<p class="atf-note">Glisse pour te déplacer, +/− pour zoomer, '+meta.ic+' change le fond (cadastre → IGN → Esri), touche une parcelle pour la sélectionner. '+cartoGeoCount()+' / '+parc.length+' géolocalisées.</p>';
-  h+='<button class="mnt-btn" id="cmBack" style="width:100%">← Registre</button>';
+  let h='<div class="cm-wrap cm-full no-swipe">'+
+    '<svg id="cmSvg" viewBox="0 0 '+CM_VW+' '+CM_VH+'" class="cm-svg" preserveAspectRatio="xMidYMid meet"><g id="cmG" transform="'+cmTransform()+'">'+bgImg+inner+bats+labels+'</g></svg>'+
+    '<div class="cm-title">'+(sat?esc(meta.nom):'Domaine du Freyche')+'</div>'+
+    '<button id="cmBack" class="cm-close" title="Fermer la carte">✕</button>'+
+    '<div class="cm-zoom"><button id="cmLayer" title="Fond : '+(sat?esc(meta.nom):'cadastre')+'">'+meta.ic+'</button><button id="cmIn" title="Zoom +">+</button><button id="cmOut" title="Zoom −">−</button><button id="cmFit" title="Recadrer">⤢</button><button id="cmFold" title="Masquer le panneau">▾</button></div>'+
+    '<div class="cm-panel" id="cmPanel">'+legend+
+      (sp?('<div class="atf-key">Parcelle <b>'+esc(sp.num)+'</b> · '+esc(cartoSurf(sp.cont))+(sp.usage?' · '+esc(sp.usage):'')+' <button class="jr-del" id="cmEdit">éditer</button></div>'):'')+
+      (sat?('<p class="atf-note">'+meta.ic+' <b>'+esc(meta.nom)+'</b> — imagerie en ligne. '+esc(meta.attr)+'.</p>'):'')+
+      '<p class="atf-note">Pince ou double-tape pour zoomer · glisse pour te déplacer · '+meta.ic+' change le fond · touche une parcelle. '+cartoGeoCount()+'/'+parc.length+' géoloc.</p>'+
+    '</div>'+
+    '<button class="cm-sheet" id="cmUnfold">▴ Infos</button>'+
+    '</div>';
   $('atfBody').innerHTML=h;
-  const svg=$('cmSvg'); let drag=null;
+  const svg=$('cmSvg'), G=()=>$('cmG');
+  const applyT=()=>{ const g=G(); if(g) g.setAttribute('transform',cmTransform()); };
+  // sélection d'une parcelle (tap simple, sans déplacement)
   $('atfBody').querySelectorAll('[data-cp]').forEach(el=>el.onclick=()=>{ if(svg&&svg._moved) return; _cmSel=el.dataset.cp; renderCartoMap(); });
-  if(svg){ svg.onpointerdown=e=>{ drag={x:e.clientX,y:e.clientY,ox:_cmX,oy:_cmY}; svg._moved=false; };
-    svg.onpointermove=e=>{ if(!drag) return; const r=svg.getBoundingClientRect(); const k=CM_VW/(r.width||CM_VW); const dx=(e.clientX-drag.x)*k, dy=(e.clientY-drag.y)*k; if(Math.abs(dx)+Math.abs(dy)>2) svg._moved=true; _cmX=drag.ox+dx; _cmY=drag.oy+dy; const g=$('cmG'); if(g) g.setAttribute('transform','translate('+_cmX.toFixed(1)+','+_cmY.toFixed(1)+') scale('+_cmZoom.toFixed(3)+')'); };
-    svg.onpointerup=svg.onpointerleave=svg.onpointercancel=()=>{ drag=null; }; }
+  if(svg){ const pts=new Map(); let pan=null, pinch=null, lastTap=0;
+    const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
+    const scl=()=>{ const r=svg.getBoundingClientRect(); return Math.min(r.width/CM_VW,r.height/CM_VH)||1; };
+    svg.onpointerdown=e=>{ if(svg.setPointerCapture) try{ svg.setPointerCapture(e.pointerId); }catch(_){}
+      pts.set(e.pointerId,{x:e.clientX,y:e.clientY}); svg._moved=false;
+      if(pts.size===1){ pan={x:e.clientX,y:e.clientY,ox:_cmX,oy:_cmY}; }
+      else if(pts.size===2){ const a=[...pts.values()]; pinch={d:dist(a[0],a[1]),z0:_cmZoom, mid:cmClientToVB(svg,(a[0].x+a[1].x)/2,(a[0].y+a[1].y)/2)}; pan=null; } };
+    svg.onpointermove=e=>{ if(!pts.has(e.pointerId)) return; pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
+      if(pinch&&pts.size>=2){ const a=[...pts.values()]; const nd=dist(a[0],a[1]); if(pinch.d>0){ const nz=Math.max(1,Math.min(12,pinch.z0*(nd/pinch.d)));
+          const cx=pinch.mid[0],cy=pinch.mid[1]; _cmX=cx-(cx-_cmX)*(nz/_cmZoom); _cmY=cy-(cy-_cmY)*(nz/_cmZoom); _cmZoom=nz; applyT(); } svg._moved=true; return; }
+      if(pan){ const s=scl(); const dx=(e.clientX-pan.x)/s, dy=(e.clientY-pan.y)/s; if(Math.abs(dx)+Math.abs(dy)>1.5) svg._moved=true; _cmX=pan.ox+dx; _cmY=pan.oy+dy; applyT(); } };
+    const up=e=>{ pts.delete(e.pointerId); if(pts.size<2) pinch=null;
+      if(pts.size===1){ const v=[...pts.values()][0]; pan={x:v.x,y:v.y,ox:_cmX,oy:_cmY}; }
+      else if(pts.size===0){ pan=null;
+        if(!svg._moved){ const now=Date.now(); if(now-lastTap<300){ const v=cmClientToVB(svg,e.clientX,e.clientY); cmZoomAt(1.8,v[0],v[1]); applyT(); lastTap=0; } else lastTap=now; } } };
+    svg.onpointerup=svg.onpointercancel=up;
+    svg.onwheel=e=>{ e.preventDefault&&e.preventDefault(); const v=cmClientToVB(svg,e.clientX,e.clientY); cmZoomAt(e.deltaY<0?1.18:1/1.18,v[0],v[1]); applyT(); }; }
   if($('cmLayer')) $('cmLayer').onclick=()=>{ _cmLayer=CM_LAYERS[(CM_LAYERS.indexOf(_cmLayer)+1)%CM_LAYERS.length]; renderCartoMap(); };
-  if($('cmIn')) $('cmIn').onclick=()=>{ cmZoomBy(1.35); renderCartoMap(); };
-  if($('cmOut')) $('cmOut').onclick=()=>{ cmZoomBy(1/1.35); renderCartoMap(); };
-  if($('cmFit')) $('cmFit').onclick=()=>{ _cmZoom=1;_cmX=0;_cmY=0; renderCartoMap(); };
+  if($('cmIn')) $('cmIn').onclick=()=>{ cmZoomBy(1.3); applyT(); };
+  if($('cmOut')) $('cmOut').onclick=()=>{ cmZoomBy(1/1.3); applyT(); };
+  if($('cmFit')) $('cmFit').onclick=()=>{ _cmZoom=1;_cmX=0;_cmY=0; applyT(); };
+  if($('cmFold')) $('cmFold').onclick=()=>{ const p=$('cmPanel'); if(p) p.classList.add('folded'); };
+  if($('cmUnfold')) $('cmUnfold').onclick=()=>{ const p=$('cmPanel'); if(p) p.classList.remove('folded'); };
   if($('cmEdit')) $('cmEdit').onclick=()=>openCartoEdit(_cmSel);
   $('cmBack').onclick=()=>navBack();
   show('scAtelierFlow',{accent:'#3E7C4E',nav:'domains'});

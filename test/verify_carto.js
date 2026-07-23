@@ -73,6 +73,9 @@ ok('C16c — cycle fond : cadastre → IGN → Esri (image calée + attribution)
   const okEsri=/<image[^>]+arcgisonline\.com[^>]+World_Imagery/.test(esri) && /Esri/.test(esri);
   R.cmLayer.onclick(); const plan=R.atfBody.innerHTML; // retour cadastre
   return okIgn && okEsri && !/<image/.test(plan); })());
+c.renderCartoMap();
+ok('C16d — plein écran : overlay no-swipe + bouton fermer + panneau repliable', (()=>{ const h=R.atfBody.innerHTML;
+  return /class="cm-wrap cm-full no-swipe"/.test(h) && /id="cmBack" class="cm-close"/.test(h) && /id="cmFold"/.test(h) && /id="cmUnfold"/.test(h) && typeof R.cmFold.onclick==='function' && typeof R.cmBack.onclick==='function'; })());
 ok('C17 — géométrie persistée au rechargement', (()=>{ const e3=makeEnv(store(env)); loadApp(e3); return e3.ctx.cartoGeoCount()===13; })());
 
 // ---- migration : un registre existant SANS géométrie récupère les contours ----

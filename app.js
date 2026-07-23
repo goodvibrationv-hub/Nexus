@@ -275,7 +275,7 @@ $('doorLearn').onclick=()=>go(rDomains,'domaines');
 $('doorStable').onclick=()=>navGo('stable');
 if($('doorWood')) $('doorWood').onclick=()=>navGo('wood');
 if($('doorEsprit')) $('doorEsprit').onclick=()=>navGo('esprit');
-if($('doorCarto')) $('doorCarto').onclick=()=>openCarto();
+if($('doorCarto')) $('doorCarto').onclick=()=>openCartoMap();
 /* compte personnel : pas de changement d'utilisateur depuis l'app */
 
 /* ====== attribution du propriétaire de l'appareil (code parent uniquement) ====== */
@@ -2634,6 +2634,7 @@ function renderCartoMap(){
       (_cmWatch!=null?'<p class="atf-note">📍 <b>'+(_cmFollow?'Carte collée à ta position':'GPS actif')+'</b> (précision ≈ '+(_cmGeo?Math.round(_cmGeo.acc)+' m':'…')+'). '+(_cmFollow?'Touche 📍 pour libérer la carte.':'Touche 📍 pour recoller.')+'</p>':'')+
       (sat?('<p class="atf-note">'+meta.ic+' <b>'+esc(meta.nom)+'</b> — fond en ligne (nécessite une connexion). '+esc(meta.attr)+'.</p>'):'')+
       '<p class="atf-note">Pince / double-tape pour zoomer · '+meta.ic+' change le fond'+(chm.length?' · 🚶 chemins':'')+' · touche une parcelle.</p>'+
+      '<button class="cm-reg" id="cmReg">≡ Registre des parcelles</button>'+
     '</div>'+
     '<button class="cm-sheet" id="cmUnfold">▴ Infos</button>'+
     '</div>';
@@ -2668,6 +2669,7 @@ function renderCartoMap(){
   if($('cmGeo')) $('cmGeo').onclick=()=>{ if(_cmWatch==null){ _cmFollow=true; _cmGeoFirst=true; cmToggleGeo(); }
     else { _cmFollow=!_cmFollow; if(_cmFollow) cmCenterMe(); renderCartoMap(); } };
   if($('cmPaths')) $('cmPaths').onclick=()=>{ _cmPaths=!_cmPaths; renderCartoMap(); };
+  if($('cmReg')) $('cmReg').onclick=()=>{ cmStopGeo(); _cmGeo=null; _cmFollow=false; openCarto(); };
   if($('cmEdit')) $('cmEdit').onclick=()=>openCartoEdit(_cmSel);
   $('cmBack').onclick=()=>{ cmStopGeo(); _cmGeo=null; _cmFollow=false; navBack(); };
   cmDrawMe();

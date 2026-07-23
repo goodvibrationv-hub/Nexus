@@ -2556,14 +2556,17 @@ function cartoImgRect(bb){ const midLat=(bb.miny+bb.maxy)/2, lonScale=Math.cos(m
 // une seule image ortho EPSG:4326 calée sur le bbox — IGN (officiel FR) ou ESRI (mondial)
 function cartoSatUrl(bb,prov){ const dLon=(bb.maxx-bb.minx)||1e-9, dLat=(bb.maxy-bb.miny)||1e-9;
   const W=1024, H=Math.max(1,Math.round(W*dLat/dLon));
-  if(prov==='ign') return 'https://data.geopf.fr/wms-r/wms?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetMap&LAYERS=ORTHOIMAGERY.ORTHOPHOTOS&STYLES=&CRS=EPSG:4326&BBOX='+
+  const ignWms=lay=>'https://data.geopf.fr/wms-r/wms?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetMap&LAYERS='+lay+'&STYLES=&CRS=EPSG:4326&BBOX='+
     bb.miny+','+bb.minx+','+bb.maxy+','+bb.maxx+'&WIDTH='+W+'&HEIGHT='+H+'&FORMAT=image/jpeg';
+  if(prov==='ign') return ignWms('ORTHOIMAGERY.ORTHOPHOTOS');
+  if(prov==='ignplan') return ignWms('GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2'); // carte topo : chemins & sentiers
   return 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/export?bbox='+
     bb.minx+','+bb.miny+','+bb.maxx+','+bb.maxy+'&bboxSR=4326&imageSR=4326&size='+W+','+H+'&format=jpg&f=image'; }
-// fournisseurs de fond : cadastre seul → ortho IGN → ortho ESRI (cycle)
-const CM_LAYERS=['plan','ign','esri'];
+// fournisseurs de fond : cadastre → ortho IGN → ortho ESRI → Plan IGN (chemins/sentiers)
+const CM_LAYERS=['plan','ign','esri','ignplan'];
 function cmSatMeta(l){ return l==='ign'?{ic:'🇫🇷',nom:'IGN BD ORTHO®',attr:'IGN — BD ORTHO® (data.geopf.fr)'}
-  :l==='esri'?{ic:'🌍',nom:'Esri World Imagery',attr:'Imagerie © Esri, Maxar, Earthstar Geographics'}:{ic:'🛰',nom:'',attr:''}; }
+  :l==='esri'?{ic:'🌍',nom:'Esri World Imagery',attr:'Imagerie © Esri, Maxar, Earthstar Geographics'}
+  :l==='ignplan'?{ic:'🥾',nom:'Plan IGN — chemins & sentiers',attr:'Plan IGN® © IGN (data.geopf.fr)'}:{ic:'🛰',nom:'',attr:''}; }
 let _cmZoom=1,_cmX=0,_cmY=0,_cmSel='',_cmLayer='plan';
 function cmTransform(){ return 'translate('+_cmX.toFixed(1)+','+_cmY.toFixed(1)+') scale('+_cmZoom.toFixed(3)+')'; }
 function cmZoomAt(f,cx,cy){ const z=Math.max(1,Math.min(12,_cmZoom*f)); if(z===_cmZoom) return; _cmX=cx-(cx-_cmX)*(z/_cmZoom); _cmY=cy-(cy-_cmY)*(z/_cmZoom); _cmZoom=z; }
@@ -2578,9 +2581,9 @@ function renderCartoMap(){
   $('atfTitle').textContent='Carte du domaine';
   if(!bb){ $('atfBody').innerHTML='<p class="atf-lead">Pas encore de contours. Reviens au registre et <b>importe le GeoJSON</b> du cadastre pour dessiner la carte.</p><button class="mnt-btn" id="cmBack" style="width:100%">← Registre</button>';
     $('cmBack').onclick=()=>navBack(); show('scAtelierFlow',{accent:'#3E7C4E',nav:'domains'}); return; }
-  const proj=cartoProject(bb); const sat=(_cmLayer!=='plan'); let inner='', labels='';
+  const proj=cartoProject(bb); const sat=(_cmLayer!=='plan'), ortho=(_cmLayer==='ign'||_cmLayer==='esri'); let inner='', labels='';
   parc.forEach(p=>{ const rings=geoRings(p.geo); if(!rings.length) return; const col=cartoUsageColor(p.usage); const sel=(p.id===_cmSel);
-    const fo=sat?(sel?'.34':'.12'):(sel?'.85':'.55'), stk=sat?'#fff':(sel?'#111':'#5a4a2a'), sw=sat?(sel?'1.6':'.9'):(sel?'1.4':'.6');
+    const fo=sat?(sel?'.30':'.10'):(sel?'.85':'.55'), stk=ortho?'#fff':(sel?'#111':'#5a4a2a'), sw=sat?(sel?'1.6':'.9'):(sel?'1.4':'.6');
     rings.forEach(ring=>{ const pts=ring.map(proj).map(q=>q[0].toFixed(1)+','+q[1].toFixed(1)).join(' ');
       inner+='<polygon points="'+pts+'" fill="'+col+'" fill-opacity="'+fo+'" stroke="'+stk+'" stroke-width="'+sw+'" data-cp="'+esc(p.id)+'"/>'; });
     const cc=cmCentroid(rings[0],proj); labels+='<text x="'+cc[0].toFixed(1)+'" y="'+cc[1].toFixed(1)+'" class="cm-lbl">'+esc(p.num)+'</text>';
@@ -2600,7 +2603,7 @@ function renderCartoMap(){
     '<div class="cm-zoom"><button id="cmLayer" title="Fond : '+(sat?esc(meta.nom):'cadastre')+'">'+meta.ic+'</button><button id="cmIn" title="Zoom +">+</button><button id="cmOut" title="Zoom −">−</button><button id="cmFit" title="Recadrer">⤢</button><button id="cmFold" title="Masquer le panneau">▾</button></div>'+
     '<div class="cm-panel" id="cmPanel">'+legend+
       (sp?('<div class="atf-key">Parcelle <b>'+esc(sp.num)+'</b> · '+esc(cartoSurf(sp.cont))+(sp.usage?' · '+esc(sp.usage):'')+' <button class="jr-del" id="cmEdit">éditer</button></div>'):'')+
-      (sat?('<p class="atf-note">'+meta.ic+' <b>'+esc(meta.nom)+'</b> — imagerie en ligne. '+esc(meta.attr)+'.</p>'):'')+
+      (sat?('<p class="atf-note">'+meta.ic+' <b>'+esc(meta.nom)+'</b> — fond en ligne (nécessite une connexion). '+esc(meta.attr)+'.</p>'):'')+
       '<p class="atf-note">Pince ou double-tape pour zoomer · glisse pour te déplacer · '+meta.ic+' change le fond · touche une parcelle. '+cartoGeoCount()+'/'+parc.length+' géoloc.</p>'+
     '</div>'+
     '<button class="cm-sheet" id="cmUnfold">▴ Infos</button>'+

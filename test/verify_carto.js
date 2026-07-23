@@ -71,8 +71,10 @@ ok('C16c — cycle fond : cadastre → IGN → Esri (image calée + attribution)
   const okIgn=/<image[^>]+data\.geopf\.fr[^>]+ORTHOIMAGERY\.ORTHOPHOTOS/.test(ign) && /CRS=EPSG:4326/.test(ign.replace(/&amp;/g,'&')) && /preserveAspectRatio="none"/.test(ign) && /BD ORTHO/.test(ign);
   R.cmLayer.onclick(); const esri=R.atfBody.innerHTML;
   const okEsri=/<image[^>]+arcgisonline\.com[^>]+World_Imagery/.test(esri) && /Esri/.test(esri);
+  R.cmLayer.onclick(); const rando=R.atfBody.innerHTML;
+  const okRando=/<image[^>]+data\.geopf\.fr[^>]+GEOGRAPHICALGRIDSYSTEMS\.PLANIGNV2/.test(rando) && /chemins/i.test(rando);
   R.cmLayer.onclick(); const plan=R.atfBody.innerHTML; // retour cadastre
-  return okIgn && okEsri && !/<image/.test(plan); })());
+  return okIgn && okEsri && okRando && !/<image/.test(plan); })());
 c.renderCartoMap();
 ok('C16d — plein écran : overlay no-swipe + bouton fermer + panneau repliable', (()=>{ const h=R.atfBody.innerHTML;
   return /class="cm-wrap cm-full no-swipe"/.test(h) && /id="cmBack" class="cm-close"/.test(h) && /id="cmFold"/.test(h) && /id="cmUnfold"/.test(h) && typeof R.cmFold.onclick==='function' && typeof R.cmBack.onclick==='function'; })());

@@ -76,6 +76,7 @@ ok('C16c — cycle fond : cadastre → IGN → Esri (image calée + attribution)
 c.renderCartoMap();
 ok('C16d — plein écran : overlay no-swipe + bouton fermer + panneau repliable', (()=>{ const h=R.atfBody.innerHTML;
   return /class="cm-wrap cm-full no-swipe"/.test(h) && /id="cmBack" class="cm-close"/.test(h) && /id="cmFold"/.test(h) && /id="cmUnfold"/.test(h) && typeof R.cmFold.onclick==='function' && typeof R.cmBack.onclick==='function'; })());
+ok('C16e — porte « Le Territoire » sur l’accueil ouvre la carto', typeof R.doorCarto.onclick==='function' && (()=>{ R.doorCarto.onclick(); return R.scAtelierFlow.classList.contains('active'); })());
 ok('C17 — géométrie persistée au rechargement', (()=>{ const e3=makeEnv(store(env)); loadApp(e3); return e3.ctx.cartoGeoCount()===13; })());
 
 // ---- migration : un registre existant SANS géométrie récupère les contours ----

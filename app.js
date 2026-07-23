@@ -275,6 +275,7 @@ $('doorLearn').onclick=()=>go(rDomains,'domaines');
 $('doorStable').onclick=()=>navGo('stable');
 if($('doorWood')) $('doorWood').onclick=()=>navGo('wood');
 if($('doorEsprit')) $('doorEsprit').onclick=()=>navGo('esprit');
+if($('doorCarto')) $('doorCarto').onclick=()=>openCarto();
 /* compte personnel : pas de changement d'utilisateur depuis l'app */
 
 /* ====== attribution du propriétaire de l'appareil (code parent uniquement) ====== */

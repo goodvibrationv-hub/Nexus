@@ -2544,7 +2544,17 @@ function cartoProject(bb){ const midLat=(bb.miny+bb.maxy)/2; const lonScale=Math
   const s=Math.min((CM_VW-2*CM_PAD)/wW,(CM_VH-2*CM_PAD)/wH); const oX=(CM_VW-wW*s)/2, oY=(CM_VH-wH*s)/2;
   return pt=>[ oX+(pt[0]-bb.minx)*lonScale*s, oY+(bb.maxy-pt[1])*s ]; }
 function cmCentroid(ring,proj){ let sx=0,sy=0,n=0; (ring||[]).forEach(pt=>{ const q=proj(pt); sx+=q[0]; sy+=q[1]; n++; }); return n?[sx/n,sy/n]:[0,0]; }
-let _cmZoom=1,_cmX=0,_cmY=0,_cmSel='';
+// rectangle (repère SVG) couvrant exactement le bbox — pour poser un fond image calé
+function cartoImgRect(bb){ const midLat=(bb.miny+bb.maxy)/2, lonScale=Math.cos(midLat*Math.PI/180)||1;
+  const wW=(bb.maxx-bb.minx)*lonScale||1e-9, wH=(bb.maxy-bb.miny)||1e-9;
+  const s=Math.min((CM_VW-2*CM_PAD)/wW,(CM_VH-2*CM_PAD)/wH), oX=(CM_VW-wW*s)/2, oY=(CM_VH-wH*s)/2;
+  return {x:oX,y:oY,w:wW*s,h:wH*s}; }
+// ortho ESRI World Imagery (libre, attribution) : une seule image EPSG:4326 sur le bbox
+function cartoSatUrl(bb){ const dLon=(bb.maxx-bb.minx)||1e-9, dLat=(bb.maxy-bb.miny)||1e-9;
+  const W=1024, H=Math.max(1,Math.round(W*dLat/dLon));
+  return 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/export?bbox='+
+    bb.minx+','+bb.miny+','+bb.maxx+','+bb.maxy+'&bboxSR=4326&imageSR=4326&size='+W+','+H+'&format=jpg&f=image'; }
+let _cmZoom=1,_cmX=0,_cmY=0,_cmSel='',_cmLayer='plan';
 function cmZoomBy(f){ const cx=CM_VW/2,cy=CM_VH/2; const z=Math.max(1,Math.min(10,_cmZoom*f)); _cmX=cx-(cx-_cmX)*(z/_cmZoom); _cmY=cy-(cy-_cmY)*(z/_cmZoom); _cmZoom=z; }
 function openCartoMap(){ _cmZoom=1;_cmX=0;_cmY=0;_cmSel=''; go(renderCartoMap,'carte'); }
 function renderCartoMap(){
@@ -2552,22 +2562,25 @@ function renderCartoMap(){
   $('atfTitle').textContent='Carte du domaine';
   if(!bb){ $('atfBody').innerHTML='<p class="atf-lead">Pas encore de contours. Reviens au registre et <b>importe le GeoJSON</b> du cadastre pour dessiner la carte.</p><button class="mnt-btn" id="cmBack" style="width:100%">← Registre</button>';
     $('cmBack').onclick=()=>navBack(); show('scAtelierFlow',{accent:'#3E7C4E',nav:'domains'}); return; }
-  const proj=cartoProject(bb); let inner='', labels='';
+  const proj=cartoProject(bb); const sat=(_cmLayer==='sat'); let inner='', labels='';
   parc.forEach(p=>{ const rings=geoRings(p.geo); if(!rings.length) return; const col=cartoUsageColor(p.usage); const sel=(p.id===_cmSel);
+    const fo=sat?(sel?'.34':'.12'):(sel?'.85':'.55'), stk=sat?'#fff':(sel?'#111':'#5a4a2a'), sw=sat?(sel?'1.6':'.9'):(sel?'1.4':'.6');
     rings.forEach(ring=>{ const pts=ring.map(proj).map(q=>q[0].toFixed(1)+','+q[1].toFixed(1)).join(' ');
-      inner+='<polygon points="'+pts+'" fill="'+col+'" fill-opacity="'+(sel?'.85':'.55')+'" stroke="'+(sel?'#111':'#5a4a2a')+'" stroke-width="'+(sel?'1.4':'.6')+'" data-cp="'+esc(p.id)+'"/>'; });
+      inner+='<polygon points="'+pts+'" fill="'+col+'" fill-opacity="'+fo+'" stroke="'+stk+'" stroke-width="'+sw+'" data-cp="'+esc(p.id)+'"/>'; });
     const cc=cmCentroid(rings[0],proj); labels+='<text x="'+cc[0].toFixed(1)+'" y="'+cc[1].toFixed(1)+'" class="cm-lbl">'+esc(p.num)+'</text>';
   });
   let bats=''; const bg=(window.CARTO_SEED&&window.CARTO_SEED.batiments)||[];
   bg.forEach(b=>{ geoRings(b).forEach(ring=>{ const pts=ring.map(proj).map(q=>q[0].toFixed(1)+','+q[1].toFixed(1)).join(' ');
     bats+='<polygon points="'+pts+'" fill="#4A403A" fill-opacity=".92" stroke="#241d18" stroke-width=".5" pointer-events="none"/>'; }); });
-  let h='<div class="cm-wrap"><svg id="cmSvg" viewBox="0 0 '+CM_VW+' '+CM_VH+'" class="cm-svg"><g id="cmG" transform="translate('+_cmX.toFixed(1)+','+_cmY.toFixed(1)+') scale('+_cmZoom.toFixed(3)+')">'+inner+bats+labels+'</g></svg>'+
-    '<div class="cm-zoom"><button id="cmIn">+</button><button id="cmOut">−</button><button id="cmFit">⤢</button></div></div>';
+  let bgImg=''; if(sat){ const r=cartoImgRect(bb); bgImg='<image href="'+esc(cartoSatUrl(bb))+'" x="'+r.x.toFixed(1)+'" y="'+r.y.toFixed(1)+'" width="'+r.w.toFixed(1)+'" height="'+r.h.toFixed(1)+'" preserveAspectRatio="none"/>'; }
+  let h='<div class="cm-wrap"><svg id="cmSvg" viewBox="0 0 '+CM_VW+' '+CM_VH+'" class="cm-svg"><g id="cmG" transform="translate('+_cmX.toFixed(1)+','+_cmY.toFixed(1)+') scale('+_cmZoom.toFixed(3)+')">'+bgImg+inner+bats+labels+'</g></svg>'+
+    '<div class="cm-zoom"><button id="cmLayer" title="Fond de carte">'+(sat?'🗺':'🛰')+'</button><button id="cmIn">+</button><button id="cmOut">−</button><button id="cmFit">⤢</button></div></div>';
   const us=[...new Set(parc.filter(p=>geoRings(p.geo).length).map(p=>p.usage||'(à renseigner)'))];
   h+='<div class="cm-leg">'+us.map(u=>'<span class="cm-lg"><i style="background:'+cartoUsageColor(u==='(à renseigner)'?'':u)+'"></i>'+esc(u)+'</span>').join('')+(bg.length?'<span class="cm-lg"><i style="background:#4A403A"></i>Bâtiments</span>':'')+'</div>';
   const sp=_cmSel?parc.find(x=>x.id===_cmSel):null;
   if(sp) h+='<div class="atf-key">Parcelle <b>'+esc(sp.num)+'</b> · '+esc(cartoSurf(sp.cont))+(sp.usage?' · '+esc(sp.usage):'')+' <button class="jr-del" id="cmEdit">éditer</button></div>';
-  h+='<p class="atf-note">Glisse pour te déplacer, +/− pour zoomer, touche une parcelle pour la sélectionner. '+cartoGeoCount()+' / '+parc.length+' géolocalisées.</p>';
+  if(sat) h+='<p class="atf-note">🛰 Fond satellite <b>Esri World Imagery</b> — nécessite une connexion (l’imagerie se charge en ligne). Imagerie © Esri, Maxar, Earthstar Geographics.</p>';
+  h+='<p class="atf-note">Glisse pour te déplacer, +/− pour zoomer, 🛰 change le fond, touche une parcelle pour la sélectionner. '+cartoGeoCount()+' / '+parc.length+' géolocalisées.</p>';
   h+='<button class="mnt-btn" id="cmBack" style="width:100%">← Registre</button>';
   $('atfBody').innerHTML=h;
   const svg=$('cmSvg'); let drag=null;
@@ -2575,6 +2588,7 @@ function renderCartoMap(){
   if(svg){ svg.onpointerdown=e=>{ drag={x:e.clientX,y:e.clientY,ox:_cmX,oy:_cmY}; svg._moved=false; };
     svg.onpointermove=e=>{ if(!drag) return; const r=svg.getBoundingClientRect(); const k=CM_VW/(r.width||CM_VW); const dx=(e.clientX-drag.x)*k, dy=(e.clientY-drag.y)*k; if(Math.abs(dx)+Math.abs(dy)>2) svg._moved=true; _cmX=drag.ox+dx; _cmY=drag.oy+dy; const g=$('cmG'); if(g) g.setAttribute('transform','translate('+_cmX.toFixed(1)+','+_cmY.toFixed(1)+') scale('+_cmZoom.toFixed(3)+')'); };
     svg.onpointerup=svg.onpointerleave=svg.onpointercancel=()=>{ drag=null; }; }
+  if($('cmLayer')) $('cmLayer').onclick=()=>{ _cmLayer=(_cmLayer==='sat'?'plan':'sat'); renderCartoMap(); };
   if($('cmIn')) $('cmIn').onclick=()=>{ cmZoomBy(1.35); renderCartoMap(); };
   if($('cmOut')) $('cmOut').onclick=()=>{ cmZoomBy(1/1.35); renderCartoMap(); };
   if($('cmFit')) $('cmFit').onclick=()=>{ _cmZoom=1;_cmX=0;_cmY=0; renderCartoMap(); };

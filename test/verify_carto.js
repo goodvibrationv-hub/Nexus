@@ -66,10 +66,13 @@ ok('C15 — JSON invalide → erreur', !!c.cartoImport('{pas du json').error);
 c.renderCartoMap();
 ok('C16 — carte : SVG + polygones cliquables + légende', /<svg/.test(R.atfBody.innerHTML) && (R.atfBody.innerHTML.match(/<polygon/g)||[]).length>=2 && /data-cp=/.test(R.atfBody.innerHTML) && /cm-leg/.test(R.atfBody.innerHTML));
 ok('C16b — bâtiments : ≥6 seed + surcouche non-cliquable + légende', ((c.window.CARTO_SEED.batiments||[]).length>=6) && (R.atfBody.innerHTML.match(/pointer-events="none"/g)||[]).length>=6 && /Bâtiments<\/span>/.test(R.atfBody.innerHTML));
-ok('C16c — bascule fond satellite : bouton + image ESRI calée + attribution', (()=>{ if(!/id="cmLayer"/.test(R.atfBody.innerHTML)) return false;
-  R.cmLayer.onclick(); const h=R.atfBody.innerHTML;
-  return /<image[^>]+arcgisonline\.com[^>]+World_Imagery/.test(h) && /bboxSR=4326/.test(h) && /preserveAspectRatio="none"/.test(h) && /Esri/.test(h); })());
-c._cmLayer='plan';
+ok('C16c — cycle fond : cadastre → IGN → Esri (image calée + attribution)', (()=>{ if(!/id="cmLayer"/.test(R.atfBody.innerHTML)) return false;
+  R.cmLayer.onclick(); const ign=R.atfBody.innerHTML;
+  const okIgn=/<image[^>]+data\.geopf\.fr[^>]+ORTHOIMAGERY\.ORTHOPHOTOS/.test(ign) && /CRS=EPSG:4326/.test(ign.replace(/&amp;/g,'&')) && /preserveAspectRatio="none"/.test(ign) && /BD ORTHO/.test(ign);
+  R.cmLayer.onclick(); const esri=R.atfBody.innerHTML;
+  const okEsri=/<image[^>]+arcgisonline\.com[^>]+World_Imagery/.test(esri) && /Esri/.test(esri);
+  R.cmLayer.onclick(); const plan=R.atfBody.innerHTML; // retour cadastre
+  return okIgn && okEsri && !/<image/.test(plan); })());
 ok('C17 — géométrie persistée au rechargement', (()=>{ const e3=makeEnv(store(env)); loadApp(e3); return e3.ctx.cartoGeoCount()===13; })());
 
 // ---- migration : un registre existant SANS géométrie récupère les contours ----

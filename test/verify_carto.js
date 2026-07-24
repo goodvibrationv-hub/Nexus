@@ -113,6 +113,8 @@ ok('C16l — noms visibles seulement au zoom (groupes masqués/affichés)', (()=
 ok('C16e — porte « Le Territoire » ouvre directement la carte plein écran', typeof R.doorCarto.onclick==='function' && (()=>{ R.doorCarto.onclick(); return R.scAtelierFlow.classList.contains('active') && /cm-full/.test(R.atfBody.innerHTML) && /id="cmReg"/.test(R.atfBody.innerHTML); })());
 ok('C16h — bouton « Registre » depuis la carte ouvre le registre', typeof R.cmReg.onclick==='function' && (()=>{ R.cmReg.onclick(); const h=R.atfBody.innerHTML; return /Voir la carte/.test(h) && !/cm-full/.test(h); })());
 c.renderCartoMap();
+ok('C16n — superficie totale affichée sur la carte', /class="cm-area"/.test(R.atfBody.innerHTML) && new RegExp(c.cartoTotalHa().toFixed(2)+' ha').test(R.atfBody.innerHTML) && /parcelles/.test(R.atfBody.innerHTML));
+c.renderCartoMap();
 ok('C16g — chemins : ≥6 segments seed + polylignes + bouton 🚶 masque/affiche', (()=>{ const chm=c.window.CARTO_SEED.chemins||[]; const h=R.atfBody.innerHTML;
   if(chm.length<6) return false;
   const okDraw=(h.match(/<polyline/g)||[]).length>=chm.length && /id="cmPaths"/.test(h);

@@ -911,6 +911,8 @@
   .cf-thumb .cm-thumb{ width:100%; height:170px }
   .cf-thumb-tag{ position:absolute; left:8px; bottom:8px; background:rgba(0,0,0,.55); color:#fff; font-size:11px; padding:3px 8px; border-radius:6px }
   .mod-row .cm-thumb{ width:46px; height:46px; border-radius:8px; flex:none; border:1px solid var(--line2) }
+  .cm-area{ position:absolute; left:50%; transform:translateX(-50%); bottom:calc(12px + env(safe-area-inset-bottom)); z-index:2; background:rgba(255,255,255,.92); border:1px solid var(--line2); border-radius:11px; padding:6px 13px; font-size:12px; font-weight:600; box-shadow:0 3px 12px rgba(0,0,0,.25); white-space:nowrap }
+  @media (prefers-color-scheme: dark){ .cm-area{ background:rgba(30,27,22,.94); color:#eee } }
   @media (prefers-color-scheme: dark){ .cm-info{ background:rgba(30,27,22,.96); color:#eee } }
   .cm-sheet{ position:absolute; left:50%; transform:translateX(-50%); bottom:calc(10px + env(safe-area-inset-bottom)); z-index:2; padding:8px 14px; border-radius:12px; border:1px solid var(--line2); background:rgba(255,255,255,.94); color:#222; font-size:12px; font-weight:600; cursor:pointer; box-shadow:0 4px 14px rgba(0,0,0,.25); display:none }
   .cm-panel.folded ~ .cm-sheet{ display:block }

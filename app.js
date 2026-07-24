@@ -2696,6 +2696,7 @@ function renderCartoMap(){
     (_cmMeasure?('<div class="cm-meas" id="cmMeasOut"><span id="cmMeasVal">'+esc(cmMeasVal())+'</span><span class="cm-meas-b"><button id="cmMeasUndo" title="Annuler le dernier point">↶</button><button id="cmMeasClear" title="Tout effacer">✕</button></span></div>'):'')+
     (sp?('<div class="cm-info"><div class="ci-main">Parcelle <b>'+esc(sp.num)+'</b></div><div class="ci-sub">'+esc(cartoSurf(sp.cont))+(sp.usage?' · '+esc(sp.usage):'')+(sp.note?' · '+esc(sp.note):'')+'</div><div class="ci-act"><button id="cmEdit">éditer</button><button id="cmDesel">✕</button></div></div>'):'')+
     '<div class="cm-cred">'+(sat?esc(meta.attr):'Cadastre © DGFiP')+(chm.length&&_cmPaths?' · chemins © OpenStreetMap':'')+'</div>'+
+    ((_cmMeasure||_cmAddPoi)?'':'<div class="cm-area">🗺️ '+cartoTotalHa().toFixed(2)+' ha · '+parc.length+' parcelles</div>')+
     '</div>';
   $('atfBody').innerHTML=h;
   const svg=$('cmSvg'), G=()=>$('cmG');

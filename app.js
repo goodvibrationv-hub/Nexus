@@ -2468,11 +2468,28 @@ function cartoS(){ if(!STORE.carto){ const seed=(window.CARTO_SEED&&window.CARTO
   const seed=(window.CARTO_SEED&&window.CARTO_SEED.parcelles)||[]; let changed=false;
   seed.forEach(sp=>{ if(!sp.geo) return; const p=STORE.carto.parcelles.find(x=>x.id===sp.id||(x.num===sp.num&&x.insee===sp.insee));
     if(p&&!p.geo){ p.geo=sp.geo; if(!p.cont) p.cont=sp.cont; changed=true; } });
+  if(!Array.isArray(STORE.carto.pois)){ STORE.carto.pois=JSON.parse(JSON.stringify((window.CARTO_SEED&&window.CARTO_SEED.pois)||[])); changed=true; }
   if(changed) saveStore();
   return STORE.carto; }
+function cartoAddPoi(lon,lat){ const s=cartoS(); if(!Array.isArray(s.pois)) s.pois=[];
+  const nm=(typeof prompt!=='undefined')?prompt('Nom du point (ex : 🐑 Moutons, 💧 Abreuvoir, 🛖 Cabanon) :',''):null; if(nm==null) return false;
+  s.pois.push({id:'poi_'+Date.now().toString(36), lon:+lon.toFixed(6), lat:+lat.toFixed(6), n:(nm.trim()||'📍 Point')}); saveStore(); return true; }
+function cartoEditPoi(id){ const s=cartoS(); const po=(s.pois||[]).find(x=>x.id===id); if(!po) return;
+  const nm=(typeof prompt!=='undefined')?prompt('Renommer ce point (champ vide = supprimer) :', po.n||''):po.n; if(nm==null) return;
+  if(!nm.trim()){ s.pois=s.pois.filter(x=>x.id!==id); } else { po.n=nm.trim(); } saveStore(); }
 function cartoProgress(){ const p=cartoS().parcelles; return {done:p.filter(x=>x.usage).length, total:p.length}; }
 function cartoTotalHa(){ return cartoS().parcelles.reduce((a,p)=>a+(+p.cont||0),0)/10000; }
 function cartoSurf(cont){ const v=+cont||0; return v>=10000?(v/10000).toFixed(2)+' ha':v+' m²'; }
+// miniature aérienne d'une parcelle : ortho IGN de son emprise + contour (charge en ligne)
+function cartoThumb(p){ const rings=geoRings(p.geo); if(!rings.length) return '';
+  let a=1/0,b=1/0,c=-1/0,d=-1/0; rings.forEach(r=>r.forEach(pt=>{ if(pt[0]<a)a=pt[0]; if(pt[0]>c)c=pt[0]; if(pt[1]<b)b=pt[1]; if(pt[1]>d)d=pt[1]; }));
+  const mx=(c-a)*0.3||0.0004, my=(d-b)*0.3||0.0004; a-=mx;c+=mx;b-=my;d+=my;
+  const midLat=(b+d)/2, ls=Math.cos(midLat*Math.PI/180)||1, wW=(c-a)*ls||1e-9, wH=(d-b)||1e-9;
+  const W=600, H=Math.max(120,Math.round(W*wH/wW));
+  const PR=pt=>[ (pt[0]-a)*ls/wW*W, (d-pt[1])/wH*H ];
+  const url='https://data.geopf.fr/wms-r/wms?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetMap&LAYERS=ORTHOIMAGERY.ORTHOPHOTOS&STYLES=&CRS=EPSG:4326&BBOX='+b+','+a+','+d+','+c+'&WIDTH='+W+'&HEIGHT='+H+'&FORMAT=image/jpeg';
+  let poly=''; rings.forEach(r=>{ poly+='<polygon points="'+r.map(PR).map(q=>q[0].toFixed(1)+','+q[1].toFixed(1)).join(' ')+'" fill="rgba(255,214,0,.10)" stroke="#ffd400" stroke-width="2.4"/>'; });
+  return '<svg class="cm-thumb" viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="xMidYMid slice"><image href="'+esc(url)+'" x="0" y="0" width="'+W+'" height="'+H+'" preserveAspectRatio="none"/>'+poly+'</svg>'; }
 function openCarto(){ go(renderCarto,'cartographie'); }
 function renderCarto(){
   mode='learn'; const c=cartoS(); const pr=cartoProgress();
@@ -2485,7 +2502,7 @@ function renderCarto(){
   Object.keys(byC).sort().forEach(insee=>{ const list=byC[insee]; const sha=(list.reduce((a,p)=>a+(+p.cont||0),0)/10000).toFixed(2);
     h+='<div class="dep-cat">Commune '+esc(insee)+' — '+list.length+' · '+sha+' ha</div>';
     list.slice().sort((a,b)=>(a.num||'').localeCompare(b.num||'')).forEach(p=>{
-      h+='<button class="mod-row'+(p.usage?' full':'')+'" type="button" data-cp="'+esc(p.id)+'"><span class="arb-ic">🗺️</span><span class="mod-mid"><span class="dep-s">Parcelle '+esc(p.num)+(p.usage?' · '+esc(p.usage):'')+'</span><span class="mod-s">'+esc('Sect. '+(p.section||'?')+' · F'+(p.feuille||'?'))+(p.note?' · '+esc(p.note):'')+'</span></span><span class="dep-c">'+esc(cartoSurf(p.cont))+'</span></button>';
+      h+='<button class="mod-row'+(p.usage?' full':'')+'" type="button" data-cp="'+esc(p.id)+'">'+(p.geo?cartoThumb(p):'<span class="arb-ic">🗺️</span>')+'<span class="mod-mid"><span class="dep-s">Parcelle '+esc(p.num)+(p.usage?' · '+esc(p.usage):'')+'</span><span class="mod-s">'+esc('Sect. '+(p.section||'?')+' · F'+(p.feuille||'?'))+(p.note?' · '+esc(p.note):'')+'</span></span><span class="dep-c">'+esc(cartoSurf(p.cont))+'</span></button>';
     });
   });
   h+='<p class="atf-note">Cartographie en cours — touche une parcelle pour renseigner son usage (bois, pré, bâti…). Données partagées, visibles par tous les comptes.</p>';
@@ -2503,6 +2520,7 @@ function renderCartoEdit(id){
   $('atfTitle').textContent=isNew?'Nouvelle parcelle':('Parcelle '+(d.num||''));
   const usages=['','Bois','Pré / prairie','Bâti','Cour / accès','Verger','Jardin','Friche','Eau / ruisseau','Autre'];
   let h='';
+  if(p&&p.geo) h+='<div class="cf-thumb">'+cartoThumb(p)+'<span class="cf-thumb-tag">🛰 Vue aérienne — en ligne</span></div>';
   h+='<div class="field"><label>N° de parcelle</label><input id="cfNum" value="'+esc(d.num)+'" placeholder="ex : 0961"></div>';
   h+='<div class="field"><label>Section</label><input id="cfSec" value="'+esc(d.section)+'"></div>';
   h+='<div class="field"><label>Feuille</label><input id="cfFeu" value="'+esc(d.feuille)+'"></div>';
@@ -2569,7 +2587,7 @@ function cmSatMeta(l){ return l==='ign'?{ic:'🇫🇷',nom:'IGN BD ORTHO®',attr
   :l==='ignplan'?{ic:'🥾',nom:'Plan IGN — chemins & sentiers',attr:'Plan IGN® © IGN (data.geopf.fr)'}:{ic:'🛰',nom:'',attr:''}; }
 let _cmZoom=1,_cmX=0,_cmY=0,_cmSel='',_cmLayer='ign';
 let _cmGeo=null,_cmWatch=null,_cmProj=null,_cmUnproj=null,_cmPxDegLat=0,_cmGeoFirst=false,_cmPaths=true,_cmFollow=false;
-let _cmMeasure=false,_cmMpts=[];
+let _cmMeasure=false,_cmMpts=[],_cmAddPoi=false;
 const CM_OPEN_ZOOM=4; // petit zoom appliqué au premier point GPS (carte collée à la position)
 const CM_LBL_Z=2;   // n° de parcelles visibles à partir de ce zoom
 const CM_CLBL_Z=3;  // noms de chemins visibles à partir de ce zoom
@@ -2652,16 +2670,22 @@ function renderCartoMap(){
   let clabels=''; if(_cmPaths){ const best={}; chm.forEach(ch=>{ if(!ch.n) return; const len=(ch.g||[]).length; if(!best[ch.n]||len>best[ch.n].len) best[ch.n]={g:ch.g,len}; });
     Object.keys(best).forEach(nm=>{ const g=best[nm].g, mid=g[Math.floor(g.length/2)]; if(!mid) return; const v=proj(mid);
       clabels+='<text x="'+v[0].toFixed(1)+'" y="'+v[1].toFixed(1)+'" class="cm-clbl">'+esc(nm)+'</text>'; }); }
+  // points d'intérêt (poser/nommer soi-même) : marqueur cliquable + étiquette
+  let poiMarks='', poiLbls=''; const POIS=(cartoS().pois||[]);
+  POIS.forEach(po=>{ if(po.lon==null||po.lat==null) return; const v=proj([po.lon,po.lat]);
+    poiMarks+='<g data-poi="'+esc(po.id)+'"><circle cx="'+v[0].toFixed(1)+'" cy="'+v[1].toFixed(1)+'" r="4.6" fill="rgba(0,0,0,0.001)"/><circle cx="'+v[0].toFixed(1)+'" cy="'+v[1].toFixed(1)+'" r="2" fill="#fff" stroke="#b23a2e" stroke-width="1.3"/></g>';
+    poiLbls+='<text x="'+(v[0]+3.2).toFixed(1)+'" y="'+(v[1]-2.4).toFixed(1)+'" class="cm-poilbl">'+esc(po.n||'')+'</text>'; });
   const meta=cmSatMeta(_cmLayer);
   let bgImg=''; if(sat){ const r=cartoImgRect(bb); bgImg='<image href="'+esc(cartoSatUrl(bb,_cmLayer))+'" x="'+r.x.toFixed(1)+'" y="'+r.y.toFixed(1)+'" width="'+r.w.toFixed(1)+'" height="'+r.h.toFixed(1)+'" preserveAspectRatio="none"/>'; }
   const sp=_cmSel?parc.find(x=>x.id===_cmSel):null;
   let h='<div class="cm-wrap cm-full no-swipe">'+
-    '<svg id="cmSvg" viewBox="0 0 '+CM_VW+' '+CM_VH+'" class="cm-svg" preserveAspectRatio="xMidYMid meet"><g id="cmG" transform="'+cmTransform()+'">'+bgImg+inner+bats+paths+'<g id="cmCLbl">'+clabels+'</g><g id="cmPLbl">'+labels+'</g><g id="cmMeas">'+cmMeasMarkup()+'</g><g id="cmMe">'+cmMeMarkup()+'</g></g></svg>'+
-    '<div class="cm-title">'+(sat?esc(meta.nom):'Domaine du Freyche')+'</div>'+
+    '<svg id="cmSvg" viewBox="0 0 '+CM_VW+' '+CM_VH+'" class="cm-svg" preserveAspectRatio="xMidYMid meet"><g id="cmG" transform="'+cmTransform()+'">'+bgImg+inner+bats+paths+'<g id="cmCLbl">'+clabels+'</g><g id="cmPLbl">'+labels+poiLbls+'</g><g id="cmMeas">'+cmMeasMarkup()+'</g><g id="cmPOI">'+poiMarks+'</g><g id="cmMe">'+cmMeMarkup()+'</g></g></svg>'+
+    '<div class="cm-title">'+(_cmAddPoi?'📌 Touche la carte pour poser un point':(sat?esc(meta.nom):'Domaine du Freyche'))+'</div>'+
     '<button id="cmBack" class="cm-close" title="Fermer la carte">✕</button>'+
     '<div class="cm-zoom">'+
       '<button id="cmReg" title="Registre des parcelles">≡</button>'+
       '<button id="cmRuler" class="'+(_cmMeasure?'onm':'')+'" title="Mesurer une distance">📏</button>'+
+      '<button id="cmPoi" class="'+(_cmAddPoi?'onm':'')+'" title="Poser un point d\'intérêt">📌</button>'+
       '<button id="cmFit" title="Recadrer">⤢</button>'+
       (chm.length?'<button id="cmPaths" class="'+(_cmPaths?'onp':'')+'" title="Chemins & sentiers">🚶</button>':'')+
       '<button id="cmLayer" title="Fond : '+(sat?esc(meta.nom):'cadastre')+'">'+meta.ic+'</button>'+
@@ -2676,8 +2700,10 @@ function renderCartoMap(){
   $('atfBody').innerHTML=h;
   const svg=$('cmSvg'), G=()=>$('cmG');
   const applyT=()=>{ const g=G(); if(g) g.setAttribute('transform',cmTransform()); cmApplyLabels(); };
-  // sélection d'une parcelle (tap simple, sans déplacement ; désactivée en mode mesure)
-  $('atfBody').querySelectorAll('[data-cp]').forEach(el=>el.onclick=()=>{ if((svg&&svg._moved)||_cmMeasure) return; _cmSel=el.dataset.cp; renderCartoMap(); });
+  // sélection d'une parcelle (tap simple, sans déplacement ; désactivée en mode mesure/point)
+  $('atfBody').querySelectorAll('[data-cp]').forEach(el=>el.onclick=()=>{ if((svg&&svg._moved)||_cmMeasure||_cmAddPoi) return; _cmSel=el.dataset.cp; renderCartoMap(); });
+  // clic sur un point d'intérêt : renommer / supprimer
+  $('atfBody').querySelectorAll('[data-poi]').forEach(el=>el.onclick=()=>{ if((svg&&svg._moved)||_cmAddPoi||_cmMeasure) return; cartoEditPoi(el.dataset.poi); renderCartoMap(); });
   if(svg){ const pts=new Map(); let pan=null, pinch=null, lastTap=0;
     const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
     const scl=()=>{ const r=svg.getBoundingClientRect(); return Math.min(r.width/CM_VW,r.height/CM_VH)||1; };
@@ -2694,6 +2720,7 @@ function renderCartoMap(){
       else if(pts.size===0){ pan=null;
         if(!svg._moved){
           if(_cmMeasure){ const v=cmClientToVB(svg,e.clientX,e.clientY); const ll=_cmUnproj(v); _cmMpts.push([ll[0],ll[1]]); cmUpdateMeas(); }
+          else if(_cmAddPoi){ const v=cmClientToVB(svg,e.clientX,e.clientY); const ll=_cmUnproj(v); const added=cartoAddPoi(ll[0],ll[1]); _cmAddPoi=false; if(added) renderCartoMap(); else renderCartoMap(); }
           else { const now=Date.now(); if(now-lastTap<300){ const v=cmClientToVB(svg,e.clientX,e.clientY); cmZoomAt(1.8,v[0],v[1]); applyT(); lastTap=0; } else lastTap=now; } } } };
     svg.onpointerup=svg.onpointercancel=up;
     svg.onwheel=e=>{ e.preventDefault&&e.preventDefault(); const v=cmClientToVB(svg,e.clientX,e.clientY); cmZoomAt(e.deltaY<0?1.18:1/1.18,v[0],v[1]); applyT(); }; }
@@ -2706,7 +2733,8 @@ function renderCartoMap(){
     else { _cmFollow=!_cmFollow; if(_cmFollow) cmCenterMe(); renderCartoMap(); } };
   if($('cmPaths')) $('cmPaths').onclick=()=>{ _cmPaths=!_cmPaths; renderCartoMap(); };
   if($('cmReg')) $('cmReg').onclick=()=>{ cmStopGeo(); _cmGeo=null; _cmFollow=false; openCarto(); };
-  if($('cmRuler')) $('cmRuler').onclick=()=>{ _cmMeasure=!_cmMeasure; if(_cmMeasure){ _cmFollow=false; } else { _cmMpts=[]; } renderCartoMap(); };
+  if($('cmRuler')) $('cmRuler').onclick=()=>{ _cmMeasure=!_cmMeasure; if(_cmMeasure){ _cmFollow=false; _cmAddPoi=false; } else { _cmMpts=[]; } renderCartoMap(); };
+  if($('cmPoi')) $('cmPoi').onclick=()=>{ _cmAddPoi=!_cmAddPoi; if(_cmAddPoi){ _cmFollow=false; _cmMeasure=false; } renderCartoMap(); };
   if($('cmMeasUndo')) $('cmMeasUndo').onclick=()=>{ _cmMpts.pop(); cmUpdateMeas(); };
   if($('cmMeasClear')) $('cmMeasClear').onclick=()=>{ _cmMpts=[]; cmUpdateMeas(); };
   if($('cmEdit')) $('cmEdit').onclick=()=>openCartoEdit(_cmSel);

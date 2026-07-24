@@ -46,6 +46,10 @@ ok('C9 — écran activé', R.scAtelierFlow.classList.contains('active'));
 // ---- édition : renseigner un usage → persistance + progression ----
 c.renderCartoEdit('p_0961');
 ok('C10 — formulaire d’édition rendu', /id="cfNum"/.test(R.atfBody.innerHTML) && /id="cfUse"/.test(R.atfBody.innerHTML));
+ok('C10b — miniature aérienne : formulaire + lignes du registre (ortho IGN + contour)', (()=>{
+  const hf=R.atfBody.innerHTML; const formThumb=/class="cf-thumb"/.test(hf) && /class="cm-thumb"/.test(hf) && /ORTHOIMAGERY\.ORTHOPHOTOS/.test(hf);
+  c.renderCarto(); const hr=R.atfBody.innerHTML; const rowThumb=(hr.match(/class="cm-thumb"/g)||[]).length>=10;
+  c.renderCartoEdit('p_0961'); return formThumb && rowThumb; })());
 const pc=c.cartoS().parcelles.find(x=>x.id==='p_0961'); pc.usage='Bois'; c.saveStore();
 ok('C11 — usage renseigné → progression 1/13', c.cartoProgress().done===1);
 const env2=makeEnv(store(env)); loadApp(env2);
@@ -83,6 +87,14 @@ ok('C16d — plein écran sans bandeau : overlay no-swipe + fermer + mini-crédi
 ok('C16i — données exploitées : noms de chemins (cm-clbl) sur la carte', (()=>{ const h=R.atfBody.innerHTML;
   const named=(c.window.CARTO_SEED.chemins||[]).some(x=>x.n);
   return named && (h.match(/class="cm-clbl"/g)||[]).length>=1 && /Route du Castella|Chemin|D 436/.test(h) && /id="cmCLbl"/.test(h) && /id="cmPLbl"/.test(h); })());
+ok('C16m — points d’intérêt : moutons/poneys seed + marqueurs cliquables + étiquettes + persistance', (()=>{
+  const pois=c.cartoS().pois||[]; const h=R.atfBody.innerHTML;
+  const seed=pois.length>=2 && /Moutons/.test(JSON.stringify(pois)) && /Poneys/.test(JSON.stringify(pois));
+  const draw=/id="cmPOI"/.test(h) && (h.match(/data-poi=/g)||[]).length>=2 && /class="cm-poilbl"/.test(h) && /id="cmPoi"/.test(h);
+  // persistance : ajout direct + rechargement
+  c.cartoS().pois.push({id:'poi_test',lon:1.581,lat:43.1786,n:'🌰 Potager'}); c.saveStore();
+  const e4=makeEnv(store(env)); loadApp(e4); const kept=(e4.ctx.cartoS().pois||[]).some(x=>x.id==='poi_test');
+  return seed && draw && kept; })());
 ok('C16k — mesure : bouton 📏 + lecteur + calculs distance/surface', (()=>{ if(typeof R.cmRuler.onclick!=='function') return false;
   R.cmRuler.onclick(); const on=R.atfBody.innerHTML;
   const uiOk=/class="cm-meas"/.test(on) && /id="cmMeasVal"/.test(on) && /id="cmMeasUndo"/.test(on) && /id="cmMeasClear"/.test(on);

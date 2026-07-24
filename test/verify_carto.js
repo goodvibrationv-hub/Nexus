@@ -42,6 +42,7 @@ c.renderCarto();
 const h=R.atfBody.innerHTML;
 ok('C8 — registre : total ha + groupé par commune + parcelle 0961', /22\.31 ha/.test(h) && /Commune 09060/.test(h) && /Commune 09331/.test(h) && /Parcelle 0961/.test(h) && /data-cp=/.test(h));
 ok('C9 — écran activé', R.scAtelierFlow.classList.contains('active'));
+ok('C9b — import : bouton « choisir un fichier » GeoJSON', /id="cartoFileBtn"/.test(h) && /id="cartoFile"/.test(h) && /Choisir un fichier/.test(h) && typeof R.cartoFileBtn.onclick==='function');
 
 // ---- édition : renseigner un usage → persistance + progression ----
 c.renderCartoEdit('p_0961');
@@ -71,6 +72,8 @@ c.renderCartoMap();
 ok('C16 — carte : SVG + polygones cliquables + plein écran', /<svg/.test(R.atfBody.innerHTML) && (R.atfBody.innerHTML.match(/<polygon/g)||[]).length>=2 && /data-cp=/.test(R.atfBody.innerHTML) && /cm-full/.test(R.atfBody.innerHTML));
 ok('C16b — bâtiments : ≥6 seed + surcouche non-cliquable', ((c.window.CARTO_SEED.batiments||[]).length>=6) && (R.atfBody.innerHTML.match(/pointer-events="none"/g)||[]).length>=6);
 ok('C16b2 — fond IGN par défaut (ortho IGN affichée à l’ouverture)', /<image[^>]+data\.geopf\.fr[^>]+ORTHOIMAGERY\.ORTHOPHOTOS/.test(R.atfBody.innerHTML) && /BD ORTHO/.test(R.atfBody.innerHTML));
+ok('C16o — satellite élargi : 2 images (contexte large 2048 + domaine net)', (()=>{ const h=R.atfBody.innerHTML;
+  const imgs=(h.match(/<image[^>]+ORTHOIMAGERY\.ORTHOPHOTOS/g)||[]).length; return imgs>=2 && /WIDTH=2048/.test(h.replace(/&amp;/g,'&')); })());
 ok('C16c — cycle des 4 fonds : ortho IGN, Esri, Plan IGN, cadastre', (()=>{ if(!/id="cmLayer"/.test(R.atfBody.innerHTML)) return false;
   let ign=false,esri=false,rando=false,plan=false;
   for(let i=0;i<4;i++){ const h=R.atfBody.innerHTML;
